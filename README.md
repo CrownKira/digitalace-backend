@@ -2,4 +2,4 @@
 
 # Entity–relationship model #
 
-![digitalace-erd](https://user-images.githubusercontent.com/24221801/118472653-a4287380-b73b-11eb-86ab-7be4d499f923.png)
+![digitalace-erd (1)](https://user-images.githubusercontent.com/24221801/118473732-e43c2600-b73c-11eb-96b8-70fac0672ede.png)
