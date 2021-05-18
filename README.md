@@ -1,4 +1,4 @@
 # digitalace-backend
 
 ## Entity–relationship model 
-![digitalace-erd (2)](https://user-images.githubusercontent.com/24221801/118498064-376fa200-b758-11eb-9559-2afe253b8b8a.png)
+![digitalace-erd (2)](https://user-images.githubusercontent.com/24221801/118578199-4e48df80-b7be-11eb-8fc2-56b8e361721f.png)
