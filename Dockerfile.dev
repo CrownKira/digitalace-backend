@@ -14,9 +14,9 @@ RUN pip install -r /requirements.txt
 RUN apk del .tmp-build-deps
 
 # TODO: need this?
-RUN mkdir /app
+# RUN mkdir /app
 WORKDIR /app
-COPY ./app /app
+COPY . .
 
 # store media files uploaded by users
 RUN mkdir -p /vol/web/media
