@@ -1,0 +1,20 @@
+# only used for testing
+version: '3'
+services:
+  db:
+    image: 'postgres:latest'
+    environment:
+      - POSTGRES_DB=digitalace_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_password
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+      context: .
+    environment:
+      - DB_HOST=db
+      - DB_NAME=digitalace_db
+      - DB_USER=postgres
+      - DB_PASS=postgres_password
+    depends_on:
+      - db

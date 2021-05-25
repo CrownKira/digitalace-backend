@@ -5,8 +5,5 @@ python:
 services:
   - docker
 
-before_install:
-  - docker build -t crownkira/digitalace-backend-test -f ./Dockerfile.dev .
-
 script:
-  - docker run -e CI=true crownkira/digitalace-backend-test sh -c "python manage.py wait_for_db && python manage.py test"
+  - docker compose run api sh -c "python manage.py wait_for_db && python manage.py test"
