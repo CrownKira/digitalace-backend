@@ -6,7 +6,6 @@ from core import models
 
 
 class UserAdmin(BaseUserAdmin):
-    # TODO: review this
     ordering = ["id"]
     list_display = ["email", "name"]
     fieldsets = (
