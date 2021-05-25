@@ -133,4 +133,4 @@ STATIC_ROOT = "vol/web/static"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# AUTH_USER_MODEL = "core.User"
+AUTH_USER_MODEL = "core.User"
