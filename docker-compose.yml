@@ -7,7 +7,7 @@ services:
       - POSTGRES_DB=digitalace_db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres_password
-  api:
+  app:
     build:
       dockerfile: Dockerfile.dev
       context: .
