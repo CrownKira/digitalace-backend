@@ -1,5 +1,5 @@
 from django.test import TestCase
-from django.contrib.auth import get_user, get_user_model
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from rest_framework.test import APIClient
@@ -32,7 +32,7 @@ class PublicUserApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         user = get_user_model().objects.get(**res.data)
         self.assertTrue(user.check_password(payload["password"]))
-        self.assetNotIn("password", res.data)
+        self.assertNotIn("password", res.data)
 
     def test_user_exists(self):
         """Test creating user that already exists fails"""
