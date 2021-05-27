@@ -20,6 +20,8 @@ from django.conf import settings
 
 urlpatterns = [
     # TODO: find other way to append /api/
+    # TODO: add url path versioning
+    # https://www.django-rest-framework.org/api-guide/versioning/
     path("admin/", admin.site.urls),
     path("api/user/", include("user.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
