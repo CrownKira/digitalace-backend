@@ -18,12 +18,12 @@ def get_unique_filename(filename):
 
 def user_image_file_path(instance, filename):
     """Generate file path for new user image"""
-    return os.path.join("uploads/user/image/", get_unique_filename(filename))
+    return os.path.join("uploads/user/images/", get_unique_filename(filename))
 
 
 def user_resume_file_path(instance, filename):
     """Generate file path for new user resume"""
-    return os.path.join("uploads/user/resume/", get_unique_filename(filename))
+    return os.path.join("uploads/user/resumes/", get_unique_filename(filename))
 
 
 class Company(models.Model):
