@@ -155,12 +155,8 @@ class UserConfig(models.Model):
         on_delete=models.CASCADE,
         primary_key=True,
     )
-    gst_rate = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
-    discount_rate = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
+    gst_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_rate = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.user.name

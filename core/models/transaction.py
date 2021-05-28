@@ -18,27 +18,13 @@ class Document(models.Model):
     # create a class for payment_method
     payment_method = models.CharField(max_length=255, blank=True)
     payment_note = models.TextField(blank=True)
-    gst_rate = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
-    discount_rate = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
-    gst_amount = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
-    discount_amount = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
-    net = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
-    total_amount = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
-    grand_total = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
+    gst_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    gst_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    net = models.DecimalField(max_digits=10, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    grand_total = models.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
         # https://docs.djangoproject.com/en/3.2/topics/db/models/#abstract-base-classes
@@ -52,16 +38,10 @@ class LineItem(models.Model):
     product = models.ForeignKey("Product", on_delete=models.CASCADE)
     # TODO: create a class for unit
     unit = models.CharField(max_length=255)
-    cost = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
-    unit_price = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.IntegerField()
-    unit_price = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
         abstract = True

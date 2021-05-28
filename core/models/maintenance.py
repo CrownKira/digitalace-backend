@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db import models
+from django.db.models.fields import DateField
 
 
 class Customer(models.Model):
@@ -61,12 +62,30 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     # TODO: create a class for unit
     unit = models.CharField(max_length=255)
-    cost = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
-    unit_price = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal(0.00)
-    )
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.name
+
+
+class Payslip(models.Model):
+    """Payslip managed by a company"""
+
+    user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True)
+    company = models.ForeignKey("Company", on_delete=models.CASCADE)
+
+    date = models.DateField()
+    year = models.CharField(max_length=255)
+    month = models.CharField(max_length=255)
+    basic_salary = models.DecimalField(max_digits=10, decimal_places=2)
+    total_allowances = models.DecimalField(max_digits=10, decimal_places=2)
+    total_deductions = models.DecimalField(max_digits=10, decimal_places=2)
+    sale_price = models.DecimalField(max_digits=10, decimal_places=2)
+    commission = models.DecimalField(max_digits=10, decimal_places=2)
+    commission_amt = models.DecimalField(max_digits=10, decimal_places=2)
+    net_pay = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = models.CharField(max_length=255)
+    bank = models.CharField(max_length=255)
+    status = models.CharField(max_length=255)
+    comment = models.TextField(blank=True)
