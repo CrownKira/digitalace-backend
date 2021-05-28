@@ -1,5 +1,7 @@
+from decimal import Decimal
 import uuid
 import os
+
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -93,6 +95,9 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom user model that supports using email instead of username"""
 
+    # null=True since superuser does not have a company
+    # if company is null, disable all functionalities
+    company = models.ForeignKey("Company", on_delete=models.CASCADE, null=True)
     is_active = models.BooleanField(default=True)
     # is the user an owner
     is_staff = models.BooleanField(default=False)
@@ -130,11 +135,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     nationality = models.CharField(max_length=255, blank=True)
     gender = models.CharField(max_length=255, blank=True)
 
-    date_of_birth = models.DateField(max_length=255, null=True, blank=True)
-    date_of_commencement = models.DateField(
-        max_length=255, null=True, blank=True
-    )
-    date_of_cessation = models.DateField(max_length=255, null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    date_of_commencement = models.DateField(null=True, blank=True)
+    date_of_cessation = models.DateField(null=True, blank=True)
 
     objects = UserManager()
 
@@ -151,6 +154,12 @@ class UserConfig(models.Model):
         "User",
         on_delete=models.CASCADE,
         primary_key=True,
+    )
+    gst_rate = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal(0.00)
+    )
+    discount_rate = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal(0.00)
     )
 
     def __str__(self):
