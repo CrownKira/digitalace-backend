@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django.db import models
 from django.db.models.deletion import SET_NULL
 
@@ -61,6 +59,9 @@ class Invoice(Document):
     salesperson = models.ForeignKey(
         "User", on_delete=models.SET_NULL, null=True, blank=True
     )
+    sales_order = models.OneToOneField(
+        "SalesOrder", on_delete=SET_NULL, null=True, blank=True
+    )
 
 
 class InvoiceItem(LineItem):
@@ -78,10 +79,6 @@ class SalesOrder(Document):
     salesperson = models.ForeignKey(
         "User", on_delete=models.SET_NULL, null=True, blank=True
     )
-    # can be linked to existing or non-existing invoice
-    invoice = models.OneToOneField(
-        "Invoice", on_delete=SET_NULL, null=True, blank=True
-    )
 
 
 class SalesOrderItem(LineItem):
@@ -96,6 +93,9 @@ class Receive(Document):
     supplier = models.ForeignKey(
         "Supplier", on_delete=models.SET_NULL, null=True
     )
+    purchase_order = models.OneToOneField(
+        "PurchaseOrder", on_delete=SET_NULL, null=True, blank=True
+    )
 
 
 class ReceiveItem(LineItem):
@@ -109,10 +109,6 @@ class PurchaseOrder(Document):
 
     supplier = models.ForeignKey(
         "Supplier", on_delete=models.SET_NULL, null=True
-    )
-    # can be linked to existing or non-existing receive
-    receive = models.OneToOneField(
-        "Receive", on_delete=SET_NULL, null=True, blank=True
     )
 
 

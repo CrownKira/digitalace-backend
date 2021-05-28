@@ -1,7 +1,4 @@
-from decimal import Decimal
-
 from django.db import models
-from django.db.models.fields import DateField
 
 
 class Customer(models.Model):
@@ -57,6 +54,7 @@ class Product(models.Model):
     """Product managed by a company"""
 
     category = models.ForeignKey("ProductCategory", on_delete=models.CASCADE)
+    # TODO: mandatory?
     supplier = models.ForeignKey("Supplier", on_delete=models.CASCADE)
 
     name = models.CharField(max_length=255)
