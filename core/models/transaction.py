@@ -107,4 +107,38 @@ class SalesOrder(Document):
 class SalesOrderItem(LineItem):
     """Line item in a sales order"""
 
-    invoice = models.ForeignKey("SalesOrder", on_delete=models.CASCADE)
+    sales_order = models.ForeignKey("SalesOrder", on_delete=models.CASCADE)
+
+
+class Receive(Document):
+    """Record of products received from a supplier"""
+
+    supplier = models.ForeignKey(
+        "Supplier", on_delete=models.SET_NULL, null=True
+    )
+
+
+class ReceiveItem(LineItem):
+    """Line item in a receive"""
+
+    receive = models.ForeignKey("Receive", on_delete=models.CASCADE)
+
+
+class PurchaseOrder(Document):
+    """Purchase order issued to a supplier"""
+
+    supplier = models.ForeignKey(
+        "Supplier", on_delete=models.SET_NULL, null=True
+    )
+    # can be linked to existing or non-existing receive
+    receive = models.OneToOneField(
+        "Receive", on_delete=SET_NULL, null=True, blank=True
+    )
+
+
+class PurchaseOrderItem(LineItem):
+    """Line item in a purchase order"""
+
+    purchase_order = models.ForeignKey(
+        "PurchaseOrder", on_delete=models.CASCADE
+    )
