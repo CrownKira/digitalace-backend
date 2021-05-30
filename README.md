@@ -1,4 +1,7 @@
-# digitalace-backend
+# Backend of DigitaLAce 
+
+## Set-Up Instructions
+Please refer to [DigitaLAce main repo](https://github.com/CrownKira/digitalace#getting-started).
 
 ## Container networking
 ### Approach 1:
