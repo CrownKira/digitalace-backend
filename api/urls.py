@@ -24,5 +24,5 @@ urlpatterns = [
     # https://www.django-rest-framework.org/api-guide/versioning/
     path("admin/", admin.site.urls),
     path("api/user/", include("user.urls")),
-    path("api/customer", include("customer.urls"))
+    path("api/", include("customer.urls"))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

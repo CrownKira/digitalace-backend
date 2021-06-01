@@ -7,7 +7,7 @@ from core.models import Invoice
 from customer import serializers
 
 
-class InvoiceViewSet(viewsets.GenericViewSet, 
+class InvoiceViewSet(viewsets.ModelViewSet, 
                      mixins.ListModelMixin,
                      mixins.CreateModelMixin):
     """Manage invoice in the database"""
