@@ -7,9 +7,15 @@ from core.models import Invoice
 from customer import serializers
 
 
-class InvoiceViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+class InvoiceViewSet(viewsets.GenericViewSet, 
+                     mixins.ListModelMixin,
+                     mixins.CreateModelMixin):
     """Manage invoice in the database"""
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
     queryset = Invoice.objects.all()
     serializer_class = serializers.InvoiceSerializer
+
+    def perform_create(self, serializer):
+        """Create a new invoice"""
+        serializer.save()

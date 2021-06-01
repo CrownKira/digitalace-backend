@@ -67,3 +67,90 @@ class PrivateInvoiceApiTest(TestCase):
         serializer = InvoiceSerializer(invoices, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_invoice_not_limited_to_user(self):
+        """Test that invoices returned are visible by every user"""
+        testuser = get_user_model().objects.create_user(
+            'testsales@crownkiraappdev.com'
+            'password1234'
+        )
+        testcompany = Company.objects.create(name='testcompany')
+        testcustomer = Customer.objects.create(company=testcompany, name='testname')
+        testsalesorder = SalesOrder.objects.create(
+            salesperson=testuser, customer=testcustomer, company=testcompany,
+            date='2001-01-10', payment_date='2001-01-10', 
+            gst_rate='0.07', discount_rate='0',
+            gst_amount='0', discount_amount='0', 
+            net='0', total_amount='0', grand_total='0'
+            )
+        Invoice.objects.create(
+            date='2001-01-10', payment_date='2001-01-10', 
+            gst_rate='0.07', discount_rate='0',
+            gst_amount='0', discount_amount='0', 
+            net='0', total_amount='0', grand_total='0',
+            customer=testcustomer, sales_order=testsalesorder,
+            salesperson=testuser, company=testcompany
+        )
+        testuser2 = self.user
+        testcompany = Company.objects.create(name='testcompany')
+        testcustomer = Customer.objects.create(company=testcompany, name='testname')
+        testsalesorder = SalesOrder.objects.create(
+            salesperson=testuser2, customer=testcustomer, company=testcompany,
+            date='2001-01-11', payment_date='2001-01-11', 
+            gst_rate='0.07', discount_rate='0',
+            gst_amount='0', discount_amount='0', 
+            net='0', total_amount='0', grand_total='0'
+            )
+        Invoice.objects.create(
+            date='2001-01-11', payment_date='2001-01-11', 
+            gst_rate='0.07', discount_rate='0',
+            gst_amount='0', discount_amount='0', 
+            net='0', total_amount='0', grand_total='0',
+            customer=testcustomer, sales_order=testsalesorder,
+            salesperson=testuser2, company=testcompany
+        )
+
+        res = self.client.get(INVOICE_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 2)
+
+    def test_create_invoice_successful(self):
+        """Test creating a new invoice"""
+        self.company = Company.objects.create(name='testcompany')
+        self.Customer = Customer.objects.create(company=self.company, name='testname')
+        self.SalesOrder = SalesOrder.objects.create(
+            salesperson=self.user, customer=self.Customer, company=self.company,
+            date='2001-01-10', payment_date='2001-01-10', 
+            gst_rate='0.07', discount_rate='0',
+            gst_amount='0', discount_amount='0', 
+            net='0', total_amount='0', grand_total='0'
+            )
+        payload = {
+            'salesperson': self.user, 'customer': self.Customer,
+            'sales_order': self.SalesOrder,
+            'date':'2001-01-10', 'payment_date':'2001-01-10', 
+            'gst_rate':'0.07', 'discount_rate':'0',
+            'gst_amount':'0', 'discount_amount':'0', 
+            'net':'0', 'total_amount':'0', 'grand_total':'0'
+            }
+        self.client.post(INVOICE_URL, payload)
+
+        exists = Invoice.objects.all()
+        self.assertEqual(len(exists),1)
+
+    def test_create_invoice_invalid(self):
+        """Test creating a new invoice with invalid payload"""
+        testcompany = Company.objects.create(name='testcompany')
+        testcustomer = Customer.objects.create(company=testcompany, name='testname')
+        payload = {
+            'salesperson': '', 'customer': testcustomer, 'company': testcompany,
+            'date':'2001-01-10', 'payment_date':'2001-01-10', 
+            'gst_rate':'0.07', 'discount_rate':'0',
+            'gst_amount':'0', 'discount_amount':'0', 
+            'net':'0', 'total_amount':'0', 'grand_total':'0'
+        }
+        res = self.client.post(INVOICE_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        
