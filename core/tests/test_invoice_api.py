@@ -25,7 +25,7 @@ class PublicInvoiceApiTest(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    
+
 class PrivateInvoiceApiTest(TestCase):
     """Test authorized user invoice API"""
 
@@ -44,18 +44,20 @@ class PrivateInvoiceApiTest(TestCase):
             'password1234'
         )
         testcompany = Company.objects.create(name='testcompany')
-        testcustomer = Customer.objects.create(company=testcompany, name='testname')
+        testcustomer = Customer.objects.create(
+            company=testcompany, name='testname'
+            )
         testsalesorder = SalesOrder.objects.create(
             salesperson=testuser, customer=testcustomer, company=testcompany,
-            date='2001-01-10', payment_date='2001-01-10', 
+            date='2001-01-10', payment_date='2001-01-10',
             gst_rate='0.07', discount_rate='0',
-            gst_amount='0', discount_amount='0', 
+            gst_amount='0', discount_amount='0',
             net='0', total_amount='0', grand_total='0'
             )
         Invoice.objects.create(
-            date='2001-01-10', payment_date='2001-01-10', 
+            date='2001-01-10', payment_date='2001-01-10',
             gst_rate='0.07', discount_rate='0',
-            gst_amount='0', discount_amount='0', 
+            gst_amount='0', discount_amount='0',
             net='0', total_amount='0', grand_total='0',
             customer=testcustomer, sales_order=testsalesorder,
             salesperson=testuser, company=testcompany
@@ -75,36 +77,40 @@ class PrivateInvoiceApiTest(TestCase):
             'password1234'
         )
         testcompany = Company.objects.create(name='testcompany')
-        testcustomer = Customer.objects.create(company=testcompany, name='testname')
+        testcustomer = Customer.objects.create(
+            company=testcompany, name='testname'
+            )
         testsalesorder = SalesOrder.objects.create(
             salesperson=testuser, customer=testcustomer, company=testcompany,
-            date='2001-01-10', payment_date='2001-01-10', 
+            date='2001-01-10', payment_date='2001-01-10',
             gst_rate='0.07', discount_rate='0',
-            gst_amount='0', discount_amount='0', 
+            gst_amount='0', discount_amount='0',
             net='0', total_amount='0', grand_total='0'
             )
         Invoice.objects.create(
-            date='2001-01-10', payment_date='2001-01-10', 
+            date='2001-01-10', payment_date='2001-01-10',
             gst_rate='0.07', discount_rate='0',
-            gst_amount='0', discount_amount='0', 
+            gst_amount='0', discount_amount='0',
             net='0', total_amount='0', grand_total='0',
             customer=testcustomer, sales_order=testsalesorder,
             salesperson=testuser, company=testcompany
         )
         testuser2 = self.user
         testcompany = Company.objects.create(name='testcompany')
-        testcustomer = Customer.objects.create(company=testcompany, name='testname')
+        testcustomer = Customer.objects.create(
+            company=testcompany, name='testname'
+            )
         testsalesorder = SalesOrder.objects.create(
             salesperson=testuser2, customer=testcustomer, company=testcompany,
-            date='2001-01-11', payment_date='2001-01-11', 
+            date='2001-01-11', payment_date='2001-01-11',
             gst_rate='0.07', discount_rate='0',
-            gst_amount='0', discount_amount='0', 
+            gst_amount='0', discount_amount='0',
             net='0', total_amount='0', grand_total='0'
             )
         Invoice.objects.create(
-            date='2001-01-11', payment_date='2001-01-11', 
+            date='2001-01-11', payment_date='2001-01-11',
             gst_rate='0.07', discount_rate='0',
-            gst_amount='0', discount_amount='0', 
+            gst_amount='0', discount_amount='0',
             net='0', total_amount='0', grand_total='0',
             customer=testcustomer, sales_order=testsalesorder,
             salesperson=testuser2, company=testcompany
@@ -117,40 +123,47 @@ class PrivateInvoiceApiTest(TestCase):
 
     def test_create_invoice_successful(self):
         """Test creating a new invoice"""
-        self.company = Company.objects.create(name='testcompany')
-        self.Customer = Customer.objects.create(company=self.company, name='testname')
+        self.Company = Company.objects.create(name='testcompany')
+        self.Customer = Customer.objects.create(
+            company=self.Company, name='testname'
+            )
         self.SalesOrder = SalesOrder.objects.create(
-            salesperson=self.user, customer=self.Customer, company=self.company,
-            date='2001-01-10', payment_date='2001-01-10', 
+            salesperson=self.user, customer=self.Customer,
+            company=self.Company,
+            date='2001-01-10', payment_date='2001-01-10',
             gst_rate='0.07', discount_rate='0',
-            gst_amount='0', discount_amount='0', 
+            gst_amount='0', discount_amount='0',
             net='0', total_amount='0', grand_total='0'
             )
         payload = {
-            'salesperson': self.user, 'customer': self.Customer,
-            'sales_order': self.SalesOrder,
-            'date':'2001-01-10', 'payment_date':'2001-01-10', 
-            'gst_rate':'0.07', 'discount_rate':'0',
-            'gst_amount':'0', 'discount_amount':'0', 
-            'net':'0', 'total_amount':'0', 'grand_total':'0'
+            'salesperson': self.user.id, 'customer': self.Customer.id,
+            'sales_order': self.SalesOrder.id,
+            'company': self.Company.id,
+            'date': '2001-01-10', 'payment_date': '2001-01-10',
+            'gst_rate': '0.07', 'discount_rate': '0',
+            'gst_amount': '0', 'discount_amount': '0',
+            'net': '0', 'total_amount': '0', 'grand_total': '0'
             }
         self.client.post(INVOICE_URL, payload)
-
-        exists = Invoice.objects.all()
-        self.assertEqual(len(exists),1)
+        exists = Invoice.objects.filter(
+            company=payload['customer']
+        )
+        self.assertTrue(exists)
 
     def test_create_invoice_invalid(self):
         """Test creating a new invoice with invalid payload"""
         testcompany = Company.objects.create(name='testcompany')
-        testcustomer = Customer.objects.create(company=testcompany, name='testname')
+        testcustomer = Customer.objects.create(
+            company=testcompany, name='testname'
+            )
         payload = {
-            'salesperson': '', 'customer': testcustomer, 'company': testcompany,
-            'date':'2001-01-10', 'payment_date':'2001-01-10', 
-            'gst_rate':'0.07', 'discount_rate':'0',
-            'gst_amount':'0', 'discount_amount':'0', 
-            'net':'0', 'total_amount':'0', 'grand_total':'0'
+            'salesperson': '', 'customer': testcustomer,
+            'company': testcompany,
+            'date': '2001-01-10', 'payment_date': '2001-01-10',
+            'gst_rate': '0.07', 'discount_rate': '0',
+            'gst_amount': '0', 'discount_amount': '0',
+            'net': '0', 'total_amount': '0', 'grand_total': '0'
         }
         res = self.client.post(INVOICE_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        

@@ -14,5 +14,6 @@ class InvoiceSerializer(serializers.ModelSerializer):
             'gst_amount', 'discount_amount',
             'net', 'total_amount', 'grand_total',
             'customer', 'sales_order', 'salesperson',
+            'company'
         )
         read_only_fields = ('id',)
