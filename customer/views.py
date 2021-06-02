@@ -1,4 +1,3 @@
-from django.db.models.query import QuerySet
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -8,7 +7,7 @@ from core.models import Invoice
 from customer import serializers
 
 
-class InvoiceViewSet(viewsets.ModelViewSet,):
+class InvoiceViewSet(viewsets.ModelViewSet):
     """Manage invoice in the database"""
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -31,12 +30,10 @@ class InvoiceViewSet(viewsets.ModelViewSet,):
 
     def get_queryset(self):
         """Custom queryset to support filtering sorting and listing"""
-        queryset = self.queryset
-        print('testcase')
-        print(Invoice.objects.all())
+        queryset = self.queryset.order_by('id')
         filter = self.request.query_params.get('filter', None)
         sort = self.request.query_params.get('sort', None)
-        range = self.request.query_params.get('range', None)
+#       #range = self.request.query_params.get('range', None)
         if filter is not None:
             filtered = self._params_to_int(filter)
             queryset = queryset.exclude(id__in=filtered)
