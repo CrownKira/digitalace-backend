@@ -161,7 +161,6 @@ class PrivateInvoiceApiTest(TestCase):
             'net': '0', 'total_amount': '0', 'grand_total': '0'
             }
         self.client.post(INVOICE_URL, payload)
-        print(Invoice.objects.all())
         exists = Invoice.objects.filter(
             company=payload['customer']
         )

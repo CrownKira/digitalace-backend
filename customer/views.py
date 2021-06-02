@@ -13,7 +13,3 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     queryset = Invoice.objects.all()
     serializer_class = serializers.InvoiceSerializer
-
-    def perform_create(self, serializer):
-        """Create a new invoice"""
-        serializer.save()

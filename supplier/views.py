@@ -1,4 +1,4 @@
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
@@ -13,7 +13,3 @@ class ReceiveViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     queryset = Receive.objects.all()
     serializer_class = serializers.ReceiveSerializer
-
-    def perform_create(self, serializer):
-        """Create a new receive"""
-        serializer.save()
