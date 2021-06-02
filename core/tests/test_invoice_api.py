@@ -43,11 +43,19 @@ class PrivateInvoiceApiTest(TestCase):
             'testsales@crownkiraappdev.com'
             'password1234'
         )
+        testcompany2 = Company.objects.create(name='testcompany2')
         testcompany = Company.objects.create(name='testcompany')
         testcustomer = Customer.objects.create(
             company=testcompany, name='testname'
             )
         testsalesorder = SalesOrder.objects.create(
+            salesperson=testuser, customer=testcustomer, company=testcompany,
+            date='2001-01-10', payment_date='2001-01-10',
+            gst_rate='0.07', discount_rate='0',
+            gst_amount='0', discount_amount='0',
+            net='0', total_amount='0', grand_total='0'
+            )
+        testsalesorder2 = SalesOrder.objects.create(
             salesperson=testuser, customer=testcustomer, company=testcompany,
             date='2001-01-10', payment_date='2001-01-10',
             gst_rate='0.07', discount_rate='0',
@@ -62,10 +70,18 @@ class PrivateInvoiceApiTest(TestCase):
             customer=testcustomer, sales_order=testsalesorder,
             salesperson=testuser, company=testcompany
         )
+        Invoice.objects.create(
+            date='2001-01-10', payment_date='2001-01-10',
+            gst_rate='0.07', discount_rate='0',
+            gst_amount='0', discount_amount='0',
+            net='0', total_amount='1', grand_total='0',
+            customer=testcustomer, sales_order=testsalesorder2,
+            salesperson=testuser, company=testcompany2
+        )
 
         res = self.client.get(INVOICE_URL)
 
-        invoices = Invoice.objects.all().order_by('-id')
+        invoices = Invoice.objects.all().order_by('id')
         serializer = InvoiceSerializer(invoices, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
@@ -145,6 +161,7 @@ class PrivateInvoiceApiTest(TestCase):
             'net': '0', 'total_amount': '0', 'grand_total': '0'
             }
         self.client.post(INVOICE_URL, payload)
+        print(Invoice.objects.all())
         exists = Invoice.objects.filter(
             company=payload['customer']
         )
