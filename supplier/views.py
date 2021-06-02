@@ -7,9 +7,7 @@ from core.models import Receive
 from supplier import serializers
 
 
-class ReceiveViewSet(viewsets.GenericViewSet,
-                     mixins.ListModelMixin,
-                     mixins.CreateModelMixin):
+class ReceiveViewSet(viewsets.ModelViewSet):
     """Manage Receive in the database"""
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
