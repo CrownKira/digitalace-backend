@@ -40,7 +40,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         if sort is not None:
             sorted = self._param_to_str(sort)
             if sorted[1] == 'DESC':
-                queryset = queryset.order_by('-'+sorted[0])
+                queryset = queryset.order_by('-' + sorted[0])
             else:
                 queryset = queryset.order_by(sorted[0])
         return queryset
