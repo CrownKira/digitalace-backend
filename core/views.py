@@ -18,9 +18,6 @@ class BaseClassAttrForViewSet(viewsets.ModelViewSet):
         qs = qs.split(":")
         split2 = qs[1]
         intsplit = [int(str_id) for str_id in split2.split(",")]
-        print("testcase")
-        print(intsplit)
-        print(qs[0])
         return {qs[0] + "__in": intsplit}
 
     def _param_to_str(self, qs):
@@ -36,7 +33,6 @@ class BaseClassAttrForViewSet(viewsets.ModelViewSet):
         queryset = self.queryset.order_by("id")
         filter = self.request.query_params.get("filter", None)
         sort = self.request.query_params.get("sort", None)
-        print(filter)
         if filter is not None:
             filtered = self._params_to_int(filter)
             queryset = queryset.exclude(**filtered)
