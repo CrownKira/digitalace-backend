@@ -1,7 +1,9 @@
-from rest_framework import pagination
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.response import Response
+from collections import OrderedDict
 
 
-class CustomPagination(pagination.LimitOffsetPagination):
+class CustomPagination(LimitOffsetPagination):
     def _params_to_int(self, qs):
         qs = qs[1:]
         qs = qs[:-1]
@@ -9,15 +11,29 @@ class CustomPagination(pagination.LimitOffsetPagination):
 
     def paginate_queryset(self, queryset, request, view=None):
         """Custom pagination"""
-        range = self.request.query_params.get("range", None)
-        self.limit = self.get_limit(request)
+        range = request.query_params.get("range", None)
+        self.offset = 0
+        self.limit = None
+        if range is not None:
+            range = self._params_to_int(range)
+            self.offset = range[0]
+            self.limit = range[1]
         if self.limit is None:
             return None
-
         self.count = self.get_count(queryset)
-        self.offset = self.get_offset(request)
-
         self.request = request
         if self.count == 0 or self.offset > self.count:
             return []
         return list(queryset[self.offset : self.offset + self.limit])
+
+    def get_paginated_response(self, data):
+        return Response(
+            OrderedDict(
+                [
+                    ("count", self.count),
+                    ("next", self.get_next_link()),
+                    ("previous", self.get_previous_link()),
+                    ("results", data),
+                ]
+            )
+        )
