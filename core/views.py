@@ -38,7 +38,7 @@ class BaseClassAttrForViewSet(viewsets.ModelViewSet):
         sort = self.request.query_params.get("sort", None)
         if filter is not None:
             filtered = self._params_to_int(filter)
-            queryset = queryset.exclude(**filtered)
+            queryset = queryset.filter(**filtered)
         if sort is not None:
             sorted = self._param_to_str(sort)
             if sorted[1] == "DESC":
