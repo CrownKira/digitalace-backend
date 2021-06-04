@@ -5,7 +5,8 @@ from supplier import views
 
 
 router = DefaultRouter()
-router.register('receive', views.ReceiveViewSet)
+router.register('receives', views.ReceiveViewSet)
+router.register('suppliers', views.SupplierViewSet)
 
 app_name = 'supplier'
 
