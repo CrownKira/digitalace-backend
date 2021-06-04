@@ -191,6 +191,14 @@ class PrivateInvoiceApiTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 2)
 
+        self.user = testuser
+        self.client.force_authenticate(self.user)
+
+        res = self.client.get(INVOICE_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 2)
+
     def test_create_invoice_successful(self):
         """Test creating a new invoice"""
         self.Company = Company.objects.create(name="testcompany")
@@ -227,7 +235,7 @@ class PrivateInvoiceApiTest(TestCase):
             "grand_total": "0",
         }
         self.client.post(INVOICE_URL, payload)
-        exists = Invoice.objects.filter(company=payload["customer"])
+        exists = Invoice.objects.filter(customer=payload["customer"])
         self.assertTrue(exists)
 
     def test_create_invoice_invalid(self):
