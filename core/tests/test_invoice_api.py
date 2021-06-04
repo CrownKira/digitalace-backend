@@ -1,6 +1,5 @@
-from core.models.transaction import Invoice, SalesOrder
-from core.models.maintenance import Customer
-from core.models.user import Company
+from core.models import Company, Customer, Invoice, SalesOrder
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse

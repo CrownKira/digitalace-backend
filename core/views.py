@@ -16,9 +16,10 @@ class BaseClassAttrForViewSet(viewsets.ModelViewSet):
         qs = qs[:-1]
         qs = re.sub(r"[\[\]]", "", qs)
         qs = qs.split(":")
+        qsid = qs[0].strip('"')
         split2 = qs[1]
         intsplit = [int(str_id) for str_id in split2.split(",")]
-        return {qs[0] + "__in": intsplit}
+        return {qsid + "__in": intsplit}
 
     def _param_to_str(self, qs):
         """Convert string to list of string"""
