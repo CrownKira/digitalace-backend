@@ -7,6 +7,7 @@ from customer import views
 router = DefaultRouter()
 router.register('invoices', views.InvoiceViewSet)
 router.register('customers', views.CustomerViewSet)
+router.register('salesorders', views.SalesOrderViewSet)
 
 app_name = 'customer'
 

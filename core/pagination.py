@@ -27,18 +27,10 @@ class CustomPagination(LimitOffsetPagination):
         return list(queryset[self.offset: self.limit])
 
     def get_paginated_response(self, data):
-        # self.next_link = self.request.build_absolute_uri().rsplit('/', 1)[0]
-        # self.next_link = self.next_link + '/?'
-        # filter = self.request.query_params.get("filter", None)
-        # if filter is not None:
-        #    self.next_link = self.next_link + 'filter=' + filter
-        # self.next_link = self.next_link + '&range='
         return Response(
             OrderedDict(
                 [
                     ("count", self.count),
-                    # ("next", self.get_next_link()),
-                    # ("previous", self.get_previous_link()),
                     ("results", data),
                 ]
             )

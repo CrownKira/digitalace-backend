@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from core.models import Invoice, Customer
+from core.models import Invoice, Customer, SalesOrder
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
@@ -27,5 +27,20 @@ class CustomerSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'company', 'attention', 'name', 'address',
             'area', 'contact', 'term', 'phone_no'
+        )
+        read_only_fields = ('id',)
+
+
+class SalesOrderSerializer(serializers.ModelSerializer):
+    """Serializer for salesorder objects"""
+
+    class Meta:
+        model = SalesOrder
+        fields = (
+            'id', 'date', 'payment_date',
+            'gst_rate', 'discount_rate',
+            'gst_amount', 'discount_amount',
+            'net', 'total_amount', 'grand_total',
+            'customer', 'salesperson', 'company'
         )
         read_only_fields = ('id',)

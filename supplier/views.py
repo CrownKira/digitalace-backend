@@ -1,7 +1,7 @@
 from core.pagination import CustomPagination
 from core.views import BaseClassAttrForViewSet
 
-from core.models import Receive, Supplier
+from core.models import Receive, Supplier, PurchaseOrder
 
 from supplier import serializers
 
@@ -17,4 +17,11 @@ class SupplierViewSet(BaseClassAttrForViewSet):
     """Manage Supplier in the database"""
     queryset = Supplier.objects.all()
     serializer_class = serializers.SupplierSerializer
+    pagination_class = CustomPagination
+
+
+class PurchaseOrderViewSet(BaseClassAttrForViewSet):
+    """Manage Supplier in the database"""
+    queryset = PurchaseOrder.objects.all()
+    serializer_class = serializers.PurchaseOrderSerializer
     pagination_class = CustomPagination

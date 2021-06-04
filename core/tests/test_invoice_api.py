@@ -115,7 +115,8 @@ class PrivateInvoiceApiTest(TestCase):
     def test_invoice_not_limited_to_user(self):
         """Test that invoices returned are visible by every user"""
         testuser = get_user_model().objects.create_user(
-            "testsales@crownkiraappdev.com" "password1234"
+            "testsales@crownkiraappdev.com",
+            "password1234"
         )
         testcompany = Company.objects.create(name="testcompany")
         testcustomer = Customer.objects.create(
