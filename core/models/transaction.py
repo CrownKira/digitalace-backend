@@ -24,6 +24,8 @@ class Document(models.Model):
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     grand_total = models.DecimalField(max_digits=10, decimal_places=2)
 
+    status = models.CharField(max_length=255)
+
     class Meta:
         # https://docs.djangoproject.com/en/3.2/topics/db/models/#abstract-base-classes
         abstract = True

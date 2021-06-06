@@ -1,4 +1,16 @@
+from decimal import Decimal
+import os
+
 from django.db import models
+
+from .user import get_unique_filename
+
+
+def product_image_file_path(instance, filename):
+    """Generate file path for new user image"""
+    return os.path.join(
+        "uploads/product/images/", get_unique_filename(filename)
+    )
 
 
 class Customer(models.Model):
@@ -13,6 +25,13 @@ class Customer(models.Model):
     contact = models.CharField(max_length=255, blank=True)
     term = models.CharField(max_length=255, blank=True)
     phone_no = models.CharField(max_length=255, blank=True)
+
+    email = models.EmailField(max_length=255, unique=True)
+    receivables = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, default=Decimal("0.00")
+    )
+    first_seen = models.DateField(null=True, blank=True)
+    last_seen = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -30,6 +49,13 @@ class Supplier(models.Model):
     contact = models.CharField(max_length=255, blank=True)
     term = models.CharField(max_length=255, blank=True)
     phone_no = models.CharField(max_length=255, blank=True)
+
+    email = models.EmailField(max_length=255, unique=True)
+    payables = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, default=Decimal("0.00")
+    )
+    first_seen = models.DateField(null=True, blank=True)
+    last_seen = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -63,8 +89,23 @@ class Product(models.Model):
     cost = models.DecimalField(max_digits=10, decimal_places=2)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
 
+    image = models.ImageField(upload_to=product_image_file_path, blank=True)
+
     def __str__(self):
         return self.name
+
+
+class StockBalance(models.Model):
+    """Stock balance of a product"""
+
+    product = models.ForeignKey("Product", on_delete=models.CASCADE)
+    quantity_in = models.IntegerField()
+    quantity_out = models.IntegerField()
+    balance = models.IntegerField()
+    period = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.product + " (" + self.period + ")"
 
 
 class Payslip(models.Model):
