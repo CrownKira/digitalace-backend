@@ -29,7 +29,7 @@ class CreateTokenView(ObtainAuthToken):
                 "token": token.key,
                 "id": user.id,
                 "fullName": user.name,
-                "avatar": "",
+                "avatar": user.image.url,
             }
         )
 

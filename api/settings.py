@@ -127,8 +127,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = "/static/"
-MEDIA_URL = "/media/"
+# client can only access server via /api/
+STATIC_URL = "/api/static/"
+MEDIA_URL = "/api/media/"
 
 MEDIA_ROOT = "/vol/web/media"
 STATIC_ROOT = "vol/web/static"
