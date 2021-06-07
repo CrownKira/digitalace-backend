@@ -9,7 +9,7 @@ from core.models import Customer, Company
 from customer.serializers import CustomerSerializer
 
 
-CUSTOMER_URL = reverse('customer:customer-list')
+CUSTOMER_URL = reverse("customer:customer-list")
 
 
 class PublicCustomerApiTest(TestCase):
@@ -27,6 +27,7 @@ class PublicCustomerApiTest(TestCase):
 
 class PrivateCustomerApiTest(TestCase):
     """Test authorized user customer API"""
+
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             "test@crownkiraappdev.com",
@@ -39,12 +40,12 @@ class PrivateCustomerApiTest(TestCase):
         """Test retreiving customer"""
         testcompany2 = Company.objects.create(name="testcompany2")
         testcompany = Company.objects.create(name="testcompany")
-        Customer.objects.create(name='testcustomer', company=testcompany)
-        Customer.objects.create(name='testcustomer2', company=testcompany2)
+        Customer.objects.create(name="testcustomer", company=testcompany)
+        Customer.objects.create(name="testcustomer2", company=testcompany2)
 
         res = self.client.get(CUSTOMER_URL)
 
-        customers = Customer.objects.all().order_by('id')
+        customers = Customer.objects.all().order_by("id")
         serializer = CustomerSerializer(customers, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
@@ -53,10 +54,11 @@ class PrivateCustomerApiTest(TestCase):
         """Test that customers returned are visible by every user"""
         testcompany2 = Company.objects.create(name="testcompany2")
         testcompany = Company.objects.create(name="testcompany")
-        Customer.objects.create(name='testcustomer', company=testcompany)
-        Customer.objects.create(name='testcustomer2', company=testcompany2)
+        Customer.objects.create(name="testcustomer", company=testcompany)
+        Customer.objects.create(name="testcustomer2", company=testcompany2)
         testuser = get_user_model().objects.create_user(
-            "testsales@crownkiraappdev.com" "password1234"
+            "testsales@crownkiraappdev.com",
+            "password1234",
         )
         res = self.client.get(CUSTOMER_URL)
 
@@ -75,19 +77,19 @@ class PrivateCustomerApiTest(TestCase):
         """Test creating a new customer"""
         self.Company = Company.objects.create(name="testcompany")
         payload = {
-            'company': self.Company.id,
-            'name': 'testname',
+            "company": self.Company.id,
+            "name": "testname",
         }
         self.client.post(CUSTOMER_URL, payload)
-        exists = Customer.objects.filter(company=payload['company'])
+        exists = Customer.objects.filter(company=payload["company"])
         self.assertTrue(exists)
 
     def test_create_customer_invalid(self):
         """Test creating a new customer"""
         self.Company = Company.objects.create(name="testcompany")
         payload = {
-            'company': self.Company.id,
-            'name': '',
+            "company": self.Company.id,
+            "name": "",
         }
         res = self.client.post(CUSTOMER_URL, payload)
 

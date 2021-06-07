@@ -8,6 +8,7 @@ from django.contrib.auth.models import (
     BaseUserManager,
     PermissionsMixin,
 )
+
 from django.core.validators import FileExtensionValidator
 from django.db.models.fields import CharField
 
@@ -64,6 +65,8 @@ class Department(models.Model):
 class Role(models.Model):
     """Role in a department"""
 
+    # TODO: rename to designation
+
     name = CharField(max_length=255)
     department = models.ForeignKey("Department", on_delete=models.CASCADE)
 
@@ -102,7 +105,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         "Company", on_delete=models.CASCADE, null=True, blank=True
     )
     is_active = models.BooleanField(default=True)
-    # is the user an owner
+    # is the user an owner of his company?
+    # TODO: rename to is_owner
     is_staff = models.BooleanField(default=False)
     email = models.EmailField(max_length=255, unique=True)
     # full name
@@ -161,6 +165,8 @@ class UserConfig(models.Model):
     discount_rate = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00)
     )
+    theme = models.CharField(max_length=255, blank=True, default="light")
+    language = models.CharField(max_length=255, blank=True, default="en")
 
     def __str__(self):
         return self.user.name

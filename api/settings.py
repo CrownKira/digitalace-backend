@@ -28,7 +28,7 @@ SECRET_KEY = (
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost"]
+ALLOWED_HOSTS = ["localhost", "api"]
 
 
 # Application definition
@@ -128,8 +128,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = "/static/"
-MEDIA_URL = "/media/"
+# client can only access server via /api/
+STATIC_URL = "/api/static/"
+MEDIA_URL = "/api/media/"
 
 MEDIA_ROOT = "/vol/web/media"
 STATIC_ROOT = "vol/web/static"
@@ -140,3 +141,5 @@ STATIC_ROOT = "vol/web/static"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "core.User"
+
+CSRF_COOKIE_NAME = "csrftoken"

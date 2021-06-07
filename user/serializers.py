@@ -12,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ("email", "password", "name")
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
+    # TODO: create employee by POST /employees/
     def create(self, validated_data):
         """Create a new user with encrypted password and return it"""
         return get_user_model().objects.create_user(**validated_data)
