@@ -30,6 +30,7 @@ class CreateTokenView(ObtainAuthToken):
                 "id": user.id,
                 "fullName": user.name,
                 "avatar": user.image.url,
+                "permissions": user.get_group_permissions(),
             }
         )
 
