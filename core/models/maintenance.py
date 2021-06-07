@@ -90,6 +90,8 @@ class Product(models.Model):
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     image = models.ImageField(upload_to=product_image_file_path, blank=True)
+    stock = models.IntegerField(blank=True, default=0)
+    sales = models.IntegerField(blank=True, default=0)
 
     def __str__(self):
         return self.name
