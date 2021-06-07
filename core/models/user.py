@@ -7,8 +7,8 @@ from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
-    Permission,
 )
+
 from django.core.validators import FileExtensionValidator
 from django.db.models.fields import CharField
 
@@ -105,7 +105,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         "Company", on_delete=models.CASCADE, null=True, blank=True
     )
     is_active = models.BooleanField(default=True)
-    # is the user an owner
+    # is the user an owner of his company?
+    # TODO: rename to is_owner
     is_staff = models.BooleanField(default=False)
     email = models.EmailField(max_length=255, unique=True)
     # full name

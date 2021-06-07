@@ -12,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ("email", "password", "name")
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
+    # TODO: create employee by POST /employees/
     def create(self, validated_data):
         """Create a new user with encrypted password and return it"""
         return get_user_model().objects.create_user(**validated_data)
@@ -26,6 +27,27 @@ class UserSerializer(serializers.ModelSerializer):
             user.save()
 
         return user
+
+    def validate(self, attrs):
+        """Validate the form"""
+        email = attrs.get("email", None)
+        password = attrs.get("password", None)
+
+        confirm_email = self.initial_data.get("confirm_email", None)
+        confirm_password = self.initial_data.get("confirm_password", None)
+        company = self.initial_data.get("company", "")
+
+        if email != confirm_email:
+            msg = _("Emails do not match")
+            raise serializers.ValidationError(msg)
+
+        if password != confirm_password:
+            msg = _("Passwords do not match")
+            raise serializers.ValidationError(msg)
+
+        # push all validated data to validated_data
+        attrs["company"] = company
+        return attrs
 
 
 class AuthTokenSerializer(serializers.Serializer):
