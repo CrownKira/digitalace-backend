@@ -41,12 +41,10 @@ class PrivatePurchseOrderApiTest(TestCase):
         testcompany = Company.objects.create(name="testcompany")
         testcompany2 = Company.objects.create(name="testcompany2")
         testsupplier = Supplier.objects.create(
-            company=testcompany,
-            name="testsupplier"
+            company=testcompany, name="testsupplier"
         )
         testsupplier2 = Supplier.objects.create(
-            company=testcompany,
-            name="testsupplier2"
+            company=testcompany, name="testsupplier2"
         )
         PurchaseOrder.objects.create(
             date="2001-01-10",
@@ -59,7 +57,7 @@ class PrivatePurchseOrderApiTest(TestCase):
             total_amount="0",
             grand_total="0",
             supplier=testsupplier,
-            company=testcompany
+            company=testcompany,
         )
         PurchaseOrder.objects.create(
             date="2001-01-10",
@@ -72,30 +70,27 @@ class PrivatePurchseOrderApiTest(TestCase):
             total_amount="0",
             grand_total="0",
             supplier=testsupplier2,
-            company=testcompany2
+            company=testcompany2,
         )
         res = self.client.get(PURCHASEORDER_URL)
 
-        purchaseorders = PurchaseOrder.objects.all().order_by("id")
-        serializer = PurchaseOrderSerializer(purchaseorders, many=True)
+        purchase_orders = PurchaseOrder.objects.all().order_by("id")
+        serializer = PurchaseOrderSerializer(purchase_orders, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
     def test_purchse_order_not_limited_to_user(self):
         """Test that purchase order returned are visible by every user"""
         testuser = get_user_model().objects.create_user(
-            "testsales@crownkiraappdev.com",
-            "password1234"
+            "testsales@crownkiraappdev.com", "password1234"
         )
         testcompany = Company.objects.create(name="testcompany")
         testcompany2 = Company.objects.create(name="testcompany2")
         testsupplier = Supplier.objects.create(
-            company=testcompany,
-            name="testsupplier"
+            company=testcompany, name="testsupplier"
         )
         testsupplier2 = Supplier.objects.create(
-            company=testcompany,
-            name="testsupplier2"
+            company=testcompany, name="testsupplier2"
         )
         PurchaseOrder.objects.create(
             date="2001-01-10",
@@ -108,7 +103,7 @@ class PrivatePurchseOrderApiTest(TestCase):
             total_amount="0",
             grand_total="0",
             supplier=testsupplier,
-            company=testcompany
+            company=testcompany,
         )
         PurchaseOrder.objects.create(
             date="2001-01-10",
@@ -121,7 +116,7 @@ class PrivatePurchseOrderApiTest(TestCase):
             total_amount="0",
             grand_total="0",
             supplier=testsupplier2,
-            company=testcompany2
+            company=testcompany2,
         )
         res = self.client.get(PURCHASEORDER_URL)
 
@@ -137,8 +132,7 @@ class PrivatePurchseOrderApiTest(TestCase):
         """Test creating a new purchase order"""
         self.company = Company.objects.create(name="testcompany")
         self.supplier = Supplier.objects.create(
-            company=self.company,
-            name="testsupplier"
+            company=self.company, name="testsupplier"
         )
         payload = {
             "supplier": self.supplier.id,
@@ -161,12 +155,11 @@ class PrivatePurchseOrderApiTest(TestCase):
         """Test creating a new invoice"""
         self.company = Company.objects.create(name="testcompany")
         self.supplier = Supplier.objects.create(
-            company=self.company,
-            name="testsupplier"
+            company=self.company, name="testsupplier"
         )
         payload = {
             "supplier": self.supplier.id,
-            "company": '',
+            "company": "",
             "date": "2001-01-10",
             "payment_date": "2001-01-10",
             "gst_rate": "0.07",

@@ -5,12 +5,10 @@ from customer import views
 
 
 router = DefaultRouter()
-router.register('invoices', views.InvoiceViewSet)
-router.register('customers', views.CustomerViewSet)
-router.register('salesorders', views.SalesOrderViewSet)
+router.register("invoices", views.InvoiceViewSet)
+router.register("customers", views.CustomerViewSet)
+router.register("sales_orders", views.SalesOrderViewSet)
 
-app_name = 'customer'
+app_name = "customer"
 
-urlpatterns = [
-    path('', include(router.urls))
-]
+urlpatterns = [path("", include(router.urls))]
