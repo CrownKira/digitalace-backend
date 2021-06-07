@@ -7,6 +7,7 @@ from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
+    Group,
 )
 from django.core.validators import FileExtensionValidator
 from django.db.models.fields import CharField

@@ -1,7 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-import re
 
 
 class BaseClassAttrForViewSet(viewsets.ModelViewSet):
@@ -17,7 +16,8 @@ class BaseClassAttrForViewSet(viewsets.ModelViewSet):
         splited = qs[1]
         if "[" and "]" in splited:
             splited = splited.split('],')[0]
-            splited = re.sub(r"[\[\]]", "", splited)
+            splited = splited.strip(']')
+            splited = splited.strip('[')
             intsplit = [int(str_id) for str_id in splited.split(",")]
             return {qsid + "__in": intsplit}
         splited = splited.strip(',')
