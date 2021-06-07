@@ -1,4 +1,12 @@
-from rest_framework import generics, authentication, permissions, status
+from django.utils.translation import ugettext_lazy as _
+
+from rest_framework import (
+    generics,
+    authentication,
+    permissions,
+    status,
+    serializers,
+)
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
@@ -33,8 +41,26 @@ class CreateUserView(generics.CreateAPIView):
         )
 
     def perform_create(self, serializer):
+        # validate confirm fields here since serializer.validate()
+        # is shared between create and update
+        email = serializer.validated_data.get("email", None)
+        password = serializer.validated_data.get("password", None)
+
+        confirm_email = serializer.initial_data.get("confirm_email", None)
+        confirm_password = serializer.initial_data.get(
+            "confirm_password", None
+        )
+
+        if email != confirm_email:
+            msg = _("Emails do not match")
+            raise serializers.ValidationError(msg)
+
+        if password != confirm_password:
+            msg = _("Passwords do not match")
+            raise serializers.ValidationError(msg)
+
         company = Company.objects.create(
-            name=serializer.validated_data.get("company", "")
+            name=serializer.initial_data.get("company", "")
         )
         serializer.save(is_staff=True, company=company)
 
@@ -55,7 +81,7 @@ class CreateTokenView(ObtainAuthToken):
                 "token": token.key,
                 "id": user.id,
                 "fullName": user.name,
-                "avatar": user.image.url,
+                "avatar": user.image.url if user.image else "",
                 "permissions": user.get_group_permissions(),
             }
         )

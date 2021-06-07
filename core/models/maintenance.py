@@ -26,7 +26,7 @@ class Customer(models.Model):
     term = models.CharField(max_length=255, blank=True)
     phone_no = models.CharField(max_length=255, blank=True)
 
-    email = models.EmailField(max_length=255, unique=True)
+    email = models.EmailField(max_length=255)
     receivables = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, default=Decimal("0.00")
     )
@@ -50,7 +50,7 @@ class Supplier(models.Model):
     term = models.CharField(max_length=255, blank=True)
     phone_no = models.CharField(max_length=255, blank=True)
 
-    email = models.EmailField(max_length=255, unique=True)
+    email = models.EmailField(max_length=255)
     payables = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, default=Decimal("0.00")
     )

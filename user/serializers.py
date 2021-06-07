@@ -28,27 +28,6 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
-    def validate(self, attrs):
-        """Validate the form"""
-        email = attrs.get("email", None)
-        password = attrs.get("password", None)
-
-        confirm_email = self.initial_data.get("confirm_email", None)
-        confirm_password = self.initial_data.get("confirm_password", None)
-        company = self.initial_data.get("company", "")
-
-        if email != confirm_email:
-            msg = _("Emails do not match")
-            raise serializers.ValidationError(msg)
-
-        if password != confirm_password:
-            msg = _("Passwords do not match")
-            raise serializers.ValidationError(msg)
-
-        # push all validated data to validated_data
-        attrs["company"] = company
-        return attrs
-
 
 class AuthTokenSerializer(serializers.Serializer):
     """Serializer for the user authentication object"""
