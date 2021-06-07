@@ -15,12 +15,13 @@ class BaseClassAttrForViewSet(viewsets.ModelViewSet):
         qsid = qs[0].strip('"')
         splited = qs[1]
         if "[" and "]" in splited:
-            splited = splited.split('],')[0]
-            splited = splited.strip(']')
-            splited = splited.strip('[')
+            # TODO: rename this var for better readability
+            splited = splited.split("],")[0]
+            splited = splited.strip("]")
+            splited = splited.strip("[")
             intsplit = [int(str_id) for str_id in splited.split(",")]
             return {qsid + "__in": intsplit}
-        splited = splited.strip(',')
+        splited = splited.strip(",")
         return {qsid: splited}
 
     def _param_to_str(self, qs):
@@ -36,11 +37,13 @@ class BaseClassAttrForViewSet(viewsets.ModelViewSet):
         qs = qs[1:]
         qs = qs[:-1]
         while qs.count('"') > 1:
+            # TODO: rename this var for better readability
             splt_char = '"'
             K = 3
             temp = qs.split(splt_char)
             res = splt_char.join(temp[:K]), splt_char.join(temp[K:])
             qs = '"' + res[1]
+            # TODO: rename this var for better readability
             fltr = res[0]
             filtered = self._params_to_int(fltr)
             queryset = queryset.filter(**filtered)
@@ -55,6 +58,7 @@ class BaseClassAttrForViewSet(viewsets.ModelViewSet):
             queryset = self._new_params_to_int(filter, queryset)
         if sort is not None:
             sorted = self._param_to_str(sort)
+            # TODO: convert "DESC" from query param to lowercase then compare
             if sorted[1] == "DESC":
                 queryset = queryset.order_by("-" + sorted[0])
             else:
