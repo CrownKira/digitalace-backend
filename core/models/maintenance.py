@@ -25,6 +25,7 @@ class Customer(models.Model):
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
     agent = models.ManyToManyField("User", blank=True)
+    attention = models.CharField(max_length=255, blank=True)
 
     name = models.CharField(max_length=255)
     address = models.TextField(blank=True)
@@ -49,6 +50,7 @@ class Supplier(models.Model):
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
     agent = models.ManyToManyField("User", blank=True)
+    attention = models.CharField(max_length=255, blank=True)
 
     name = models.CharField(max_length=255)
     address = models.TextField(blank=True)
