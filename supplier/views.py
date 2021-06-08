@@ -1,27 +1,25 @@
-from core.pagination import CustomPagination
-from core.views import BaseClassAttrForViewSet
-
+from core.views import BaseAssetAttrViewSet
 from core.models import Receive, Supplier, PurchaseOrder
 
 from supplier import serializers
 
 
-class ReceiveViewSet(BaseClassAttrForViewSet):
-    """Manage Receive in the database"""
-    queryset = Receive.objects.all()
-    serializer_class = serializers.ReceiveSerializer
-    pagination_class = CustomPagination
-
-
-class SupplierViewSet(BaseClassAttrForViewSet):
+class SupplierViewSet(BaseAssetAttrViewSet):
     """Manage Supplier in the database"""
+
     queryset = Supplier.objects.all()
     serializer_class = serializers.SupplierSerializer
-    pagination_class = CustomPagination
 
 
-class PurchaseOrderViewSet(BaseClassAttrForViewSet):
+class ReceiveViewSet(BaseAssetAttrViewSet):
+    """Manage Receive in the database"""
+
+    queryset = Receive.objects.all()
+    serializer_class = serializers.ReceiveSerializer
+
+
+class PurchaseOrderViewSet(BaseAssetAttrViewSet):
     """Manage Supplier in the database"""
+
     queryset = PurchaseOrder.objects.all()
     serializer_class = serializers.PurchaseOrderSerializer
-    pagination_class = CustomPagination

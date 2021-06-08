@@ -41,21 +41,19 @@ class PrivateSupplierApiTest(TestCase):
         testcompany = Company.objects.create(name="testcompany")
         Supplier.objects.create(
             company=testcompany,
-            name='testsupplier',
-            address='testaddress',
-            area='testarea',
-            contact='testcontact',
-            term='testterm',
-            phone_no='testphone_no'
+            name="testsupplier",
+            address="testaddress",
+            contact="testcontact",
+            term="testterm",
+            phone_no="testphone_no",
         )
         Supplier.objects.create(
             company=testcompany,
-            name='testsupplier2',
-            address='testaddress',
-            area='testarea',
-            contact='testcontact',
-            term='testterm',
-            phone_no='testphone_no'
+            name="testsupplier2",
+            address="testaddress",
+            contact="testcontact",
+            term="testterm",
+            phone_no="testphone_no",
         )
         res = self.client.get(SUPPLIER_URL)
 
@@ -72,21 +70,19 @@ class PrivateSupplierApiTest(TestCase):
         testcompany = Company.objects.create(name="testcompany")
         Supplier.objects.create(
             company=testcompany,
-            name='testsupplier',
-            address='testaddress',
-            area='testarea',
-            contact='testcontact',
-            term='testterm',
-            phone_no='testphone_no'
+            name="testsupplier",
+            address="testaddress",
+            contact="testcontact",
+            term="testterm",
+            phone_no="testphone_no",
         )
         Supplier.objects.create(
             company=testcompany,
-            name='testsupplier2',
-            address='testaddress',
-            area='testarea',
-            contact='testcontact',
-            term='testterm',
-            phone_no='testphone_no'
+            name="testsupplier2",
+            address="testaddress",
+            contact="testcontact",
+            term="testterm",
+            phone_no="testphone_no",
         )
         res = self.client.get(SUPPLIER_URL)
 
@@ -105,14 +101,13 @@ class PrivateSupplierApiTest(TestCase):
         """Test creating a new Supplier"""
         self.Company = Company.objects.create(name="testcompany")
         payload = {
-            'company': self.Company.id,
-            'attention': self.user.id,
-            'name': 'testsupplier2',
-            'address': 'testaddress',
-            'area': 'testarea',
-            'contact': 'testcontact',
-            'term': 'testterm',
-            'phone_no': 'testphone_no'
+            "company": self.Company.id,
+            "attention": self.user.id,
+            "name": "testsupplier2",
+            "address": "testaddress",
+            "contact": "testcontact",
+            "term": "testterm",
+            "phone_no": "testphone_no",
         }
         self.client.post(SUPPLIER_URL, payload)
         exists = Supplier.objects.filter(company=payload["company"])
@@ -122,14 +117,13 @@ class PrivateSupplierApiTest(TestCase):
         """Test creating a new supplier with invalid payload"""
         self.Company = Company.objects.create(name="testcompany")
         payload = {
-            'company': '',
-            'attention': self.user.id,
-            'name': 'testsupplier2',
-            'address': 'testaddress',
-            'area': 'testarea',
-            'contact': 'testcontact',
-            'term': 'testterm',
-            'phone_no': 'testphone_no'
+            "company": "",
+            "attention": self.user.id,
+            "name": "testsupplier2",
+            "address": "testaddress",
+            "contact": "testcontact",
+            "term": "testterm",
+            "phone_no": "testphone_no",
         }
         res = self.client.post(SUPPLIER_URL, payload)
 

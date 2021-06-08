@@ -3,30 +3,6 @@ from rest_framework import serializers
 from core.models import Invoice, Customer, SalesOrder
 
 
-class InvoiceSerializer(serializers.ModelSerializer):
-    """Serializer for Invoice objects"""
-
-    class Meta:
-        model = Invoice
-        fields = (
-            "id",
-            "date",
-            "payment_date",
-            "gst_rate",
-            "discount_rate",
-            "gst_amount",
-            "discount_amount",
-            "net",
-            "total_amount",
-            "grand_total",
-            "customer",
-            "sales_order",
-            "salesperson",
-            "company",
-        )
-        read_only_fields = ("id",)
-
-
 class CustomerSerializer(serializers.ModelSerializer):
     """Serializer for customer objects"""
 
@@ -38,10 +14,44 @@ class CustomerSerializer(serializers.ModelSerializer):
             "attention",
             "name",
             "address",
-            "area",
+            "city",
+            "state",
+            "zipcode",
             "contact",
             "term",
             "phone_no",
+            "email",
+            "receivables",
+            "first_seen",
+            "last_seen",
+        )
+        read_only_fields = ("id",)
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    """Serializer for Invoice objects"""
+
+    class Meta:
+        model = Invoice
+        fields = (
+            "id",
+            "company",
+            "date",
+            "description",
+            "payment_date",
+            "payment_method",
+            "payment_note",
+            "gst_rate",
+            "discount_rate",
+            "gst_amount",
+            "discount_amount",
+            "net",
+            "total_amount",
+            "grand_total",
+            "status",
+            "customer",
+            "salesperson",
+            "sales_order",
         )
         read_only_fields = ("id",)
 
@@ -53,8 +63,12 @@ class SalesOrderSerializer(serializers.ModelSerializer):
         model = SalesOrder
         fields = (
             "id",
+            "company",
             "date",
+            "description",
             "payment_date",
+            "payment_method",
+            "payment_note",
             "gst_rate",
             "discount_rate",
             "gst_amount",
@@ -62,8 +76,8 @@ class SalesOrderSerializer(serializers.ModelSerializer):
             "net",
             "total_amount",
             "grand_total",
+            "status",
             "customer",
             "salesperson",
-            "company",
         )
         read_only_fields = ("id",)

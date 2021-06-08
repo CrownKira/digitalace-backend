@@ -8,6 +8,7 @@ class Document(models.Model):
     a transaction between a buyer and a seller
     """
 
+    # document belongs to a company (not a user)
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
 
     date = models.DateField()

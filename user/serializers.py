@@ -9,7 +9,31 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ("email", "password", "name")
+        fields = (
+            "id",
+            "password",
+            "last_login",
+            "is_superuser",
+            "company",
+            "is_active",
+            "is_staff",
+            "email",
+            "name",
+            "department",
+            "role",
+            "image",
+            "resume",
+            "first_name",
+            "last_name",
+            "residential_address",
+            "postal_code",
+            "ic_no",
+            "nationality",
+            "gender",
+            "date_of_birth",
+            "date_of_commencement",
+            "date_of_cessation",
+        )
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
     # TODO: create employee by POST /employees/

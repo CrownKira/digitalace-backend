@@ -1,13 +1,15 @@
-from core.pagination import CustomPagination
-from core.views import BaseClassAttrForViewSet
-
+from core.views import BaseAssetAttrViewSet
 from core.models import Product
 
 from company import serializers
 
 
-class ProductViewSet(BaseClassAttrForViewSet):
+class ProductViewSet(BaseAssetAttrViewSet):
     """Manage product in the database"""
+
     queryset = Product.objects.all()
     serializer_class = serializers.ProductSerializer
-    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        company = self.request.user.company
+        return Product.objects.filter(category__company=company)
