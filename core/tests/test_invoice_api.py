@@ -29,9 +29,12 @@ class PrivateInvoiceApiTest(TestCase):
     """Test authorized user invoice API"""
 
     def setUp(self):
+        self.company = Company.objects.create(name="testcompany")
         self.user = get_user_model().objects.create_user(
             "test@crownkiraappdev.com",
             "password123",
+            is_staff=True,
+            company=self.company,
         )
         self.client = APIClient()
         self.client.force_authenticate(self.user)
@@ -41,15 +44,13 @@ class PrivateInvoiceApiTest(TestCase):
         testuser = get_user_model().objects.create_user(
             "testsales@crownkiraappdev.com" "password1234"
         )
-        testcompany2 = Company.objects.create(name="testcompany2")
-        testcompany = Company.objects.create(name="testcompany")
         testcustomer = Customer.objects.create(
-            company=testcompany, name="testname"
+            company=self.company, name="testname"
         )
         testsalesorder = SalesOrder.objects.create(
             salesperson=testuser,
             customer=testcustomer,
-            company=testcompany,
+            company=self.company,
             date="2001-01-10",
             payment_date="2001-01-10",
             gst_rate="0.07",
@@ -59,11 +60,12 @@ class PrivateInvoiceApiTest(TestCase):
             net="0",
             total_amount="0",
             grand_total="0",
+            status="completed",
         )
         testsalesorder2 = SalesOrder.objects.create(
             salesperson=testuser,
             customer=testcustomer,
-            company=testcompany,
+            company=self.company,
             date="2001-01-10",
             payment_date="2001-01-10",
             gst_rate="0.07",
@@ -73,6 +75,7 @@ class PrivateInvoiceApiTest(TestCase):
             net="0",
             total_amount="0",
             grand_total="0",
+            status="completed",
         )
         Invoice.objects.create(
             date="2001-01-10",
@@ -87,7 +90,8 @@ class PrivateInvoiceApiTest(TestCase):
             customer=testcustomer,
             sales_order=testsalesorder,
             salesperson=testuser,
-            company=testcompany,
+            status="paid",
+            company=self.company,
         )
         Invoice.objects.create(
             date="2001-01-10",
@@ -102,102 +106,105 @@ class PrivateInvoiceApiTest(TestCase):
             customer=testcustomer,
             sales_order=testsalesorder2,
             salesperson=testuser,
-            company=testcompany2,
+            status="paid",
+            company=self.company,
         )
 
         res = self.client.get(INVOICE_URL)
 
-        invoices = Invoice.objects.all().order_by("id")
+        invoices = Invoice.objects.all().order_by("-id")
         serializer = InvoiceSerializer(invoices, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, serializer.data)
+        self.assertEqual(res.data.get("results", None), serializer.data)
 
-    def test_invoice_not_limited_to_user(self):
-        """Test that invoices returned are visible by every user"""
-        testuser = get_user_model().objects.create_user(
-            "testsales@crownkiraappdev.com",
-            "password1234"
-        )
-        testcompany = Company.objects.create(name="testcompany")
-        testcustomer = Customer.objects.create(
-            company=testcompany, name="testname"
-        )
-        testsalesorder = SalesOrder.objects.create(
-            salesperson=testuser,
-            customer=testcustomer,
-            company=testcompany,
-            date="2001-01-10",
-            payment_date="2001-01-10",
-            gst_rate="0.07",
-            discount_rate="0",
-            gst_amount="0",
-            discount_amount="0",
-            net="0",
-            total_amount="0",
-            grand_total="0",
-        )
-        Invoice.objects.create(
-            date="2001-01-10",
-            payment_date="2001-01-10",
-            gst_rate="0.07",
-            discount_rate="0",
-            gst_amount="0",
-            discount_amount="0",
-            net="0",
-            total_amount="0",
-            grand_total="0",
-            customer=testcustomer,
-            sales_order=testsalesorder,
-            salesperson=testuser,
-            company=testcompany,
-        )
-        testuser2 = self.user
-        testcompany = Company.objects.create(name="testcompany")
-        testcustomer = Customer.objects.create(
-            company=testcompany, name="testname"
-        )
-        testsalesorder = SalesOrder.objects.create(
-            salesperson=testuser2,
-            customer=testcustomer,
-            company=testcompany,
-            date="2001-01-11",
-            payment_date="2001-01-11",
-            gst_rate="0.07",
-            discount_rate="0",
-            gst_amount="0",
-            discount_amount="0",
-            net="0",
-            total_amount="0",
-            grand_total="0",
-        )
-        Invoice.objects.create(
-            date="2001-01-11",
-            payment_date="2001-01-11",
-            gst_rate="0.07",
-            discount_rate="0",
-            gst_amount="0",
-            discount_amount="0",
-            net="0",
-            total_amount="0",
-            grand_total="0",
-            customer=testcustomer,
-            sales_order=testsalesorder,
-            salesperson=testuser2,
-            company=testcompany,
-        )
+    # Deprecated
+    # def test_invoice_not_limited_to_user(self):
+    #     """Test that invoices returned are visible by every user"""
+    #     testuser = get_user_model().objects.create_user(
+    #         "testsales@crownkiraappdev.com", "password1234"
+    #     )
+    #     testcompany = Company.objects.create(name="testcompany")
+    #     testcustomer = Customer.objects.create(
+    #         company=testcompany, name="testname"
+    #     )
+    #     testsalesorder = SalesOrder.objects.create(
+    #         salesperson=testuser,
+    #         customer=testcustomer,
+    #         company=testcompany,
+    #         date="2001-01-10",
+    #         payment_date="2001-01-10",
+    #         gst_rate="0.07",
+    #         discount_rate="0",
+    #         gst_amount="0",
+    #         discount_amount="0",
+    #         net="0",
+    #         total_amount="0",
+    #         grand_total="0",
+    #         status="completed",
+    #     )
+    #     Invoice.objects.create(
+    #         date="2001-01-10",
+    #         payment_date="2001-01-10",
+    #         gst_rate="0.07",
+    #         discount_rate="0",
+    #         gst_amount="0",
+    #         discount_amount="0",
+    #         net="0",
+    #         total_amount="0",
+    #         grand_total="0",
+    #         customer=testcustomer,
+    #         sales_order=testsalesorder,
+    #         salesperson=testuser,
+    #         company=testcompany,
+    #         status="paid",
+    #     )
+    #     testuser2 = self.user
+    #     testcompany = Company.objects.create(name="testcompany")
+    #     testcustomer = Customer.objects.create(
+    #         company=testcompany, name="testname"
+    #     )
+    #     testsalesorder = SalesOrder.objects.create(
+    #         salesperson=testuser2,
+    #         customer=testcustomer,
+    #         company=testcompany,
+    #         date="2001-01-11",
+    #         payment_date="2001-01-11",
+    #         gst_rate="0.07",
+    #         discount_rate="0",
+    #         gst_amount="0",
+    #         discount_amount="0",
+    #         net="0",
+    #         total_amount="0",
+    #         grand_total="0",
+    #     )
+    #     Invoice.objects.create(
+    #         date="2001-01-11",
+    #         payment_date="2001-01-11",
+    #         gst_rate="0.07",
+    #         discount_rate="0",
+    #         gst_amount="0",
+    #         discount_amount="0",
+    #         net="0",
+    #         total_amount="0",
+    #         grand_total="0",
+    #         customer=testcustomer,
+    #         sales_order=testsalesorder,
+    #         salesperson=testuser2,
+    #         company=testcompany,
+    #     )
 
-        res = self.client.get(INVOICE_URL)
+    #     res = self.client.get(INVOICE_URL)
 
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data), 2)
+    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
+    #     self.assertEqual(len(res.data), 2)
 
-        self.user = testuser
-        self.client.force_authenticate(self.user)
+    #     self.user = testuser
+    #     self.client.force_authenticate(self.user)
 
-        res = self.client.get(INVOICE_URL)
+    #     res = self.client.get(INVOICE_URL)
 
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data), 2)
+    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
+    #     self.assertEqual(len(res.data), 2)
 
     def test_create_invoice_successful(self):
         """Test creating a new invoice"""
@@ -218,6 +225,7 @@ class PrivateInvoiceApiTest(TestCase):
             net="0",
             total_amount="0",
             grand_total="0",
+            status="completed",
         )
         payload = {
             "salesperson": self.user.id,
@@ -233,6 +241,7 @@ class PrivateInvoiceApiTest(TestCase):
             "net": "0",
             "total_amount": "0",
             "grand_total": "0",
+            "status": "paid",
         }
         self.client.post(INVOICE_URL, payload)
         exists = Invoice.objects.filter(customer=payload["customer"])
@@ -257,6 +266,7 @@ class PrivateInvoiceApiTest(TestCase):
             "net": "0",
             "total_amount": "0",
             "grand_total": "0",
+            "status": "paid",
         }
         res = self.client.post(INVOICE_URL, payload)
 

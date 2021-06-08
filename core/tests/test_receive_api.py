@@ -30,21 +30,24 @@ class PrivateReceiveApiTest(TestCase):
     """Test authorized user receive API"""
 
     def setUp(self):
+        self.company = Company.objects.create(name="testcompany")
         self.user = get_user_model().objects.create_user(
-            "test@crownkiraappdev.com", "password123"
+            "test@crownkiraappdev.com",
+            "password123",
+            is_staff=True,
+            company=self.company,
         )
         self.client = APIClient()
         self.client.force_authenticate(self.user)
 
     def test_retreive_receive(self):
         """Test retreiving receive"""
-        testcompany = Company.objects.create(name="testcompany")
         testsupplier = Supplier.objects.create(
-            company=testcompany, name="testsupplier"
+            company=self.company, name="testsupplier"
         )
         testpurchaseorder = PurchaseOrder.objects.create(
             supplier=testsupplier,
-            company=testcompany,
+            company=self.company,
             date="2001-01-10",
             payment_date="2001-01-10",
             gst_rate="0.07",
@@ -54,10 +57,11 @@ class PrivateReceiveApiTest(TestCase):
             net="0",
             total_amount="0",
             grand_total="0",
+            status="paid",
         )
         testpurchaseorder2 = PurchaseOrder.objects.create(
             supplier=testsupplier,
-            company=testcompany,
+            company=self.company,
             date="2001-01-10",
             payment_date="2001-01-10",
             gst_rate="0.07",
@@ -67,11 +71,12 @@ class PrivateReceiveApiTest(TestCase):
             net="0",
             total_amount="0",
             grand_total="0",
+            status="paid",
         )
         Receive.objects.create(
             supplier=testsupplier,
             purchase_order=testpurchaseorder,
-            company=testcompany,
+            company=self.company,
             date="2001-01-10",
             payment_date="2001-01-10",
             gst_rate="0.07",
@@ -81,11 +86,12 @@ class PrivateReceiveApiTest(TestCase):
             net="0",
             total_amount="0",
             grand_total="0",
+            status="paid",
         )
         Receive.objects.create(
             supplier=testsupplier,
             purchase_order=testpurchaseorder2,
-            company=testcompany,
+            company=self.company,
             date="2001-01-10",
             payment_date="2001-01-10",
             gst_rate="0.07",
@@ -95,14 +101,15 @@ class PrivateReceiveApiTest(TestCase):
             net="0",
             total_amount="0",
             grand_total="0",
+            status="paid",
         )
 
         res = self.client.get(RECEIVE_URL)
 
-        receives = Receive.objects.all().order_by("id")
+        receives = Receive.objects.all().order_by("-id")
         serializer = ReceiveSerializer(receives, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, serializer.data)
+        self.assertEqual(res.data.get("results", None), serializer.data)
 
     def test_create_receive_successful(self):
         """Test creating a new receive"""
@@ -122,6 +129,7 @@ class PrivateReceiveApiTest(TestCase):
             net="0",
             total_amount="0",
             grand_total="0",
+            status="completed",
         )
         payload = {
             "supplier": self.Supplier.id,
@@ -136,6 +144,7 @@ class PrivateReceiveApiTest(TestCase):
             "net": "0",
             "total_amount": "0",
             "grand_total": "0",
+            "status": "paid",
         }
         self.client.post(RECEIVE_URL, payload)
         exists = Receive.objects.filter(company=payload["company"])
@@ -159,6 +168,7 @@ class PrivateReceiveApiTest(TestCase):
             net="0",
             total_amount="0",
             grand_total="0",
+            status="completed",
         )
         payload = {
             "supplier": "",
@@ -173,6 +183,7 @@ class PrivateReceiveApiTest(TestCase):
             "net": "0",
             "total_amount": "0",
             "grand_total": "0",
+            "status": "paid",
         }
         res = self.client.post(RECEIVE_URL, payload)
 

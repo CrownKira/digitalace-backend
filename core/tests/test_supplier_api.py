@@ -29,18 +29,20 @@ class PrivateSupplierApiTest(TestCase):
     """Test authorized user Supplier API"""
 
     def setUp(self):
+        self.company = Company.objects.create(name="testcompany")
         self.user = get_user_model().objects.create_user(
             "test@crownkiraappdev.com",
             "password123",
+            is_staff=True,
+            company=self.company,
         )
         self.client = APIClient()
         self.client.force_authenticate(self.user)
 
     def test_retreive_supplier(self):
         """Test retreiving supplier"""
-        testcompany = Company.objects.create(name="testcompany")
         Supplier.objects.create(
-            company=testcompany,
+            company=self.company,
             name="testsupplier",
             address="testaddress",
             contact="testcontact",
@@ -48,7 +50,7 @@ class PrivateSupplierApiTest(TestCase):
             phone_no="testphone_no",
         )
         Supplier.objects.create(
-            company=testcompany,
+            company=self.company,
             name="testsupplier2",
             address="testaddress",
             contact="testcontact",
@@ -57,45 +59,46 @@ class PrivateSupplierApiTest(TestCase):
         )
         res = self.client.get(SUPPLIER_URL)
 
-        suppliers = Supplier.objects.all().order_by("id")
+        suppliers = Supplier.objects.all().order_by("-id")
         serializer = SupplierSerializer(suppliers, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, serializer.data)
+        self.assertEqual(res.data.get("results", None), serializer.data)
 
-    def test_supplier_not_limited_to_user(self):
-        """Test that suppliers returned are visible by every user"""
-        testuser = get_user_model().objects.create_user(
-            "testsales@crownkiraappdev.com" "password1234"
-        )
-        testcompany = Company.objects.create(name="testcompany")
-        Supplier.objects.create(
-            company=testcompany,
-            name="testsupplier",
-            address="testaddress",
-            contact="testcontact",
-            term="testterm",
-            phone_no="testphone_no",
-        )
-        Supplier.objects.create(
-            company=testcompany,
-            name="testsupplier2",
-            address="testaddress",
-            contact="testcontact",
-            term="testterm",
-            phone_no="testphone_no",
-        )
-        res = self.client.get(SUPPLIER_URL)
+    # Deprecated
+    # def test_supplier_not_limited_to_user(self):
+    #     """Test that suppliers returned are visible by every user"""
+    #     testuser = get_user_model().objects.create_user(
+    #         "testsales@crownkiraappdev.com" "password1234"
+    #     )
+    #     testcompany = Company.objects.create(name="testcompany")
+    #     Supplier.objects.create(
+    #         company=testcompany,
+    #         name="testsupplier",
+    #         address="testaddress",
+    #         contact="testcontact",
+    #         term="testterm",
+    #         phone_no="testphone_no",
+    #     )
+    #     Supplier.objects.create(
+    #         company=testcompany,
+    #         name="testsupplier2",
+    #         address="testaddress",
+    #         contact="testcontact",
+    #         term="testterm",
+    #         phone_no="testphone_no",
+    #     )
+    #     res = self.client.get(SUPPLIER_URL)
 
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data), 2)
+    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
+    #     self.assertEqual(len(res.data), 2)
 
-        self.user = testuser
-        self.client.force_authenticate(self.user)
+    #     self.user = testuser
+    #     self.client.force_authenticate(self.user)
 
-        res = self.client.get(SUPPLIER_URL)
+    #     res = self.client.get(SUPPLIER_URL)
 
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data), 2)
+    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
+    #     self.assertEqual(len(res.data), 2)
 
     def test_create_supplier_successful(self):
         """Test creating a new Supplier"""
