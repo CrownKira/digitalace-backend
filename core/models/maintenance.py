@@ -24,7 +24,7 @@ class Customer(models.Model):
     """Customer managed by a company"""
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
-    attention = models.ManyToManyField("User", blank=True)
+    agent = models.ManyToManyField("User", blank=True)
 
     name = models.CharField(max_length=255)
     address = models.TextField(blank=True)
@@ -48,7 +48,7 @@ class Supplier(models.Model):
     """Supplier managed by a company"""
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
-    attention = models.ManyToManyField("User", blank=True)
+    agent = models.ManyToManyField("User", blank=True)
 
     name = models.CharField(max_length=255)
     address = models.TextField(blank=True)
@@ -72,7 +72,7 @@ class ProductCategory(models.Model):
     """Category of a product"""
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
-    attention = models.ManyToManyField("User", blank=True)
+    agent = models.ManyToManyField("User", blank=True)
 
     name = models.CharField(max_length=255)
 
