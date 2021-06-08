@@ -42,10 +42,10 @@ class ProductSerializer(serializers.ModelSerializer):
         return obj.thumbnail.url if obj.thumbnail else ""
 
     def validate(self, attrs):
-        """Validate and authenticate the user"""
+        """Validate image and thumbnail and add it to validated_data"""
         image = self.initial_data.get("image", None)
         thumbnail = self.initial_data.get("thumbnail", None)
-        # TODO: validate it is a valid image
+        # TODO: validate if it is a valid image
         if image:
             attrs["image"] = image
         if thumbnail:

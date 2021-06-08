@@ -1,6 +1,8 @@
 from core.views import BaseAttrViewSet, BaseAssetAttrViewSet
 from core.models import Product, ProductCategory
 
+from django_filters import rest_framework as filters
+
 from company import serializers
 
 
@@ -9,6 +11,18 @@ class ProductCategoryViewSet(BaseAssetAttrViewSet):
 
     queryset = ProductCategory.objects.all()
     serializer_class = serializers.ProductCategorySerializer
+    search_fields = [
+        "name",
+    ]
+
+
+class ProductFilter(filters.FilterSet):
+    class Meta:
+        model = Product
+        fields = {
+            "stock": ["lt", "gt", "lte", "gte"],
+            "sales": ["lt", "gt", "lte", "gte"],
+        }
 
 
 class ProductViewSet(BaseAttrViewSet):
@@ -16,6 +30,17 @@ class ProductViewSet(BaseAttrViewSet):
 
     queryset = Product.objects.all()
     serializer_class = serializers.ProductSerializer
+    filterset_fields = ("stock", "sales")
+    search_fields = [
+        "category__name",
+        "supplier__name",
+        "name",
+        "unit",
+        "cost",
+        "unit_price",
+        "stock",
+        "sales",
+    ]
 
     def get_queryset(self):
         company = self.request.user.company

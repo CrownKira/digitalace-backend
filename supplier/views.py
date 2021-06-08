@@ -1,7 +1,16 @@
+from django_filters import rest_framework as filters
+
 from core.views import BaseAssetAttrViewSet
 from core.models import Receive, Supplier, PurchaseOrder
-
 from supplier import serializers
+
+
+class SupplierFilter(filters.FilterSet):
+    class Meta:
+        model = Supplier
+        fields = {
+            "last_seen": ["lt", "gt", "lte", "gte"],
+        }
 
 
 class SupplierViewSet(BaseAssetAttrViewSet):
@@ -9,6 +18,20 @@ class SupplierViewSet(BaseAssetAttrViewSet):
 
     queryset = Supplier.objects.all()
     serializer_class = serializers.SupplierSerializer
+    filterset_class = SupplierFilter
+    search_fields = [
+        "attention",
+        "name",
+        "address",
+        "city",
+        "state",
+        "zipcode",
+        "contact",
+        "term",
+        "phone_no",
+        "email",
+        "payables",
+    ]
 
 
 class ReceiveViewSet(BaseAssetAttrViewSet):
@@ -16,6 +39,18 @@ class ReceiveViewSet(BaseAssetAttrViewSet):
 
     queryset = Receive.objects.all()
     serializer_class = serializers.ReceiveSerializer
+    search_fields = [
+        "id",
+        "date",
+        "description",
+        "payment_date",
+        "payment_method",
+        "payment_note",
+        "grand_total",
+        "status",
+        "supplier__name",
+        "purchase_order__id",
+    ]
 
 
 class PurchaseOrderViewSet(BaseAssetAttrViewSet):
@@ -23,3 +58,14 @@ class PurchaseOrderViewSet(BaseAssetAttrViewSet):
 
     queryset = PurchaseOrder.objects.all()
     serializer_class = serializers.PurchaseOrderSerializer
+    search_fields = [
+        "id",
+        "date",
+        "description",
+        "payment_date",
+        "payment_method",
+        "payment_note",
+        "grand_total",
+        "status",
+        "supplier__name",
+    ]

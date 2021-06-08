@@ -6,6 +6,8 @@ from core.models import Invoice, Customer, SalesOrder
 class CustomerSerializer(serializers.ModelSerializer):
     """Serializer for customer objects"""
 
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = Customer
         fields = (
@@ -22,10 +24,22 @@ class CustomerSerializer(serializers.ModelSerializer):
             "phone_no",
             "email",
             "receivables",
+            "image"
             # "first_seen",
             # "last_seen",
         )
         read_only_fields = ("id", "company")
+
+    def get_image(self, obj):
+        return obj.image.url if obj.image else ""
+
+    def validate(self, attrs):
+        """Validate image and add it to validated_data"""
+        image = self.initial_data.get("image", None)
+        # TODO: validate if it is a valid image
+        if image:
+            attrs["image"] = image
+        return attrs
 
 
 class InvoiceSerializer(serializers.ModelSerializer):

@@ -9,6 +9,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
+        # use the following command to easily
+        # retrieve all fields of User:
+        # [f.name for f in User._meta.fields]
         fields = (
             # "id",
             "password",
