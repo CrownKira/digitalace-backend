@@ -9,7 +9,7 @@ class SupplierFilter(filters.FilterSet):
     class Meta:
         model = Supplier
         fields = {
-            "last_seen": ["lt", "gt", "lte", "gte"],
+            "last_seen": ["lt", "gt", "lte", "gte", "exact"],
         }
 
 

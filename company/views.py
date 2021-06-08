@@ -20,8 +20,8 @@ class ProductFilter(filters.FilterSet):
     class Meta:
         model = Product
         fields = {
-            "stock": ["lt", "gt", "lte", "gte"],
-            "sales": ["lt", "gt", "lte", "gte"],
+            "stock": ["lt", "gt", "lte", "gte", "exact"],
+            "sales": ["lt", "gt", "lte", "gte", "exact"],
         }
 
 
@@ -30,7 +30,7 @@ class ProductViewSet(BaseAttrViewSet):
 
     queryset = Product.objects.all()
     serializer_class = serializers.ProductSerializer
-    filterset_fields = ("stock", "sales")
+    filterset_class = ProductFilter
     search_fields = [
         "category__name",
         "supplier__name",

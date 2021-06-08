@@ -9,7 +9,7 @@ class CustomerFilter(filters.FilterSet):
     class Meta:
         model = Customer
         fields = {
-            "last_seen": ["lt", "gt", "lte", "gte"],
+            "last_seen": ["lt", "gt", "lte", "gte", "exact"],
         }
 
 
