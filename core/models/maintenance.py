@@ -29,7 +29,9 @@ class Customer(models.Model):
 
     name = models.CharField(max_length=255)
     address = models.TextField(blank=True)
-    area = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=255, blank=True)
+    state = models.CharField(max_length=255, blank=True)
+    zipcode = models.CharField(max_length=255, blank=True)
     contact = models.CharField(max_length=255, blank=True)
     term = models.CharField(max_length=255, blank=True)
     phone_no = models.CharField(max_length=255, blank=True)
@@ -54,7 +56,9 @@ class Supplier(models.Model):
 
     name = models.CharField(max_length=255)
     address = models.TextField(blank=True)
-    area = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=255, blank=True)
+    state = models.CharField(max_length=255, blank=True)
+    zipcode = models.CharField(max_length=255, blank=True)
     contact = models.CharField(max_length=255, blank=True)
     term = models.CharField(max_length=255, blank=True)
     phone_no = models.CharField(max_length=255, blank=True)
