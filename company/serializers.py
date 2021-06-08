@@ -15,6 +15,9 @@ class ProductCategorySerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     """Serializer for product objects"""
 
+    image = serializers.SerializerMethodField()
+    thumbnail = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = (
@@ -31,3 +34,20 @@ class ProductSerializer(serializers.ModelSerializer):
             "sales",
         )
         read_only_fields = ("id",)
+
+    def get_image(self, obj):
+        return obj.image.url if obj.image else ""
+
+    def get_thumbnail(self, obj):
+        return obj.thumbnail.url if obj.thumbnail else ""
+
+    def validate(self, attrs):
+        """Validate and authenticate the user"""
+        image = self.initial_data.get("image", None)
+        thumbnail = self.initial_data.get("thumbnail", None)
+        # TODO: validate it is a valid image
+        if image:
+            attrs["image"] = image
+        if thumbnail:
+            attrs["thumbnail"] = thumbnail
+        return attrs

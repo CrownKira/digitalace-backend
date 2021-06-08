@@ -20,6 +20,20 @@ def product_thumbnail_file_path(instance, filename):
     )
 
 
+def customer_image_file_path(instance, filename):
+    """Generate file path for new user image"""
+    return os.path.join(
+        "uploads/customer/images/", get_unique_filename(filename)
+    )
+
+
+def supplier_image_file_path(instance, filename):
+    """Generate file path for new user image"""
+    return os.path.join(
+        "uploads/supplier/images/", get_unique_filename(filename)
+    )
+
+
 class Customer(models.Model):
     """Customer managed by a company"""
 
@@ -42,6 +56,7 @@ class Customer(models.Model):
     )
     first_seen = models.DateField(null=True, blank=True)
     last_seen = models.DateField(null=True, blank=True)
+    image = models.ImageField(upload_to=customer_image_file_path, blank=True)
 
     def __str__(self):
         return self.name
@@ -69,6 +84,7 @@ class Supplier(models.Model):
     )
     first_seen = models.DateField(null=True, blank=True)
     last_seen = models.DateField(null=True, blank=True)
+    image = models.ImageField(upload_to=supplier_image_file_path, blank=True)
 
     def __str__(self):
         return self.name

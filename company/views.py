@@ -20,3 +20,6 @@ class ProductViewSet(BaseAttrViewSet):
     def get_queryset(self):
         company = self.request.user.company
         return Product.objects.filter(category__company=company)
+
+    def perform_update(self, serializer):
+        serializer.save()

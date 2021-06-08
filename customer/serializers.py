@@ -22,8 +22,8 @@ class CustomerSerializer(serializers.ModelSerializer):
             "phone_no",
             "email",
             "receivables",
-            "first_seen",
-            "last_seen",
+            # "first_seen",
+            # "last_seen",
         )
         read_only_fields = ("id", "company")
 
