@@ -25,7 +25,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             "first_seen",
             "last_seen",
         )
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "company")
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
@@ -53,7 +53,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "salesperson",
             "sales_order",
         )
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "company")
 
 
 class SalesOrderSerializer(serializers.ModelSerializer):
@@ -80,4 +80,4 @@ class SalesOrderSerializer(serializers.ModelSerializer):
             "customer",
             "salesperson",
         )
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "company")

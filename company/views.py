@@ -1,4 +1,4 @@
-from core.views import BaseAssetAttrViewSet
+from core.views import BaseAttrViewSet, BaseAssetAttrViewSet
 from core.models import Product, ProductCategory
 
 from company import serializers
@@ -11,7 +11,7 @@ class ProductCategoryViewSet(BaseAssetAttrViewSet):
     serializer_class = serializers.ProductCategorySerializer
 
 
-class ProductViewSet(BaseAssetAttrViewSet):
+class ProductViewSet(BaseAttrViewSet):
     """Manage product in the database"""
 
     queryset = Product.objects.all()

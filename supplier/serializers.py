@@ -25,7 +25,7 @@ class SupplierSerializer(serializers.ModelSerializer):
             "first_seen",
             "last_seen",
         )
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "company")
 
 
 class ReceiveSerializer(serializers.ModelSerializer):
@@ -52,7 +52,7 @@ class ReceiveSerializer(serializers.ModelSerializer):
             "supplier",
             "purchase_order",
         )
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "company")
 
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
@@ -78,4 +78,4 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             "status",
             "supplier",
         )
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "company")
