@@ -8,7 +8,7 @@ class ProductCategoryViewSet(BaseAssetAttrViewSet):
     """Manage product category in the database"""
 
     queryset = ProductCategory.objects.all()
-    serializer_class = serializers.ProductSerializer
+    serializer_class = serializers.ProductCategorySerializer
 
 
 class ProductViewSet(BaseAssetAttrViewSet):
