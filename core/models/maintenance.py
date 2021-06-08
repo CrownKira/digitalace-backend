@@ -13,6 +13,13 @@ def product_image_file_path(instance, filename):
     )
 
 
+def product_thumbnail_file_path(instance, filename):
+    """Generate file path for new user image"""
+    return os.path.join(
+        "uploads/product/thumbnails/", get_unique_filename(filename)
+    )
+
+
 class Customer(models.Model):
     """Customer managed by a company"""
 
@@ -90,6 +97,9 @@ class Product(models.Model):
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     image = models.ImageField(upload_to=product_image_file_path, blank=True)
+    thumbnail = models.ImageField(
+        upload_to=product_thumbnail_file_path, blank=True
+    )
     stock = models.IntegerField(blank=True, default=0)
     sales = models.IntegerField(blank=True, default=0)
 
