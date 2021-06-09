@@ -14,7 +14,8 @@ ALLOWED_HOSTS = ["api"]
 # HTTPS settings
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
+# TODO: Configuring HTTPS for your Elastic Beanstalk environment
+# SECURE_SSL_REDIRECT = True
 
 # HSTS settings
 SECURE_HSTS_SECONDS = 31536000  # 1 year
