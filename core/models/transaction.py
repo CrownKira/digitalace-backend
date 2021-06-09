@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models.deletion import SET_NULL
+from django.utils.translation import gettext_lazy as _
 
 
 class Document(models.Model):
@@ -8,7 +9,15 @@ class Document(models.Model):
     a transaction between a buyer and a seller
     """
 
-    # document belongs to a company (not a user)
+    class DeliveryStatus(models.TextChoices):
+        COMPLETED = "CP", _("Completed")
+        PENDING = "PD", _("Pending")
+        CANCELLED = "CC", _("Cancelled")
+
+    class PaymentStatus(models.TextChoices):
+        PAID = "PD", _("Paid")
+        UNPAID = "UPD", _("Unpaid")
+
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
 
     date = models.DateField()
@@ -24,8 +33,6 @@ class Document(models.Model):
     net = models.DecimalField(max_digits=10, decimal_places=2)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     grand_total = models.DecimalField(max_digits=10, decimal_places=2)
-
-    status = models.CharField(max_length=255)
 
     class Meta:
         # https://docs.djangoproject.com/en/3.2/topics/db/models/#abstract-base-classes
@@ -65,6 +72,12 @@ class Invoice(Document):
     sales_order = models.OneToOneField(
         "SalesOrder", on_delete=SET_NULL, null=True, blank=True
     )
+    status = models.CharField(
+        max_length=3,
+        blank=True,
+        choices=Document.PaymentStatus.choices,
+        default=Document.PaymentStatus.UNPAID,
+    )
 
 
 class InvoiceItem(LineItem):
@@ -81,6 +94,12 @@ class SalesOrder(Document):
     )
     salesperson = models.ForeignKey(
         "User", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    status = models.CharField(
+        max_length=3,
+        blank=True,
+        choices=Document.DeliveryStatus.choices,
+        default=Document.DeliveryStatus.PENDING,
     )
 
 
@@ -99,6 +118,12 @@ class Receive(Document):
     purchase_order = models.OneToOneField(
         "PurchaseOrder", on_delete=SET_NULL, null=True, blank=True
     )
+    status = models.CharField(
+        max_length=3,
+        blank=True,
+        choices=Document.PaymentStatus.choices,
+        default=Document.PaymentStatus.UNPAID,
+    )
 
 
 class ReceiveItem(LineItem):
@@ -112,6 +137,12 @@ class PurchaseOrder(Document):
 
     supplier = models.ForeignKey(
         "Supplier", on_delete=models.SET_NULL, null=True
+    )
+    status = models.CharField(
+        max_length=3,
+        blank=True,
+        choices=Document.DeliveryStatus.choices,
+        default=Document.DeliveryStatus.PENDING,
     )
 
 
