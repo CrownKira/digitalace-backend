@@ -5,10 +5,9 @@ from company import views
 
 
 router = DefaultRouter()
-router.register('products', views.ProductViewSet)
+router.register("categories", views.ProductCategoryViewSet)
+router.register("products", views.ProductViewSet)
 
-app_name = 'company'
+app_name = "company"
 
-urlpatterns = [
-    path('', include(router.urls))
-]
+urlpatterns = [path("", include(router.urls))]
