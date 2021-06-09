@@ -79,10 +79,9 @@ class PrivateCustomerApiTest(TestCase):
 
     def test_create_customer_successful(self):
         """Test creating a new customer"""
-        self.Company = Company.objects.create(name="testcompany")
         payload = {
-            "company": self.Company.id,
-            "name": "testname",
+            "company": self.company,
+            "name": "testcustomer",
         }
         self.client.post(CUSTOMER_URL, payload)
         exists = Customer.objects.filter(company=payload["company"])
@@ -90,9 +89,8 @@ class PrivateCustomerApiTest(TestCase):
 
     def test_create_customer_invalid(self):
         """Test creating a new customer"""
-        self.Company = Company.objects.create(name="testcompany")
         payload = {
-            "company": self.Company.id,
+            "company": self.company,
             "name": "",
         }
         res = self.client.post(CUSTOMER_URL, payload)

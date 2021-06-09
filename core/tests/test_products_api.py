@@ -40,7 +40,7 @@ class PrivateProductApiTest(TestCase):
 
     def test_retreive_product(self):
         """Test retreiving product"""
-        testsupplier = Supplier.objects.create(
+        supplier = Supplier.objects.create(
             company=self.company, name="testsupplier"
         )
         testproductcategory = ProductCategory.objects.create(
@@ -48,7 +48,7 @@ class PrivateProductApiTest(TestCase):
         )
         Product.objects.create(
             category=testproductcategory,
-            supplier=testsupplier,
+            supplier=supplier,
             name="testproduct",
             unit="0",
             cost="0",
@@ -56,7 +56,7 @@ class PrivateProductApiTest(TestCase):
         )
         Product.objects.create(
             category=testproductcategory,
-            supplier=testsupplier,
+            supplier=supplier,
             name="testproduct2",
             unit="0",
             cost="0",
@@ -76,15 +76,15 @@ class PrivateProductApiTest(TestCase):
     #         "testsales@crownkiraappdev.com" "password1234"
     #     )
     #     testcompany = Company.objects.create(name="testcompany")
-    #     testsupplier = Supplier.objects.create(
-    #         company=testcompany, name='testsupplier'
+    #     supplier = Supplier.objects.create(
+    #         company=testcompany, name='supplier'
     #     )
     #     testproductcategory = ProductCategory.objects.create(
     #         company=testcompany, name='testproductname'
     #     )
     #     Product.objects.create(
     #         category=testproductcategory,
-    #         supplier=testsupplier,
+    #         supplier=supplier,
     #         name='testproduct',
     #         unit='0',
     #         cost='0',
@@ -92,7 +92,7 @@ class PrivateProductApiTest(TestCase):
     #     )
     #     Product.objects.create(
     #         category=testproductcategory,
-    #         supplier=testsupplier,
+    #         supplier=supplier,
     #         name='testproduct2',
     #         unit='0',
     #         cost='0',
