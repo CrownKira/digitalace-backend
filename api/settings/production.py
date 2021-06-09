@@ -2,6 +2,8 @@ import os
 
 from api.settings.common import *
 
+# TODO: fix F401, F403, F405
+
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = False
