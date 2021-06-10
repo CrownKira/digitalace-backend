@@ -7,7 +7,7 @@ services:
       context: .
     environment:
       - PGHOST=db
-      - PGNAME=digitalace_db
+      - PGDATABASE=digitalace_db
       - PGUSER=postgres
       - PGPASSWORD=postgres_password
     depends_on:
