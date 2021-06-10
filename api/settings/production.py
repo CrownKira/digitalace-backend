@@ -14,10 +14,13 @@ ALLOWED_HOSTS = ["api"]
 # HTTPS settings
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-# TODO: Configuring HTTPS for your Elastic Beanstalk environment
+# TODO: configure HTTPS for Elastic Beanstalk environment
 # SECURE_SSL_REDIRECT = True
 
 # HSTS settings
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_PRELOAD = True
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+AWS_STORAGE_BUCKET_NAME = "digitalace"
+AWS_S3_CUSTOM_DOMAIN = "%s.s3.amazonaws.com" % AWS_STORAGE_BUCKET_NAME
