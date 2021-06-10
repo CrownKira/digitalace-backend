@@ -7,28 +7,35 @@ from .user import get_unique_filename
 
 
 def product_image_file_path(instance, filename):
-    """Generate file path for new user image"""
+    """Generate file path for new product image"""
     return os.path.join(
         "uploads/product/images/", get_unique_filename(filename)
     )
 
 
 def product_thumbnail_file_path(instance, filename):
-    """Generate file path for new user image"""
+    """Generate file path for new product thumbnail"""
     return os.path.join(
         "uploads/product/thumbnails/", get_unique_filename(filename)
     )
 
 
+def category_image_file_path(instance, filename):
+    """Generate file path for new category image"""
+    return os.path.join(
+        "uploads/category/thumbnails/", get_unique_filename(filename)
+    )
+
+
 def customer_image_file_path(instance, filename):
-    """Generate file path for new user image"""
+    """Generate file path for new customer image"""
     return os.path.join(
         "uploads/customer/images/", get_unique_filename(filename)
     )
 
 
 def supplier_image_file_path(instance, filename):
-    """Generate file path for new user image"""
+    """Generate file path for new supplier image"""
     return os.path.join(
         "uploads/supplier/images/", get_unique_filename(filename)
     )
@@ -97,6 +104,7 @@ class ProductCategory(models.Model):
     agent = models.ManyToManyField("User", blank=True)
 
     name = models.CharField(max_length=255)
+    image = models.ImageField(upload_to=category_image_file_path, blank=True)
 
     class Meta:
         verbose_name_plural = "product categories"

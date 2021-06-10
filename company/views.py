@@ -22,6 +22,7 @@ class ProductFilter(filters.FilterSet):
         fields = {
             "stock": ["lt", "gt", "lte", "gte", "exact"],
             "sales": ["lt", "gt", "lte", "gte", "exact"],
+            "category": ["exact"],
         }
 
 
