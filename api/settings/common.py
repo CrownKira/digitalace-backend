@@ -132,13 +132,14 @@ REST_FRAMEWORK = {
     ),
 }
 
+
 # S3 BUCKETS
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html
 AWS_ACCESS_KEY_ID = os.environ.get(
-    "AWS_ACCESS_KEY_ID", config("AWS_ACCESS_KEY_ID")
+    "AWS_ACCESS_KEY_ID", config("AWS_ACCESS_KEY_ID", default="")
 )
 AWS_SECRET_ACCESS_KEY = os.environ.get(
-    "AWS_SECRET_ACCESS_KEY", config("AWS_SECRET_ACCESS_KEY")
+    "AWS_SECRET_ACCESS_KEY", config("AWS_SECRET_ACCESS_KEY", default="")
 )
 AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
 AWS_DEFAULT_ACL = "public-read"
