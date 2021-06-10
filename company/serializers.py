@@ -6,17 +6,36 @@ from core.models import Product, ProductCategory
 class ProductCategorySerializer(serializers.ModelSerializer):
     """Serializer for product objects"""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        try:
+            if self.context["request"].method in ["GET"]:
+                self.fields["image"] = serializers.SerializerMethodField()
+        except KeyError:
+            pass
+
     class Meta:
         model = ProductCategory
-        fields = ("id", "company", "name")
+        fields = ("id", "company", "name", "image")
         read_only_fields = ("id", "company")
+
+    def get_image(self, obj):
+        return obj.image.url if obj.image else ""
 
 
 class ProductSerializer(serializers.ModelSerializer):
     """Serializer for product objects"""
 
-    image = serializers.SerializerMethodField()
-    thumbnail = serializers.SerializerMethodField()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        try:
+            if self.context["request"].method in ["GET"]:
+                self.fields["image"] = serializers.SerializerMethodField()
+                self.fields["thumbnail"] = serializers.SerializerMethodField()
+        except KeyError:
+            pass
 
     class Meta:
         model = Product
@@ -40,14 +59,3 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_thumbnail(self, obj):
         return obj.thumbnail.url if obj.thumbnail else ""
-
-    def validate(self, attrs):
-        """Validate image and thumbnail and add it to validated_data"""
-        image = self.initial_data.get("image", None)
-        thumbnail = self.initial_data.get("thumbnail", None)
-        # TODO: validate if it is a valid image
-        if image:
-            attrs["image"] = image
-        if thumbnail:
-            attrs["thumbnail"] = thumbnail
-        return attrs

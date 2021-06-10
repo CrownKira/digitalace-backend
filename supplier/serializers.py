@@ -6,7 +6,14 @@ from core.models import Receive, Supplier, PurchaseOrder
 class SupplierSerializer(serializers.ModelSerializer):
     """Serializer for Supplier objects"""
 
-    image = serializers.SerializerMethodField()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        try:
+            if self.context["request"].method in ["GET"]:
+                self.fields["image"] = serializers.SerializerMethodField()
+        except KeyError:
+            pass
 
     class Meta:
         model = Supplier
@@ -32,14 +39,6 @@ class SupplierSerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         return obj.image.url if obj.image else ""
-
-    def validate(self, attrs):
-        """Validate image and add it to validated_data"""
-        image = self.initial_data.get("image", None)
-        # TODO: validate if it is a valid image
-        if image:
-            attrs["image"] = image
-        return attrs
 
 
 class ReceiveSerializer(serializers.ModelSerializer):
