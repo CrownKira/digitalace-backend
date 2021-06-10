@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 import os
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,6 +31,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "django_filters",
+    "storages",
     "core",
     "user",
     "customer",
@@ -111,17 +113,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.2/howto/static-files/
-
-# client can only access server via /api/
-STATIC_URL = "/api/static/"
-MEDIA_URL = "/api/media/"
-
-MEDIA_ROOT = "/vol/web/media"
-STATIC_ROOT = "vol/web/static"
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
@@ -140,3 +131,25 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
     ),
 }
+
+
+# S3 BUCKETS
+# https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html
+AWS_ACCESS_KEY_ID = os.environ.get(
+    "AWS_ACCESS_KEY_ID", config("AWS_ACCESS_KEY_ID", default="")
+)
+AWS_SECRET_ACCESS_KEY = os.environ.get(
+    "AWS_SECRET_ACCESS_KEY", config("AWS_SECRET_ACCESS_KEY", default="")
+)
+AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
+AWS_DEFAULT_ACL = "public-read"
+
+AWS_LOCATION = "static"
+
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
+STATIC_URL = "/api/static/"
+MEDIA_URL = "/api/media/"
+
+STATIC_ROOT = "/vol/web/static"
+MEDIA_ROOT = "/vol/web/media"

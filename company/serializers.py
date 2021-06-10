@@ -21,6 +21,7 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "company")
 
     def get_image(self, obj):
+        # TODO: use this syntax: return "default" if x is None else x
         return obj.image.url if obj.image else ""
 
 
