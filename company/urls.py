@@ -7,6 +7,7 @@ from company import views
 router = DefaultRouter()
 router.register("categories", views.ProductCategoryViewSet)
 router.register("products", views.ProductViewSet)
+router.register("payslips", views.PayslipViewset)
 
 app_name = "company"
 

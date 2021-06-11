@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from core.models import Product, ProductCategory
+from core.models import Product, ProductCategory, Payslip
 
 
 class ProductCategorySerializer(serializers.ModelSerializer):
@@ -60,3 +60,30 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_thumbnail(self, obj):
         return obj.thumbnail.url if obj.thumbnail else ""
+
+
+class PayslipSerializer(serializers.ModelSerializer):
+    """Serializer for Payslip objects"""
+
+    class Meta:
+        model = Payslip
+        fields = (
+            "id",
+            "user",
+            "company",
+            "date",
+            "year",
+            "month",
+            "basic_salary",
+            "total_allowances",
+            "total_deductions",
+            "sale_price",
+            "commission",
+            "commission_amt",
+            "net_pay",
+            "payment_method",
+            "bank",
+            "status",
+            "comment",
+        )
+        read_only_fields = ("id", "company")
