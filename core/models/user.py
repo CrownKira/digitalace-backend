@@ -68,6 +68,7 @@ class Role(models.Model):
     # TODO: rename to designation
 
     name = CharField(max_length=255)
+    company = models.ForeignKey('Company', on_delete=models.CASCADE)
     # department = models.ForeignKey("Department", on_delete=models.CASCADE)
 
     def __str__(self):
