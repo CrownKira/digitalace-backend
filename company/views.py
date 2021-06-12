@@ -1,5 +1,5 @@
 from core.views import BaseAttrViewSet, BaseAssetAttrViewSet
-from core.models import Product, ProductCategory, Payslip
+from core.models import Product, ProductCategory, Payslip, Role
 
 from django_filters import rest_framework as filters
 
@@ -65,4 +65,16 @@ class PayslipViewset(BaseAssetAttrViewSet):
         'payment_method',
         'bank',
         'status',
+    ]
+
+
+class RoleViewSet(BaseAssetAttrViewSet):
+    """Manage roles in the database"""
+
+    queryset = Role.objects.all()
+    serializer_class = serializers.RoleSerializer
+    search_fields = [
+        'id',
+        'name',
+        'permissions',
     ]

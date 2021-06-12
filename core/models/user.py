@@ -71,7 +71,7 @@ class Role(models.Model):
     name = CharField(max_length=255)
     company = models.ForeignKey('Company', on_delete=models.CASCADE)
     permissions = models.ManyToManyField(
-        Permission, 
+        Permission,
         blank=True,
     )
     # department = models.ForeignKey("Department", on_delete=models.CASCADE)
@@ -160,6 +160,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = "email"
+
+    def has_role_perms(self, perm_list):
+        """checks for perm"""
+        return all(perm in self.role.permissions for perm in perm_list)
 
     def __str__(self):
         return self.name

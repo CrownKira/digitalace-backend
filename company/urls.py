@@ -8,6 +8,7 @@ router = DefaultRouter()
 router.register("categories", views.ProductCategoryViewSet)
 router.register("products", views.ProductViewSet)
 router.register("payslips", views.PayslipViewset)
+router.register("roles", views.RoleViewSet)
 
 app_name = "company"
 
