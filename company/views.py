@@ -1,5 +1,5 @@
 from core.views import BaseAttrViewSet, BaseAssetAttrViewSet
-from core.models import Product, ProductCategory
+from core.models import Product, ProductCategory, Payslip
 
 from django_filters import rest_framework as filters
 
@@ -49,3 +49,20 @@ class ProductViewSet(BaseAttrViewSet):
 
     def perform_update(self, serializer):
         serializer.save()
+
+
+class PayslipViewset(BaseAssetAttrViewSet):
+    """Manage payslip in the database"""
+
+    queryset = Payslip.objects.all()
+    serializer_class = serializers.PayslipSerializer
+    search_fields = [
+        'id',
+        'user__name',
+        'date',
+        'year',
+        'month',
+        'payment_method',
+        'bank',
+        'status',
+    ]
