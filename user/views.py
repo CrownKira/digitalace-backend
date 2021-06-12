@@ -97,8 +97,3 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         """Retrieve and return authenticated user"""
         return self.request.user
-
-    def update(self, request, *args, **kwargs):
-        print("hello")
-        print(request.data)
-        return super().update(request, *args, **kwargs)
