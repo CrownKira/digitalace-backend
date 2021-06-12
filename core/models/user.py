@@ -7,6 +7,7 @@ from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
+    Permission
 )
 from django.core.validators import FileExtensionValidator
 from django.db.models.fields import CharField
@@ -69,6 +70,10 @@ class Role(models.Model):
 
     name = CharField(max_length=255)
     company = models.ForeignKey('Company', on_delete=models.CASCADE)
+    permissions = models.ManyToManyField(
+        Permission, 
+        blank=True,
+    )
     # department = models.ForeignKey("Department", on_delete=models.CASCADE)
 
     def __str__(self):
