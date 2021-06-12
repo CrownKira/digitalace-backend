@@ -149,6 +149,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         blank=True,
         choices=Gender.choices,
     )
+    phone_no = models.CharField(max_length=255, blank=True)
 
     date_of_birth = models.DateField(null=True, blank=True)
     date_of_commencement = models.DateField(null=True, blank=True)
