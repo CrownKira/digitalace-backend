@@ -7,13 +7,23 @@ from rest_framework import serializers
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for the users object"""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        try:
+            if self.context["request"].method in ["GET"]:
+                self.fields["image"] = serializers.SerializerMethodField()
+                self.fields["resume"] = serializers.SerializerMethodField()
+        except KeyError:
+            pass
+
     class Meta:
         model = get_user_model()
         # use the following command to easily
         # retrieve all fields of User:
         # [f.name for f in User._meta.fields]
         fields = (
-            # "id",
+            "id",
             "password",
             # "last_login",
             # "is_superuser",
@@ -22,20 +32,21 @@ class UserSerializer(serializers.ModelSerializer):
             # "is_staff",
             "email",
             "name",
-            # "department",
-            # "role",
-            # "image",
-            # "resume",
-            # "first_name",
-            # "last_name",
-            # "residential_address",
-            # "postal_code",
-            # "ic_no",
-            # "nationality",
-            # "gender",
-            # "date_of_birth",
-            # "date_of_commencement",
-            # "date_of_cessation",
+            "department",
+            "role",
+            "image",
+            "resume",
+            "first_name",
+            "last_name",
+            "residential_address",
+            "postal_code",
+            "ic_no",
+            "nationality",
+            "gender",
+            "date_of_birth",
+            "date_of_commencement",
+            "date_of_cessation",
+            "phone_no",
         )
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
@@ -54,6 +65,12 @@ class UserSerializer(serializers.ModelSerializer):
             user.save()
 
         return user
+
+    def get_image(self, obj):
+        return obj.image.url if obj.image else ""
+
+    def get_resume(self, obj):
+        return obj.resume.url if obj.resume else ""
 
 
 class AuthTokenSerializer(serializers.Serializer):

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from core.models import Product, ProductCategory, Payslip
+from core.models import Product, ProductCategory, Payslip, Role, Department
 
 
 class ProductCategorySerializer(serializers.ModelSerializer):
@@ -87,3 +87,24 @@ class PayslipSerializer(serializers.ModelSerializer):
             "comment",
         )
         read_only_fields = ("id", "company")
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    """Serializer for Role objects"""
+
+    class Meta:
+        model = Role
+        fields = ("id", "name", "permissions")
+        read_only_fields = ("id",)
+
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    """Serializer for Department objects"""
+
+    class Meta:
+        model = Department
+        fields = (
+            "id",
+            "name",
+        )
+        read_only_fields = ("id",)

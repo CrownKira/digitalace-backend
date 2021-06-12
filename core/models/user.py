@@ -7,6 +7,7 @@ from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
+    Permission,
 )
 from django.core.validators import FileExtensionValidator
 from django.db.models.fields import CharField
@@ -65,10 +66,12 @@ class Department(models.Model):
 class Role(models.Model):
     """Role in a department"""
 
-    # TODO: rename to designation
-
     name = CharField(max_length=255)
-    department = models.ForeignKey("Department", on_delete=models.CASCADE)
+    company = models.ForeignKey("Company", on_delete=models.CASCADE)
+    permissions = models.ManyToManyField(
+        Permission,
+        blank=True,
+    )
 
     def __str__(self):
         return self.name
@@ -146,6 +149,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         blank=True,
         choices=Gender.choices,
     )
+    phone_no = models.CharField(max_length=255, blank=True)
 
     date_of_birth = models.DateField(null=True, blank=True)
     date_of_commencement = models.DateField(null=True, blank=True)
@@ -154,6 +158,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = "email"
+
+    def has_role_perms(self, perm_list):
+        """Check if user has all the permissions in the list"""
+        # TODO: use filter(id__in=[...])?
+        return all(
+            Permission.objects.filter(role=self.role, id=perm).exists()
+            for perm in perm_list
+        )
 
     def __str__(self):
         return self.name
