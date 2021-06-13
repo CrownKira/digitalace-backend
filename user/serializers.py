@@ -11,6 +11,8 @@ from rest_framework import serializers
 class UserSerializer(serializers.ModelSerializer):
     """Abstract serialier for user objects"""
 
+    permissions = serializers.SerializerMethodField()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -74,6 +76,9 @@ class UserSerializer(serializers.ModelSerializer):
     def get_resume(self, obj):
         return obj.resume.url if obj.resume else ""
 
+    def get_permissions(self, obj):
+        return obj.get_role_permissions()
+
 
 class OwnerProfileSerializer(UserSerializer):
     """
@@ -109,6 +114,7 @@ class OwnerProfileSerializer(UserSerializer):
             # "date_of_commencement",
             # "date_of_cessation",
             "phone_no",
+            "permissions",
         )
         read_only_fields = (
             "id",
@@ -168,6 +174,7 @@ class EmployeeProfileSerializer(UserSerializer):
             "date_of_commencement",
             "date_of_cessation",
             "phone_no",
+            "permissions",
         )
         read_only_fields = (
             "id",

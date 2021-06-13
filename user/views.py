@@ -75,11 +75,6 @@ class ManageProfileView(generics.RetrieveUpdateAPIView):
             else EmployeeProfileSerializer
         )
 
-    @action(methods=["GET"], detail=False, url_path="permissions")
-    def get_role_permissions(self):
-        """Retrieve all permissions that a user has based on his/her role"""
-        return self.request.user.role.permissions_set.all()
-
 
 class CreateTokenView(ObtainAuthToken):
     """Create a new auth token for user"""
