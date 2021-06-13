@@ -1,6 +1,9 @@
+from django.contrib.auth import get_user_model
+
 from rest_framework import serializers
 
 from core.models import Product, ProductCategory, Payslip, Role, Department
+from user.serializers import UserSerializer
 
 
 class ProductCategorySerializer(serializers.ModelSerializer):
@@ -108,3 +111,47 @@ class DepartmentSerializer(serializers.ModelSerializer):
             "name",
         )
         read_only_fields = ("id",)
+
+
+class EmployeeSerializer(UserSerializer):
+    """Serializer for performing CRUDL of employees"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        try:
+            if self.context["request"].method in ["GET"]:
+                self.fields["resume"] = serializers.SerializerMethodField()
+        except KeyError:
+            pass
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            "id",
+            "password",
+            # "last_login",
+            # "is_superuser",
+            "company",
+            # "is_active",
+            # "is_staff",
+            "email",
+            "name",
+            "department",
+            "role",
+            "image",
+            "resume",
+            "first_name",
+            "last_name",
+            "residential_address",
+            "postal_code",
+            "ic_no",
+            "nationality",
+            "gender",
+            "date_of_birth",
+            "date_of_commencement",
+            "date_of_cessation",
+            "phone_no",
+        )
+        read_only_fields = ("id", "company")
+        extra_kwargs = {"password": {"write_only": True, "min_length": 5}}

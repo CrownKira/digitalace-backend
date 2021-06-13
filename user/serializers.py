@@ -3,9 +3,13 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
+# use the following command to easily
+# retrieve all fields of User:
+# [f.name for f in User._meta.fields]
+
 
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer for the users object"""
+    """Abstract serialier for user objects"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -13,42 +17,12 @@ class UserSerializer(serializers.ModelSerializer):
         try:
             if self.context["request"].method in ["GET"]:
                 self.fields["image"] = serializers.SerializerMethodField()
-                self.fields["resume"] = serializers.SerializerMethodField()
+
         except KeyError:
             pass
 
     class Meta:
-        model = get_user_model()
-        # use the following command to easily
-        # retrieve all fields of User:
-        # [f.name for f in User._meta.fields]
-        fields = (
-            "id",
-            "password",
-            # "last_login",
-            # "is_superuser",
-            # "company",
-            # "is_active",
-            # "is_staff",
-            "email",
-            "name",
-            "department",
-            "role",
-            "image",
-            "resume",
-            "first_name",
-            "last_name",
-            "residential_address",
-            "postal_code",
-            "ic_no",
-            "nationality",
-            "gender",
-            "date_of_birth",
-            "date_of_commencement",
-            "date_of_cessation",
-            "phone_no",
-        )
-        extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
+        abstract = True
 
     # TODO: create employee by POST /employees/
     def create(self, validated_data):
@@ -58,7 +32,12 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """Update a user, setting the password correctly and return it"""
         password = validated_data.pop("password", None)
+        company_name = validated_data.pop("company_name", "")
         user = super().update(instance, validated_data)
+        if user.is_staff:
+            company = user.company
+            company.name = company_name
+            company.save(update_fields=["name"])
 
         if password:
             user.set_password(password)
@@ -85,6 +64,8 @@ class UserSerializer(serializers.ModelSerializer):
             msg = _("Passwords do not match")
             raise serializers.ValidationError(msg)
 
+        attrs["company_name"] = self.initial_data.get("company_name", "")
+
         return attrs
 
     def get_image(self, obj):
@@ -92,6 +73,115 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_resume(self, obj):
         return obj.resume.url if obj.resume else ""
+
+
+class OwnerProfileSerializer(UserSerializer):
+    """
+    Serializer for creating, updating and retrieving owner's profile.
+    """
+
+    company_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            "id",
+            "password",
+            # "last_login",
+            # "is_superuser",
+            "company_name",
+            # "is_active",
+            "is_staff",
+            "email",
+            "name",
+            # "department",
+            # "role",
+            "image",
+            # "resume",
+            "first_name",
+            "last_name",
+            "residential_address",
+            "postal_code",
+            "ic_no",
+            "nationality",
+            "gender",
+            "date_of_birth",
+            # "date_of_commencement",
+            # "date_of_cessation",
+            "phone_no",
+        )
+        read_only_fields = (
+            "id",
+            "is_staff",
+            "department",
+            "role",
+            "date_of_commencement",
+            "date_of_cessation",
+            "resume",
+        )
+        extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
+
+    def get_company_name(self, obj):
+        return obj.company.name
+
+
+class EmployeeProfileSerializer(UserSerializer):
+    """
+    Serializer for updating and retrieving employee's profile.
+    """
+
+    company_name = serializers.SerializerMethodField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        try:
+            if self.context["request"].method in ["GET"]:
+                self.fields["resume"] = serializers.SerializerMethodField()
+        except KeyError:
+            pass
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            "id",
+            "password",
+            # "last_login",
+            # "is_superuser",
+            "company_name",
+            # "is_active",
+            "is_staff",
+            "email",
+            "name",
+            "department",
+            "role",
+            "image",
+            "resume",
+            "first_name",
+            "last_name",
+            "residential_address",
+            "postal_code",
+            "ic_no",
+            "nationality",
+            "gender",
+            "date_of_birth",
+            "date_of_commencement",
+            "date_of_cessation",
+            "phone_no",
+        )
+        read_only_fields = (
+            "id",
+            "is_staff",
+            "department",
+            "role",
+            "date_of_commencement",
+            "date_of_cessation",
+            "resume",
+        )
+        extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
+
+    def get_company_name(self, obj):
+        return obj.company.name
 
 
 class AuthTokenSerializer(serializers.Serializer):
