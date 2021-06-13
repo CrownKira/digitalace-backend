@@ -60,7 +60,7 @@ class PrivatePaysliptest(TestCase):
             "test2@crownkiraappdev.com",
             "password123",
             is_staff=True,
-            company=self.company,
+            company=self.company2,
         )
         self.client = APIClient()
         self.client.force_authenticate(self.user)
