@@ -66,6 +66,27 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
+    def validate(self, attrs):
+        """Validate and authenticate the user"""
+        if self.context["request"].method in ["POST"]:
+            email = attrs.get("email", None)
+            confirm_email = self.initial_data.get("confirm_email", None)
+
+            if email != confirm_email:
+                msg = _("Emails do not match")
+                raise serializers.ValidationError(msg)
+
+            attrs["company"] = self.initial_data.get("company", "")
+
+        password = attrs.get("password", None)
+        confirm_password = self.initial_data.get("confirm_password", None)
+
+        if password != confirm_password:
+            msg = _("Passwords do not match")
+            raise serializers.ValidationError(msg)
+
+        return attrs
+
     def get_image(self, obj):
         return obj.image.url if obj.image else ""
 
