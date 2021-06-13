@@ -45,7 +45,7 @@ class Customer(models.Model):
     """Customer managed by a company"""
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
-    agent = models.ManyToManyField("User", blank=True)
+    agents = models.ManyToManyField("User", blank=True)
     attention = models.CharField(max_length=255, blank=True)
 
     name = models.CharField(max_length=255)
@@ -73,7 +73,7 @@ class Supplier(models.Model):
     """Supplier managed by a company"""
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
-    agent = models.ManyToManyField("User", blank=True)
+    agents = models.ManyToManyField("User", blank=True)
     attention = models.CharField(max_length=255, blank=True)
 
     name = models.CharField(max_length=255)
@@ -101,7 +101,7 @@ class ProductCategory(models.Model):
     """Category of a product"""
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
-    agent = models.ManyToManyField("User", blank=True)
+    agents = models.ManyToManyField("User", blank=True)
 
     name = models.CharField(max_length=255)
     image = models.ImageField(upload_to=category_image_file_path, blank=True)
