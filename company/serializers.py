@@ -1,4 +1,3 @@
-from core.models.user import Designation
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
@@ -9,7 +8,7 @@ from core.models import (
     Payslip,
     Role,
     Department,
-    Department,
+    Designation,
 )
 from user.serializers import UserSerializer
 
