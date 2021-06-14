@@ -34,9 +34,7 @@ class CreateOwnerView(generics.CreateAPIView):
         user = serializer.instance
         token, created = Token.objects.get_or_create(user=user)
         return Response(
-            {
-                "token": token.key,
-            },
+            {"token": token.key, **serializer.data},
             status=status.HTTP_201_CREATED,
             headers=headers,
         )
@@ -87,8 +85,4 @@ class CreateTokenView(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
         token, created = Token.objects.get_or_create(user=user)
-        return Response(
-            {
-                "token": token.key,
-            }
-        )
+        return Response({"token": token.key})

@@ -172,7 +172,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         perm_list = (
             Permission.objects.all()
             if self.is_staff
-            else self.role.permissions.all()
+            # TODO: empty queryset instead of []?
+            else (self.role.permissions.all() if self.role else [])
         )
         return set(perm.codename for perm in perm_list)
 

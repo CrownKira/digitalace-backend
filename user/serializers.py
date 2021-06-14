@@ -59,14 +59,15 @@ class UserSerializer(serializers.ModelSerializer):
 
             attrs["company"] = self.initial_data.get("company", "")
 
+        if self.context["request"].method in ["PUT", "PATCH"]:
+            attrs["company_name"] = self.initial_data.get("company_name", "")
+
         password = attrs.get("password", None)
         confirm_password = self.initial_data.get("confirm_password", None)
 
         if password != confirm_password:
             msg = _("Passwords do not match")
             raise serializers.ValidationError(msg)
-
-        attrs["company_name"] = self.initial_data.get("company_name", "")
 
         return attrs
 
@@ -128,7 +129,7 @@ class OwnerProfileSerializer(UserSerializer):
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
     def get_company_name(self, obj):
-        return obj.company.name
+        return obj.company.name if obj.company else ""
 
 
 class EmployeeProfileSerializer(UserSerializer):
@@ -188,7 +189,7 @@ class EmployeeProfileSerializer(UserSerializer):
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
     def get_company_name(self, obj):
-        return obj.company.name
+        return obj.company.name if obj.company else ""
 
 
 class AuthTokenSerializer(serializers.Serializer):
