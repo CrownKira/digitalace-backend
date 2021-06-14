@@ -11,6 +11,7 @@ router.register("payslips", views.PayslipViewset)
 router.register("roles", views.RoleViewSet)
 router.register("departments", views.DepartmentViewSet)
 router.register("employees", views.DepartmentViewSet)
+router.register("designations", views.DesignationViewSet)
 
 app_name = "company"
 

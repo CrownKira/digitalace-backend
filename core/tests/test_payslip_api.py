@@ -13,20 +13,20 @@ PAYSLIP_URL = reverse("company:payslip-list")
 
 def create_payslip(**params):
     return Payslip.objects.create(
-        date='2001-01-10',
-        year='2001',
-        month='september',
-        basic_salary='1000',
-        total_allowances='300',
-        total_deductions='0',
-        sale_price='100',
-        commission='200',
-        commission_amt='100',
-        net_pay='1100',
-        payment_method='cash',
-        bank='UOB',
-        status='paid',
-        comment='CP',
+        date="2001-01-10",
+        year="2001",
+        month="september",
+        basic_salary="1000",
+        total_allowances="300",
+        total_deductions="0",
+        sale_price="100",
+        commission="200",
+        commission_amt="100",
+        net_pay="1100",
+        payment_method="cash",
+        bank="UOB",
+        status="paid",
+        comment="CP",
         **params,
     )
 
@@ -44,7 +44,7 @@ class PublicPayslipTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivatePaysliptest(TestCase):
+class PrivatePayslipTest(TestCase):
     """Test authorized user payslip API"""
 
     def setUp(self):
@@ -67,23 +67,31 @@ class PrivatePaysliptest(TestCase):
 
     def test_retreive_payslip(self):
         """Test retreiving payslip from company"""
-        create_payslip(**{
-            'user': self.user,
-            'company': self.company,
-        })
-        create_payslip(**{
-            'user': self.user,
-            'company': self.company,
-        })
-        create_payslip(**{
-            'user': self.user2,
-            'company': self.company2,
-        })
+        create_payslip(
+            **{
+                "user": self.user,
+                "company": self.company,
+            }
+        )
+        create_payslip(
+            **{
+                "user": self.user,
+                "company": self.company,
+            }
+        )
+        create_payslip(
+            **{
+                "user": self.user2,
+                "company": self.company2,
+            }
+        )
 
         res = self.client.get(PAYSLIP_URL)
 
-        payslips = Payslip.objects.all().filter(company=self.company).order_by('-id')
+        payslips = (
+            Payslip.objects.all().filter(company=self.company).order_by("-id")
+        )
         serializer = PayslipSerializer(payslips, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data.get('results', None)), 2)
-        self.assertEqual(res.data.get('results', None), serializer.data)
+        self.assertEqual(len(res.data.get("results", None)), 2)
+        self.assertEqual(res.data.get("results", None), serializer.data)

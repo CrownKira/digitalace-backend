@@ -1,3 +1,4 @@
+from core.models.user import Designation
 from core.views import BaseAttrViewSet, BaseAssetAttrViewSet
 from core.models import (
     Product,
@@ -93,6 +94,17 @@ class DepartmentViewSet(BaseAssetAttrViewSet):
 
     queryset = Department.objects.all()
     serializer_class = serializers.DepartmentSerializer
+    search_fields = [
+        "id",
+        "name",
+    ]
+
+
+class DesignationViewSet(BaseAssetAttrViewSet):
+    """Manage designation in the database"""
+
+    queryset = Designation.objects.all()
+    serializer_class = serializers.DesignationSerializer
     search_fields = [
         "id",
         "name",

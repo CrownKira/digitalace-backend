@@ -63,6 +63,16 @@ class Department(models.Model):
         return self.name
 
 
+class Designation(models.Model):
+    """Designation in a department"""
+
+    name = CharField(max_length=255)
+    department = models.ForeignKey("Department", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
 class Role(models.Model):
     """Role in a department"""
 
@@ -122,6 +132,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     # below are employee fields (null fields for owner)
     department = models.ForeignKey(
         "Department", on_delete=models.CASCADE, null=True, blank=True
+    )
+    designation = models.ForeignKey(
+        "Designation", on_delete=models.CASCADE, null=True, blank=True
     )
     role = models.ForeignKey(
         "Role", on_delete=models.CASCADE, null=True, blank=True

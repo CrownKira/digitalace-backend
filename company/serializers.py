@@ -1,8 +1,16 @@
+from core.models.user import Designation
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from core.models import Product, ProductCategory, Payslip, Role, Department
+from core.models import (
+    Product,
+    ProductCategory,
+    Payslip,
+    Role,
+    Department,
+    Department,
+)
 from user.serializers import UserSerializer
 
 
@@ -106,6 +114,18 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Department
+        fields = (
+            "id",
+            "name",
+        )
+        read_only_fields = ("id",)
+
+
+class DesignationSerializer(serializers.ModelSerializer):
+    """Serializer for Designation objects"""
+
+    class Meta:
+        model = Designation
         fields = (
             "id",
             "name",
