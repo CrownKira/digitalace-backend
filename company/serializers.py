@@ -132,7 +132,7 @@ class EmployeeSerializer(UserSerializer):
             "password",
             # "last_login",
             # "is_superuser",
-            "company",
+            # "company",
             # "is_active",
             # "is_staff",
             "email",
@@ -153,5 +153,5 @@ class EmployeeSerializer(UserSerializer):
             "date_of_cessation",
             "phone_no",
         )
-        read_only_fields = ("id", "company")
+        read_only_fields = ("id",)
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}

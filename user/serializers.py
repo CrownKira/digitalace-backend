@@ -36,6 +36,7 @@ class UserSerializer(serializers.ModelSerializer):
         password = validated_data.pop("password", None)
         company_name = validated_data.pop("company_name", "")
         user = super().update(instance, validated_data)
+
         if user.is_staff:
             company = user.company
             company.name = company_name

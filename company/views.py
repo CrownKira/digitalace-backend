@@ -99,7 +99,7 @@ class DepartmentViewSet(BaseAssetAttrViewSet):
     ]
 
 
-class EmployeeViewSet(BaseAssetAttrViewSet):
+class EmployeeViewSet(BaseAttrViewSet):
     """Manage employee in the database"""
 
     queryset = User.objects.all()
@@ -131,8 +131,10 @@ class EmployeeViewSet(BaseAssetAttrViewSet):
         "phone_no",
     ]
 
+    def get_queryset(self):
+        company = self.request.user.company
+        return self.queryset.filter(is_staff=False, company=company)
+
     def perform_create(self, serializer):
-        company = Company.objects.create(
-            name=serializer.validated_data.get("company", "")
-        )
+        company = self.request.user.company
         serializer.save(company=company)

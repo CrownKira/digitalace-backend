@@ -123,9 +123,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     department = models.ForeignKey(
         "Department", on_delete=models.CASCADE, null=True, blank=True
     )
-    role = models.ForeignKey(
-        "Role", on_delete=models.CASCADE, null=True, blank=True
-    )
+    # https://stackoverflow.com/questions/18243039/migrating-manytomanyfield-to-null-true-blank-true-isnt-recognized
+    roles = models.ManyToManyField("Role", blank=True)
 
     image = models.ImageField(upload_to=user_image_file_path, blank=True)
     resume = models.FileField(
