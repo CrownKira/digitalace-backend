@@ -1,5 +1,13 @@
 from core.views import BaseAttrViewSet, BaseAssetAttrViewSet
-from core.models import Product, ProductCategory, Payslip, Role, Department
+from core.models import (
+    Product,
+    ProductCategory,
+    Payslip,
+    Role,
+    Department,
+    User,
+    Company,
+)
 
 from django_filters import rest_framework as filters
 
@@ -89,3 +97,42 @@ class DepartmentViewSet(BaseAssetAttrViewSet):
         "id",
         "name",
     ]
+
+
+class EmployeeViewSet(BaseAssetAttrViewSet):
+    """Manage employee in the database"""
+
+    queryset = User.objects.all()
+    serializer_class = serializers.EmployeeSerializer
+    search_fields = [
+        "id",
+        # "password",
+        # "last_login",
+        # "is_superuser",
+        # "company",
+        # "is_active",
+        # "is_staff",
+        "email",
+        "name",
+        "department",
+        "role",
+        # "image",
+        # "resume",
+        "first_name",
+        "last_name",
+        "residential_address",
+        "postal_code",
+        "ic_no",
+        "nationality",
+        "gender",
+        "date_of_birth",
+        "date_of_commencement",
+        "date_of_cessation",
+        "phone_no",
+    ]
+
+    def perform_create(self, serializer):
+        company = Company.objects.create(
+            name=serializer.validated_data.get("company", "")
+        )
+        serializer.save(company=company)
