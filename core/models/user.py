@@ -63,6 +63,16 @@ class Department(models.Model):
         return self.name
 
 
+class Designation(models.Model):
+    """Designation in a company"""
+
+    name = CharField(max_length=255)
+    company = models.ForeignKey("Company", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
 class Role(models.Model):
     """Role in a department"""
 
@@ -124,6 +134,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     # TODO: create a Profile model to store these fields
     department = models.ForeignKey(
         "Department", on_delete=models.CASCADE, null=True, blank=True
+    )
+    designation = models.ForeignKey(
+        "Designation", on_delete=models.CASCADE, null=True, blank=True
     )
     # https://stackoverflow.com/questions/18243039/migrating-manytomanyfield-to-null-true-blank-true-isnt-recognized
     roles = models.ManyToManyField("Role", blank=True)
