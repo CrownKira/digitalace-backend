@@ -208,12 +208,12 @@ class EmployeeSerializer(UserSerializer):
         return fields
 
     def create(self, validated_data):
-        """Create a new user with encrypted password and return it"""
         roles = validated_data.pop("roles", None)
         customer_set = validated_data.pop("customer_set", None)
         product_set = validated_data.pop("product_set", None)
         user = get_user_model().objects.create_user(**validated_data)
         # TODO: fix customer_set': [[10, 9, 12]] (remove outer array)
+        # hint: conversion from initial_data to attrs
         if roles:
             user.roles.set(roles[0])
         if customer_set:
@@ -221,9 +221,9 @@ class EmployeeSerializer(UserSerializer):
         if product_set:
             user.product_set.set(product_set[0])
 
-    def update(self, instance, validated_data):
-        """Update a user, setting the password correctly and return it"""
+        return user
 
+    def update(self, instance, validated_data):
         roles = validated_data.pop("roles", None)
         customer_set = validated_data.pop("customer_set", None)
         product_set = validated_data.pop("product_set", None)
