@@ -101,7 +101,6 @@ class ProductCategory(models.Model):
     """Category of a product"""
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
-    agents = models.ManyToManyField("User", blank=True)
 
     name = models.CharField(max_length=255)
     image = models.ImageField(upload_to=category_image_file_path, blank=True)
@@ -119,6 +118,7 @@ class Product(models.Model):
     category = models.ForeignKey("ProductCategory", on_delete=models.CASCADE)
     # TODO: mandatory?
     supplier = models.ForeignKey("Supplier", on_delete=models.CASCADE)
+    agents = models.ManyToManyField("User", blank=True)
 
     name = models.CharField(max_length=255)
     # TODO: create a class for unit
