@@ -82,7 +82,10 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def get_resume(self, obj):
-        return obj.resume.url if obj.resume else ""
+        return {
+            "src": obj.resume.url if obj.resume else "",
+            "title": obj.resume.name if obj.resume else "",
+        }
 
     def get_permissions(self, obj):
         return obj.get_role_permissions()
