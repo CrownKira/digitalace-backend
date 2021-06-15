@@ -6,6 +6,7 @@ from core.models import (
     Role,
     Department,
     User,
+    Designation,
 )
 
 from django_filters import rest_framework as filters
@@ -92,6 +93,17 @@ class DepartmentViewSet(BaseAssetAttrViewSet):
 
     queryset = Department.objects.all()
     serializer_class = serializers.DepartmentSerializer
+    search_fields = [
+        "id",
+        "name",
+    ]
+
+
+class DesignationViewSet(BaseAssetAttrViewSet):
+    """Manage designations in the database"""
+
+    queryset = Designation.objects.all()
+    serializer_class = serializers.DesignationSerializer
     search_fields = [
         "id",
         "name",
