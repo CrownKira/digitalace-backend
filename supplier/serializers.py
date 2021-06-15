@@ -6,19 +6,6 @@ from core.models import Receive, Supplier, PurchaseOrder
 class SupplierSerializer(serializers.ModelSerializer):
     """Serializer for Supplier objects"""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        try:
-            if self.context["request"].method in ["GET"]:
-                self.fields["image"] = serializers.SerializerMethodField()
-            else:
-                self.fields["image"] = serializers.ImageField(
-                    allow_empty_file=True, allow_null=True
-                )
-        except KeyError:
-            pass
-
     class Meta:
         model = Supplier
         fields = (
@@ -40,6 +27,16 @@ class SupplierSerializer(serializers.ModelSerializer):
             # "last_seen",
         )
         read_only_fields = ("id", "company")
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context["request"].method in ["GET"]:
+            fields["image"] = serializers.SerializerMethodField()
+        else:
+            fields["image"] = serializers.ImageField(
+                allow_empty_file=True, allow_null=True
+            )
+        return fields
 
     def get_image(self, obj):
         return {

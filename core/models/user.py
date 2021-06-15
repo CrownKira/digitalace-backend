@@ -88,7 +88,15 @@ class Role(models.Model):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, roles=[], **extra_fields):
+    def create_user(
+        self,
+        email,
+        password=None,
+        roles=[],
+        product_set=[],
+        customer_set=[],
+        **extra_fields,
+    ):
         """Creates and save a new user"""
         if not email:
             raise ValueError("Users must have an email address")
@@ -96,6 +104,8 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
         user.roles.set(roles)
+        user.product_set.set(product_set)
+        user.customer_set.set(customer_set)
 
         return user
 

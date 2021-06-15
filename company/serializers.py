@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-
 from core.models import (
     Product,
     ProductCategory,
@@ -10,26 +9,25 @@ from core.models import (
     Role,
     Department,
     Designation,
+    Customer,
 )
+from core.relations import PrimaryKeyListRelatedField
 from user.serializers import UserSerializer
 
 
 class ProductCategorySerializer(serializers.ModelSerializer):
     """Serializer for product objects"""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        try:
-            if self.context["request"].method in ["GET"]:
-                self.fields["image"] = serializers.SerializerMethodField()
-        except KeyError:
-            pass
-
     class Meta:
         model = ProductCategory
         fields = ("id", "company", "name", "image")
         read_only_fields = ("id", "company")
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context["request"].method in ["GET"]:
+            fields["image"] = serializers.SerializerMethodField()
+        return fields
 
     def get_image(self, obj):
         return {
@@ -40,23 +38,6 @@ class ProductCategorySerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     """Serializer for product objects"""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        try:
-            if self.context["request"].method in ["GET"]:
-                self.fields["image"] = serializers.SerializerMethodField()
-                self.fields["thumbnail"] = serializers.SerializerMethodField()
-            else:
-                self.fields["image"] = serializers.ImageField(
-                    allow_empty_file=True, allow_null=True
-                )
-                self.fields["thumbnail"] = serializers.ImageField(
-                    allow_empty_file=True, allow_null=True
-                )
-        except KeyError:
-            pass
 
     class Meta:
         model = Product
@@ -74,6 +55,20 @@ class ProductSerializer(serializers.ModelSerializer):
             "sales",
         )
         read_only_fields = ("id",)
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context["request"].method in ["GET"]:
+            fields["image"] = serializers.SerializerMethodField()
+            fields["thumbnail"] = serializers.SerializerMethodField()
+        else:
+            fields["image"] = serializers.ImageField(
+                allow_empty_file=True, allow_null=True
+            )
+            fields["thumbnail"] = serializers.ImageField(
+                allow_empty_file=True, allow_null=True
+            )
+        return fields
 
     def get_image(self, obj):
         return {
@@ -151,26 +146,6 @@ class DesignationSerializer(serializers.ModelSerializer):
 class EmployeeSerializer(UserSerializer):
     """Serializer for employee objects"""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        try:
-            if self.context["request"].method in ["GET"]:
-                self.fields["resume"] = serializers.SerializerMethodField()
-            else:
-                self.fields["resume"] = serializers.ImageField(
-                    allow_empty_file=True, allow_null=True
-                )
-            # TODO: is this even needed?
-            self.fields["roles"] = serializers.PrimaryKeyRelatedField(
-                many=True,
-                queryset=Role.objects.filter(
-                    company=self.context["request"].user.company
-                ),
-            )
-        except KeyError:
-            pass
-
     class Meta:
         model = get_user_model()
         fields = (
@@ -202,5 +177,63 @@ class EmployeeSerializer(UserSerializer):
         )
 
         read_only_fields = ("id",)
-        # need validation
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context["request"].method in ["GET"]:
+            fields["resume"] = serializers.SerializerMethodField()
+        else:
+            fields["resume"] = serializers.ImageField(
+                allow_empty_file=True, allow_null=True
+            )
+        fields["roles"] = PrimaryKeyListRelatedField(
+            many=True,
+            queryset=Role.objects.filter(
+                company=self.context["request"].user.company
+            ).distinct(),
+        )
+        fields["customer_set"] = PrimaryKeyListRelatedField(
+            many=True,
+            queryset=Customer.objects.filter(
+                company=self.context["request"].user.company
+            ).distinct(),
+        )
+        fields["product_set"] = PrimaryKeyListRelatedField(
+            many=True,
+            queryset=Product.objects.filter(
+                category__company=self.context["request"].user.company
+            ).distinct(),
+        )
+        return fields
+
+    def create(self, validated_data):
+        """Create a new user with encrypted password and return it"""
+        roles = validated_data.pop("roles", None)
+        customer_set = validated_data.pop("customer_set", None)
+        product_set = validated_data.pop("product_set", None)
+        user = get_user_model().objects.create_user(**validated_data)
+        # TODO: fix customer_set': [[10, 9, 12]] (remove outer array)
+        if roles:
+            user.roles.set(roles[0])
+        if customer_set:
+            user.customer_set.set(customer_set[0])
+        if product_set:
+            user.product_set.set(product_set[0])
+
+    def update(self, instance, validated_data):
+        """Update a user, setting the password correctly and return it"""
+
+        roles = validated_data.pop("roles", None)
+        customer_set = validated_data.pop("customer_set", None)
+        product_set = validated_data.pop("product_set", None)
+
+        user = super().update(instance, validated_data)
+        if roles:
+            user.roles.set(roles[0])
+        if customer_set:
+            user.customer_set.set(customer_set[0])
+        if product_set:
+            user.product_set.set(product_set[0])
+
+        return user

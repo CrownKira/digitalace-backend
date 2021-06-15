@@ -13,21 +13,18 @@ class UserSerializer(serializers.ModelSerializer):
 
     permissions = serializers.SerializerMethodField()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        try:
-            if self.context["request"].method in ["GET"]:
-                self.fields["image"] = serializers.SerializerMethodField()
-            else:
-                self.fields["image"] = serializers.ImageField(
-                    allow_empty_file=True, allow_null=True
-                )
-        except KeyError:
-            pass
-
     class Meta:
         abstract = True
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context["request"].method in ["GET"]:
+            fields["image"] = serializers.SerializerMethodField()
+        else:
+            fields["image"] = serializers.ImageField(
+                allow_empty_file=True, allow_null=True
+            )
+        return fields
 
     def create(self, validated_data):
         """Create a new user with encrypted password and return it"""
@@ -151,15 +148,6 @@ class EmployeeProfileSerializer(UserSerializer):
 
     company_name = serializers.SerializerMethodField()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        try:
-            if self.context["request"].method in ["GET"]:
-                self.fields["resume"] = serializers.SerializerMethodField()
-        except KeyError:
-            pass
-
     class Meta:
         model = get_user_model()
         fields = (
@@ -199,6 +187,12 @@ class EmployeeProfileSerializer(UserSerializer):
             "resume",
         )
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context["request"].method in ["GET"]:
+            fields["resume"] = serializers.SerializerMethodField()
+        return fields
 
     def get_company_name(self, obj):
         return obj.company.name if obj.company else ""

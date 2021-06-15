@@ -6,19 +6,6 @@ from core.models import Invoice, Customer, SalesOrder
 class CustomerSerializer(serializers.ModelSerializer):
     """Serializer for customer objects"""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        try:
-            if self.context["request"].method in ["GET"]:
-                self.fields["image"] = serializers.SerializerMethodField()
-            else:
-                self.fields["image"] = serializers.ImageField(
-                    allow_empty_file=True, allow_null=True
-                )
-        except KeyError:
-            pass
-
     class Meta:
         model = Customer
         fields = (
@@ -40,6 +27,16 @@ class CustomerSerializer(serializers.ModelSerializer):
             # "last_seen",
         )
         read_only_fields = ("id", "company", "image")
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context["request"].method in ["GET"]:
+            fields["image"] = serializers.SerializerMethodField()
+        else:
+            fields["image"] = serializers.ImageField(
+                allow_empty_file=True, allow_null=True
+            )
+        return fields
 
     def get_image(self, obj):
         return {
