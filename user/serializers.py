@@ -26,7 +26,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         abstract = True
 
-    # TODO: create employee by POST /employees/
     def create(self, validated_data):
         """Create a new user with encrypted password and return it"""
         return get_user_model().objects.create_user(**validated_data)
@@ -50,6 +49,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """Validate and authenticate the user"""
+
         if self.context["request"].method in ["POST"]:
             email = attrs.get("email", None)
             confirm_email = self.initial_data.get("confirm_email", None)
@@ -73,7 +73,10 @@ class UserSerializer(serializers.ModelSerializer):
         return attrs
 
     def get_image(self, obj):
-        return obj.image.url if obj.image else ""
+        return {
+            "src": obj.image.url if obj.image else "",
+            "title": obj.image.name if obj.image else "",
+        }
 
     def get_resume(self, obj):
         return obj.resume.url if obj.resume else ""
@@ -102,7 +105,7 @@ class OwnerProfileSerializer(UserSerializer):
             "email",
             "name",
             # "department",
-            # "role",
+            # "roles",
             "image",
             # "resume",
             "first_name",
@@ -118,11 +121,13 @@ class OwnerProfileSerializer(UserSerializer):
             "phone_no",
             "permissions",
         )
+        # writable fields will be validated using model
+        # validator and added to validated_data
         read_only_fields = (
             "id",
             "is_staff",
             "department",
-            "role",
+            "roles",
             "date_of_commencement",
             "date_of_cessation",
             "resume",
@@ -162,7 +167,7 @@ class EmployeeProfileSerializer(UserSerializer):
             "email",
             "name",
             "department",
-            "role",
+            "roles",
             "image",
             "resume",
             "first_name",
@@ -182,7 +187,7 @@ class EmployeeProfileSerializer(UserSerializer):
             "id",
             "is_staff",
             "department",
-            "role",
+            "roles",
             "date_of_commencement",
             "date_of_cessation",
             "resume",

@@ -24,8 +24,10 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "company")
 
     def get_image(self, obj):
-        # TODO: use this syntax: return "default" if x is None else x
-        return obj.image.url if obj.image else ""
+        return {
+            "src": obj.image.url if obj.image else "",
+            "title": obj.image.name if obj.image else "",
+        }
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -59,14 +61,20 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
     def get_image(self, obj):
-        return obj.image.url if obj.image else ""
+        return {
+            "src": obj.image.url if obj.image else "",
+            "title": obj.image.name if obj.image else "",
+        }
 
     def get_thumbnail(self, obj):
-        return obj.thumbnail.url if obj.thumbnail else ""
+        return {
+            "src": obj.thumbnail.url if obj.thumbnail else "",
+            "title": obj.thumbnail.name if obj.thumbnail else "",
+        }
 
 
 class PayslipSerializer(serializers.ModelSerializer):
-    """Serializer for Payslip objects"""
+    """Serializer for payslip objects"""
 
     class Meta:
         model = Payslip
@@ -93,7 +101,7 @@ class PayslipSerializer(serializers.ModelSerializer):
 
 
 class RoleSerializer(serializers.ModelSerializer):
-    """Serializer for Role objects"""
+    """Serializer for role objects"""
 
     class Meta:
         model = Role
@@ -102,7 +110,7 @@ class RoleSerializer(serializers.ModelSerializer):
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
-    """Serializer for Department objects"""
+    """Serializer for department objects"""
 
     class Meta:
         model = Department
@@ -114,7 +122,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 
 class EmployeeSerializer(UserSerializer):
-    """Serializer for performing CRUDL of employees"""
+    """Serializer for employee objects"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -122,6 +130,13 @@ class EmployeeSerializer(UserSerializer):
         try:
             if self.context["request"].method in ["GET"]:
                 self.fields["resume"] = serializers.SerializerMethodField()
+            # TODO: is this even needed?
+            self.fields["roles"] = serializers.PrimaryKeyRelatedField(
+                many=True,
+                queryset=Role.objects.filter(
+                    company=self.context["request"].user.company
+                ),
+            )
         except KeyError:
             pass
 
@@ -132,13 +147,13 @@ class EmployeeSerializer(UserSerializer):
             "password",
             # "last_login",
             # "is_superuser",
-            # "company",
+            # "company_name",
             # "is_active",
             # "is_staff",
             "email",
             "name",
             "department",
-            "role",
+            "roles",
             "image",
             "resume",
             "first_name",
@@ -152,6 +167,9 @@ class EmployeeSerializer(UserSerializer):
             "date_of_commencement",
             "date_of_cessation",
             "phone_no",
+            "permissions",
         )
+
         read_only_fields = ("id",)
+        # need validation
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}

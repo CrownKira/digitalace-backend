@@ -38,12 +38,14 @@ class MultiPartJSONParser(BaseParser):
                 meta, stream, upload_handlers, encoding
             )
             data, files = parser.parse()
+            data = data.copy()
             for key in data:
-                if data[key]:
+                if data[key] == "null" or data[key] == "undefined":
                     try:
-                        data[key] = json.loads(data[key])
+                        data[key] = None
                     except ValueError:
                         pass
+
             return DataAndFiles(data, files)
         except MultiPartParserError as exc:
             raise ParseError("Multipart form parse error - %s" % str(exc))

@@ -17,7 +17,7 @@ class BaseAssetAttrViewSet(BaseAttrViewSet):
 
     def get_queryset(self):
         company = self.request.user.company
-        return self.queryset.filter(company=company)
+        return self.queryset.filter(company=company).distinct()
 
     def perform_create(self, serializer):
         company = self.request.user.company

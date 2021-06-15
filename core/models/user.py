@@ -78,13 +78,14 @@ class Role(models.Model):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, email, password=None, roles=[], **extra_fields):
         """Creates and save a new user"""
         if not email:
             raise ValueError("Users must have an email address")
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
+        user.roles.set(roles)
 
         return user
 
@@ -120,12 +121,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=255)
 
     # below are employee fields (null fields for owner)
+    # TODO: create a Profile model to store these fields
     department = models.ForeignKey(
         "Department", on_delete=models.CASCADE, null=True, blank=True
     )
     # https://stackoverflow.com/questions/18243039/migrating-manytomanyfield-to-null-true-blank-true-isnt-recognized
     roles = models.ManyToManyField("Role", blank=True)
-
+    # if patch with None, image reference
+    # will become empty string (rather than NULL)
     image = models.ImageField(upload_to=user_image_file_path, blank=True)
     resume = models.FileField(
         upload_to=user_resume_file_path,
@@ -162,7 +165,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         """Check if user has all the permissions in the list"""
         # TODO: use filter(id__in=[...])?
         return self.is_staff or all(
-            Permission.objects.filter(role=self.role, id=perm).exists()
+            Permission.objects.filter(
+                role__in=self.roles.all(), id=perm
+            ).exists()
             for perm in perm_list
         )
 
@@ -171,8 +176,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         perm_list = (
             Permission.objects.all()
             if self.is_staff
-            # TODO: empty queryset instead of []?
-            else (self.role.permissions.all() if self.role else [])
+            else Permission.objects.filter(
+                role__in=self.roles.all()
+            ).distinct()
         )
         return set(perm.codename for perm in perm_list)
 

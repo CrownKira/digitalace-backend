@@ -38,7 +38,10 @@ class SupplierSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "company")
 
     def get_image(self, obj):
-        return obj.image.url if obj.image else ""
+        return {
+            "src": obj.image.url if obj.image else "",
+            "title": obj.image.name if obj.image else "",
+        }
 
 
 class ReceiveSerializer(serializers.ModelSerializer):

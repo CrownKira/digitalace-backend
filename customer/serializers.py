@@ -12,6 +12,10 @@ class CustomerSerializer(serializers.ModelSerializer):
         try:
             if self.context["request"].method in ["GET"]:
                 self.fields["image"] = serializers.SerializerMethodField()
+            else:
+                self.fields["image"] = serializers.ImageField(
+                    allow_empty_file=True, allow_null=True
+                )
         except KeyError:
             pass
 
@@ -35,10 +39,13 @@ class CustomerSerializer(serializers.ModelSerializer):
             # "first_seen",
             # "last_seen",
         )
-        read_only_fields = ("id", "company")
+        read_only_fields = ("id", "company", "image")
 
     def get_image(self, obj):
-        return obj.image.url if obj.image else ""
+        return {
+            "src": obj.image.url if obj.image else "",
+            "title": obj.image.name if obj.image else "",
+        }
 
 
 class InvoiceSerializer(serializers.ModelSerializer):

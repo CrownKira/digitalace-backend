@@ -6,7 +6,6 @@ from core.models import (
     Role,
     Department,
     User,
-    Company,
 )
 
 from django_filters import rest_framework as filters
@@ -115,7 +114,7 @@ class EmployeeViewSet(BaseAttrViewSet):
         "email",
         "name",
         "department",
-        "role",
+        "roles",
         # "image",
         # "resume",
         "first_name",
@@ -133,7 +132,7 @@ class EmployeeViewSet(BaseAttrViewSet):
 
     def get_queryset(self):
         company = self.request.user.company
-        return self.queryset.filter(is_staff=False, company=company)
+        return self.queryset.filter(is_staff=False, company=company).distinct()
 
     def perform_create(self, serializer):
         company = self.request.user.company

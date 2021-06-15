@@ -40,9 +40,6 @@ class CreateOwnerView(generics.CreateAPIView):
         )
 
     def perform_create(self, serializer):
-        # validate confirm fields here since serializer.validate()
-        # is shared between create and update
-
         company = Company.objects.create(
             name=serializer.validated_data.get("company", "")
         )
