@@ -12,6 +12,10 @@ class SupplierSerializer(serializers.ModelSerializer):
         try:
             if self.context["request"].method in ["GET"]:
                 self.fields["image"] = serializers.SerializerMethodField()
+            else:
+                self.fields["image"] = serializers.ImageField(
+                    allow_empty_file=True, allow_null=True
+                )
         except KeyError:
             pass
 

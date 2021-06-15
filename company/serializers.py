@@ -40,6 +40,13 @@ class ProductSerializer(serializers.ModelSerializer):
             if self.context["request"].method in ["GET"]:
                 self.fields["image"] = serializers.SerializerMethodField()
                 self.fields["thumbnail"] = serializers.SerializerMethodField()
+            else:
+                self.fields["image"] = serializers.ImageField(
+                    allow_empty_file=True, allow_null=True
+                )
+                self.fields["thumbnail"] = serializers.ImageField(
+                    allow_empty_file=True, allow_null=True
+                )
         except KeyError:
             pass
 
@@ -130,6 +137,10 @@ class EmployeeSerializer(UserSerializer):
         try:
             if self.context["request"].method in ["GET"]:
                 self.fields["resume"] = serializers.SerializerMethodField()
+            else:
+                self.fields["resume"] = serializers.ImageField(
+                    allow_empty_file=True, allow_null=True
+                )
             # TODO: is this even needed?
             self.fields["roles"] = serializers.PrimaryKeyRelatedField(
                 many=True,
