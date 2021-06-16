@@ -115,6 +115,8 @@ class EmployeeViewSet(BaseAttrViewSet):
 
     queryset = User.objects.all()
     serializer_class = serializers.EmployeeSerializer
+    # TODO: remove id from all search fields?
+    # TODO: reduce possible search fields
     search_fields = [
         "id",
         # "password",
@@ -125,8 +127,8 @@ class EmployeeViewSet(BaseAttrViewSet):
         # "is_staff",
         "email",
         "name",
-        "department",
-        "roles",
+        "department__name",
+        "roles__name",
         # "image",
         # "resume",
         "first_name",
