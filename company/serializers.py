@@ -11,7 +11,6 @@ from core.models import (
     Designation,
     Customer,
 )
-from core.relations import PrimaryKeyListRelatedField
 from user.serializers import UserSerializer
 
 
@@ -187,53 +186,22 @@ class EmployeeSerializer(UserSerializer):
             fields["resume"] = serializers.ImageField(
                 allow_empty_file=True, allow_null=True
             )
-        fields["roles"] = PrimaryKeyListRelatedField(
+        fields["roles"] = serializers.PrimaryKeyRelatedField(
             many=True,
             queryset=Role.objects.filter(
                 company=self.context["request"].user.company
             ).distinct(),
         )
-        fields["customer_set"] = PrimaryKeyListRelatedField(
+        fields["customer_set"] = serializers.PrimaryKeyRelatedField(
             many=True,
             queryset=Customer.objects.filter(
                 company=self.context["request"].user.company
             ).distinct(),
         )
-        fields["product_set"] = PrimaryKeyListRelatedField(
+        fields["product_set"] = serializers.PrimaryKeyRelatedField(
             many=True,
             queryset=Product.objects.filter(
                 category__company=self.context["request"].user.company
             ).distinct(),
         )
         return fields
-
-    def create(self, validated_data):
-        roles = validated_data.pop("roles", None)
-        customer_set = validated_data.pop("customer_set", None)
-        product_set = validated_data.pop("product_set", None)
-        user = get_user_model().objects.create_user(**validated_data)
-        # TODO: fix customer_set': [[10, 9, 12]] (remove outer array)
-        # hint: conversion from initial_data to attrs
-        if roles:
-            user.roles.set(roles[0])
-        if customer_set:
-            user.customer_set.set(customer_set[0])
-        if product_set:
-            user.product_set.set(product_set[0])
-
-        return user
-
-    def update(self, instance, validated_data):
-        roles = validated_data.pop("roles", None)
-        customer_set = validated_data.pop("customer_set", None)
-        product_set = validated_data.pop("product_set", None)
-
-        user = super().update(instance, validated_data)
-        if roles:
-            user.roles.set(roles[0])
-        if customer_set:
-            user.customer_set.set(customer_set[0])
-        if product_set:
-            user.product_set.set(product_set[0])
-
-        return user

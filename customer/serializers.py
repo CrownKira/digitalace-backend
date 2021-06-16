@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from core.models import Invoice, Customer, SalesOrder, User
-from core.relations import PrimaryKeyListRelatedField
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -37,7 +36,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             fields["image"] = serializers.ImageField(
                 allow_empty_file=True, allow_null=True
             )
-        fields["agents"] = PrimaryKeyListRelatedField(
+        fields["agents"] = serializers.PrimaryKeyRelatedField(
             many=True,
             queryset=User.objects.filter(
                 company=self.context["request"].user.company
@@ -50,22 +49,6 @@ class CustomerSerializer(serializers.ModelSerializer):
             "src": obj.image.url if obj.image else "",
             "title": obj.image.name if obj.image else "",
         }
-
-    def create(self, validated_data):
-        agents = validated_data.pop("agents", None)
-        customer = super().create(self, validated_data)
-        if agents:
-            customer.agents.set(agents[0])
-
-        return customer
-
-    def update(self, instance, validated_data):
-        agents = validated_data.pop("agents", None)
-        customer = super().update(instance, validated_data)
-        if agents:
-            customer.agents.set(agents[0])
-
-        return customer
 
 
 class InvoiceSerializer(serializers.ModelSerializer):

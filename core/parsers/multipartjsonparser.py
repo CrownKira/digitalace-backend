@@ -41,13 +41,18 @@ class MultiPartJSONParser(BaseParser):
             data, files = parser.parse()
 
             try:
-                jsonData = json.loads(data.get("data", "{}"))
+                json_data = json.loads(data.get("data", "{}"))
             except ValueError as exc:
                 raise ParseError("JSON parse error - %s" % str(exc))
 
-            data = data.copy()
-            data.update(jsonData)
-            del data["data"]
+            if json_data:
+                data = data.copy()
+                for key, value in json_data.items():
+                    if isinstance(value, list):
+                        data.setlist(key, value)
+                    else:
+                        data.__setitem__(key, value)
+                del data["data"]
 
             return DataAndFiles(data, files)
         except MultiPartParserError as exc:

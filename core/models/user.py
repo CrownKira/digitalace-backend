@@ -92,9 +92,6 @@ class UserManager(BaseUserManager):
         self,
         email,
         password=None,
-        roles=[],
-        product_set=[],
-        customer_set=[],
         **extra_fields,
     ):
         """Creates and save a new user"""
@@ -103,10 +100,6 @@ class UserManager(BaseUserManager):
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
-        user.roles.set(roles)
-        user.product_set.set(product_set)
-        user.customer_set.set(customer_set)
-
         return user
 
     def create_superuser(self, email, password):
