@@ -21,9 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
         if self.context["request"].method in ["GET"]:
             fields["image"] = serializers.SerializerMethodField()
         else:
-            fields["image"] = serializers.ImageField(
-                allow_empty_file=True, allow_null=True
-            )
+            fields["image"] = serializers.ImageField(allow_null=True)
         return fields
 
     def create(self, validated_data):

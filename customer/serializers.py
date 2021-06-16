@@ -27,15 +27,12 @@ class CustomerSerializer(serializers.ModelSerializer):
             # "last_seen",
         )
         read_only_fields = ("id", "image")
+        extra_kwargs = {"image": {"allow_null": True}}
 
     def get_fields(self):
         fields = super().get_fields()
         if self.context["request"].method in ["GET"]:
             fields["image"] = serializers.SerializerMethodField()
-        else:
-            fields["image"] = serializers.ImageField(
-                allow_empty_file=True, allow_null=True
-            )
         fields["agents"] = serializers.PrimaryKeyRelatedField(
             many=True,
             queryset=User.objects.filter(

@@ -25,6 +25,18 @@ def user_image_file_path(instance, filename):
     return os.path.join("uploads/user/images/", get_unique_filename(filename))
 
 
+def department_image_file_path(instance, filename):
+    """Generate file path for new department image"""
+    return os.path.join(
+        "uploads/department/images/", get_unique_filename(filename)
+    )
+
+
+def role_image_file_path(instance, filename):
+    """Generate file path for new role image"""
+    return os.path.join("uploads/role/images/", get_unique_filename(filename))
+
+
 def user_resume_file_path(instance, filename):
     """Generate file path for new user resume"""
     return os.path.join("uploads/user/resumes/", get_unique_filename(filename))
@@ -57,6 +69,7 @@ class Department(models.Model):
     """Department in a company"""
 
     name = CharField(max_length=255)
+    image = models.ImageField(upload_to=department_image_file_path, blank=True)
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
 
     def __str__(self):
@@ -77,6 +90,7 @@ class Role(models.Model):
     """Role in a department"""
 
     name = CharField(max_length=255)
+    image = models.ImageField(upload_to=role_image_file_path, blank=True)
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
     permissions = models.ManyToManyField(
         Permission,

@@ -26,6 +26,7 @@ class ProductCategorySerializer(serializers.ModelSerializer):
             "image",
         )
         read_only_fields = ("id",)
+        extra_kwargs = {"image": {"allow_null": True}}
 
     def get_fields(self):
         fields = super().get_fields()
@@ -60,19 +61,16 @@ class ProductSerializer(serializers.ModelSerializer):
             "description",
         )
         read_only_fields = ("id",)
+        extra_kwargs = {
+            "image": {"allow_null": True},
+            "thumbnail": {"allow_null": True},
+        }
 
     def get_fields(self):
         fields = super().get_fields()
         if self.context["request"].method in ["GET"]:
             fields["image"] = serializers.SerializerMethodField()
             fields["thumbnail"] = serializers.SerializerMethodField()
-        else:
-            fields["image"] = serializers.ImageField(
-                allow_empty_file=True, allow_null=True
-            )
-            fields["thumbnail"] = serializers.ImageField(
-                allow_empty_file=True, allow_null=True
-            )
         return fields
 
     def get_image(self, obj):
@@ -182,16 +180,15 @@ class EmployeeSerializer(UserSerializer):
         )
 
         read_only_fields = ("id",)
-        extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
+        extra_kwargs = {
+            "password": {"write_only": True, "min_length": 5},
+            "image": {"allow_null": True},
+        }
 
     def get_fields(self):
         fields = super().get_fields()
         if self.context["request"].method in ["GET"]:
             fields["resume"] = serializers.SerializerMethodField()
-        else:
-            fields["resume"] = serializers.ImageField(
-                allow_empty_file=True, allow_null=True
-            )
         fields["roles"] = serializers.PrimaryKeyRelatedField(
             many=True,
             queryset=Role.objects.filter(

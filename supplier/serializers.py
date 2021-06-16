@@ -27,15 +27,12 @@ class SupplierSerializer(serializers.ModelSerializer):
             # "last_seen",
         )
         read_only_fields = ("id",)
+        extra_kwargs = {"image": {"allow_null": True}}
 
     def get_fields(self):
         fields = super().get_fields()
         if self.context["request"].method in ["GET"]:
             fields["image"] = serializers.SerializerMethodField()
-        else:
-            fields["image"] = serializers.ImageField(
-                allow_empty_file=True, allow_null=True
-            )
         return fields
 
     def get_image(self, obj):
