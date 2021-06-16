@@ -10,7 +10,7 @@ class SupplierSerializer(serializers.ModelSerializer):
         model = Supplier
         fields = (
             "id",
-            "company",
+            # "company",
             "attention",
             "name",
             "address",
@@ -22,11 +22,11 @@ class SupplierSerializer(serializers.ModelSerializer):
             "phone_no",
             "email",
             "payables",
-            "image"
+            "image",
             # "first_seen",
             # "last_seen",
         )
-        read_only_fields = ("id", "company")
+        read_only_fields = ("id",)
 
     def get_fields(self):
         fields = super().get_fields()
@@ -43,6 +43,11 @@ class SupplierSerializer(serializers.ModelSerializer):
             "src": obj.image.url if obj.image else "",
             "title": obj.image.name if obj.image else "",
         }
+
+    def validate(self, attrs):
+        print("==attrs==")
+        print(attrs)
+        return attrs
 
 
 class ReceiveSerializer(serializers.ModelSerializer):
@@ -69,7 +74,10 @@ class ReceiveSerializer(serializers.ModelSerializer):
             "supplier",
             "purchase_order",
         )
-        read_only_fields = ("id", "company")
+        read_only_fields = (
+            "id",
+            "company",
+        )
 
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
@@ -95,4 +103,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             "status",
             "supplier",
         )
-        read_only_fields = ("id", "company")
+        read_only_fields = (
+            "id",
+            "company",
+        )

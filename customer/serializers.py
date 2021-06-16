@@ -11,7 +11,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "company",
-            "attention",
+            # "attention",
             "name",
             "address",
             "city",
@@ -26,7 +26,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             # "first_seen",
             # "last_seen",
         )
-        read_only_fields = ("id", "company", "image")
+        read_only_fields = ("id", "image")
 
     def get_fields(self):
         fields = super().get_fields()

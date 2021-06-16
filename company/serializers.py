@@ -19,8 +19,13 @@ class ProductCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductCategory
-        fields = ("id", "company", "name", "image")
-        read_only_fields = ("id", "company")
+        fields = (
+            "id",
+            # "company",
+            "name",
+            "image",
+        )
+        read_only_fields = ("id",)
 
     def get_fields(self):
         fields = super().get_fields()

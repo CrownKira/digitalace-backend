@@ -115,8 +115,8 @@ class ProductCategory(models.Model):
 class Product(models.Model):
     """Product managed by a company"""
 
+    # this field is non-null hence .set([...products]) doesn't work
     category = models.ForeignKey("ProductCategory", on_delete=models.CASCADE)
-    # TODO: mandatory?
     supplier = models.ForeignKey("Supplier", on_delete=models.CASCADE)
     agents = models.ManyToManyField("User", blank=True)
 
