@@ -125,6 +125,7 @@ class Product(models.Model):
     unit = models.CharField(max_length=255)
     cost = models.DecimalField(max_digits=10, decimal_places=2)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True)
 
     image = models.ImageField(upload_to=product_image_file_path, blank=True)
     thumbnail = models.ImageField(
