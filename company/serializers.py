@@ -57,6 +57,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "thumbnail",
             "stock",
             "sales",
+            "description",
         )
         read_only_fields = ("id",)
 
