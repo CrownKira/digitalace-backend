@@ -342,44 +342,47 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
     # TODO: make this a global function
     def update_delete_or_create(self, instance, designations_data):
-        designation_set = instance.designation_set.all()
-        designations_data_count = len(designations_data)
-        designation_set_count = designation_set.count()
-        total = max(designations_data_count, designation_set_count)
-        delete_pks = []
-
-        # TODO: add company to instance of serializer? eg. self._company?
-        for i in range(total):
+        designations = instance.designation_set.all()
+        designation_set_count = designations.count()
+        bulk_updates = []
+        bulk_creates = []
+        user_set_updates = []
+        user_set_creates = []
+        for i, designation_data in enumerate(designations_data):
             if i < designation_set_count:
-                designation = designation_set[i]
-                designation_pk = designation.pk
-                if i < designations_data_count:
-                    designation_data = designations_data[i]
-                    # TODO: better way to filter out id and pk?
-                    designation_data.pop("id", None)
-                    designation_data.pop("pk", None)
-                    user_set = designation_data.pop("user_set")
-                    designation.user_set.set(user_set)
-                    # https://docs.djangoproject.com/en/3.2/ref/models/querysets/#update
-                    Designation.objects.filter(pk=designation_pk).update(
-                        **designation_data
-                    )
-
-                else:
-                    # can't delete here since this will mutate designation_set
-                    delete_pks.append(designation_pk)
-            else:
-                # add extra to db
-                designation_data = designations_data[i]
+                # update
+                designation_instance = designations[i]
+                user_set = designation_data.pop("user_set")
+                user_set_updates.append((designation_instance, user_set))
                 designation_data.pop("id", None)
                 designation_data.pop("pk", None)
-                user_set = designation_data.pop("user_set")
-                designation = Designation.objects.create(
-                    department=instance, **designation_data
-                )
-                designation.user_set.set(user_set)
+                for attr, value in designation_data.items():
+                    setattr(designation_instance, attr, value)
 
-        Designation.objects.filter(pk__in=delete_pks).delete()
+                bulk_updates.append(designation_instance)
+
+            else:
+                # create
+                user_set = designation_data.pop("user_set")
+                user_set_creates.append(user_set)
+                designation_data.pop("id", None)
+                designation_data.pop("pk", None)
+                bulk_creates.append(
+                    Designation(department=instance, **designation_data)
+                )
+
+        Designation.objects.bulk_update(bulk_updates, ["name"])
+        # delete
+        Designation.objects.exclude(
+            pk__in=[obj.pk for obj in bulk_updates]
+        ).delete()
+        created_designations = Designation.objects.bulk_create(bulk_creates)
+
+        for designation_instance, user_set in user_set_updates:
+            designation_instance.user_set.set(user_set)
+
+        for i, designation_instance in enumerate(created_designations):
+            designation_instance.user_set.set(user_set_creates[i])
 
     def create(self, validated_data):
         designations_data = validated_data.pop("designation_set", [])

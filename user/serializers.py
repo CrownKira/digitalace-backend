@@ -83,7 +83,6 @@ class OwnerProfileSerializer(UserSerializer):
 
     class Meta:
         model = get_user_model()
-        # only for model fields
         fields = (
             "id",
             "password",
