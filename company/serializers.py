@@ -19,7 +19,7 @@ from user.serializers import UserSerializer
 # TODO: create an abstract class for get_image logic
 # https://stackoverflow.com/questions/33137165/django-rest-framework-abstract-class-serializer
 class ProductCategorySerializer(serializers.ModelSerializer):
-    """Serializer for product objects"""
+    """Serializer for product category objects"""
 
     class Meta:
         model = ProductCategory
@@ -205,8 +205,6 @@ class RoleSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
-        """Validate and authenticate the user"""
-
         name = attrs.get("name")
         company = self.context["request"].user.company
         if self.context["request"].method in ["POST"]:
@@ -274,7 +272,6 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
     # TODO: create a function to verify existence of name logic
     def validate(self, attrs):
-        """Validate and authenticate the user"""
         # TODO: check for uniqueness of designation names
         name = attrs.get("name")
         company = self.context["request"].user.company
@@ -298,11 +295,14 @@ class DepartmentSerializer(serializers.ModelSerializer):
         designations_data_count = len(designations_data)
         designation_set_count = designation_set.count()
         total = max(designations_data_count, designation_set_count)
+        delete_pks = []
+
         # TODO: add company to instance of serializer? eg. self._company?
         for i in range(total):
             if i < designation_set_count:
+                designation = designation_set[i]
+                designation_pk = designation.pk
                 if i < designations_data_count:
-                    designation = designation_set[i]
                     designation_data = designations_data[i]
                     # TODO: better way to filter out id and pk?
                     designation_data.pop("id", None)
@@ -310,14 +310,13 @@ class DepartmentSerializer(serializers.ModelSerializer):
                     user_set = designation_data.pop("user_set")
                     designation.user_set.set(user_set)
                     # https://docs.djangoproject.com/en/3.2/ref/models/querysets/#update
-                    Designation.objects.filter(pk=designation.pk).update(
+                    Designation.objects.filter(pk=designation_pk).update(
                         **designation_data
                     )
 
                 else:
-                    # remove extra in db
-                    designation_set[i].delete()
-
+                    # can't delete here since that will mutate the queryset
+                    delete_pks.append(designation_pk)
             else:
                 # add extra to db
                 designation_data = designations_data[i]
@@ -328,6 +327,9 @@ class DepartmentSerializer(serializers.ModelSerializer):
                     department=instance, **designation_data
                 )
                 designation.user_set.set(user_set)
+
+        for delete_pk in delete_pks:
+            Designation.objects.get(pk=delete_pk).delete()
 
     def create(self, validated_data):
         designations_data = validated_data.pop("designation_set", [])
