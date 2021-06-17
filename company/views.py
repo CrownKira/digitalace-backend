@@ -7,6 +7,7 @@ from core.models import (
     Department,
     User,
     Designation,
+    User,
 )
 
 from django_filters import rest_framework as filters
@@ -110,11 +111,22 @@ class DesignationViewSet(BaseAssetAttrViewSet):
     ]
 
 
+class EmployeeFilter(filters.FilterSet):
+    class Meta:
+        model = User
+        fields = {
+            "department": ["exact"],
+            "designation": ["exact"],
+            "roles": ["exact"],
+        }
+
+
 class EmployeeViewSet(BaseAttrViewSet):
     """Manage employee in the database"""
 
     queryset = User.objects.all()
     serializer_class = serializers.EmployeeSerializer
+    filterset_class = EmployeeFilter
     # TODO: remove id from all search fields?
     # TODO: reduce possible search fields
     search_fields = [

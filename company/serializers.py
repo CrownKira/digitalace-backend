@@ -14,6 +14,8 @@ from core.models import (
 from user.serializers import UserSerializer
 
 
+# TODO: make an abstract class to extract get_image logic
+# https://stackoverflow.com/questions/33137165/django-rest-framework-abstract-class-serializer
 class ProductCategorySerializer(serializers.ModelSerializer):
     """Serializer for product objects"""
 
@@ -118,8 +120,21 @@ class RoleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Role
-        fields = ("id", "name", "permissions")
+        fields = ("id", "name", "image", "permissions")
         read_only_fields = ("id",)
+        extra_kwargs = {"image": {"allow_null": True}}
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context["request"].method in ["GET"]:
+            fields["image"] = serializers.SerializerMethodField()
+        return fields
+
+    def get_image(self, obj):
+        return {
+            "src": obj.image.url if obj.image else "",
+            "title": obj.image.name if obj.image else "",
+        }
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -127,11 +142,21 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Department
-        fields = (
-            "id",
-            "name",
-        )
+        fields = ("id", "name", "image")
         read_only_fields = ("id",)
+        extra_kwargs = {"image": {"allow_null": True}}
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context["request"].method in ["GET"]:
+            fields["image"] = serializers.SerializerMethodField()
+        return fields
+
+    def get_image(self, obj):
+        return {
+            "src": obj.image.url if obj.image else "",
+            "title": obj.image.name if obj.image else "",
+        }
 
 
 class DesignationSerializer(serializers.ModelSerializer):
