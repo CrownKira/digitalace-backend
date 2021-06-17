@@ -249,6 +249,16 @@ class DepartmentSerializer(serializers.ModelSerializer):
     # If a nested representation may optionally accept the None value
     # you should pass the required=False flag to the nested serializer.
     # https://www.django-rest-framework.org/api-guide/serializers/#dealing-with-nested-objects
+
+    # https://github.com/encode/django-rest-framework/issues/7262
+    # TL;DR: No, DRF doesn't support nested writable
+    # serializers with multipart/form-data
+    # Nested serializers that are flagged many=True are not working
+    # with multipart/form-data mostly because there's no standard notation
+    # about how a field name should looks like.
+    # I, once, worked on it but got burnt out and lost that work.
+    # Most of the work to do should be within
+    # https://github.com/encode/django-rest-framework/blob/master/rest_framework/utils/html.py
     designation_set = DesignationSerializer(many=True)
 
     class Meta:
@@ -315,7 +325,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
                     )
 
                 else:
-                    # can't delete here since that will mutate the queryset
+                    # can't delete here since this will mutate designation_set
                     delete_pks.append(designation_pk)
             else:
                 # add extra to db
