@@ -41,11 +41,6 @@ class SupplierSerializer(serializers.ModelSerializer):
             "title": obj.image.name if obj.image else "",
         }
 
-    def validate(self, attrs):
-        print("==attrs==")
-        print(attrs)
-        return attrs
-
 
 class ReceiveSerializer(serializers.ModelSerializer):
     """Serializer for Receive objects"""

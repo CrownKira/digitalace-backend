@@ -16,7 +16,7 @@ from core.models import (
 from user.serializers import UserSerializer
 
 
-# TODO: make an abstract class to extract get_image logic
+# TODO: create an abstract class for get_image logic
 # https://stackoverflow.com/questions/33137165/django-rest-framework-abstract-class-serializer
 class ProductCategorySerializer(serializers.ModelSerializer):
     """Serializer for product objects"""
@@ -66,7 +66,9 @@ class ProductSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("id",)
         extra_kwargs = {
-            "image": {"allow_null": True},
+            "image": {
+                "allow_null": True
+            },  # TODO: remove allow_null (should only allow "")
             "thumbnail": {"allow_null": True},
         }
 
@@ -205,14 +207,14 @@ class RoleSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         """Validate and authenticate the user"""
 
-        name = attrs.get("name", "")
+        name = attrs.get("name")
         company = self.context["request"].user.company
         if self.context["request"].method in ["POST"]:
             if Role.objects.filter(company=company, name=name).exists():
                 msg = _("A role with this name already exists")
                 raise serializers.ValidationError(msg)
         elif (
-            Role.exclude(pk=self.instance.pk)
+            Role.objects.exclude(pk=self.instance.pk)
             .filter(company=company, name=name)
             .exists()
         ):
@@ -232,36 +234,23 @@ class DesignationSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
         fields["user_set"] = serializers.PrimaryKeyRelatedField(
             many=True,
             queryset=User.objects.filter(
-                is_staff=False, company=self.context["request"].user.company
+                is_staff=False,
+                company=self.context["request"].user.company,
             ).distinct(),
         )
-
-    def validate(self, attrs):
-        """Validate and authenticate the user"""
-
-        name = attrs.get("name", "")
-        company = self.context["request"].user.company
-        if self.context["request"].method in ["POST"]:
-            if Designation.objects.filter(company=company, name=name).exists():
-                msg = _("A designation with this name already exists")
-                raise serializers.ValidationError(msg)
-        elif (
-            Designation.exclude(pk=self.instance.pk)
-            .filter(company=company, name=name)
-            .exists()
-        ):
-            msg = _("A designation with this name already exists")
-            raise serializers.ValidationError(msg)
-
-        return attrs
+        return fields
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
     """Serializer for department objects"""
 
+    # If a nested representation may optionally accept the None value
+    # you should pass the required=False flag to the nested serializer.
+    # https://www.django-rest-framework.org/api-guide/serializers/#dealing-with-nested-objects
     designation_set = DesignationSerializer(many=True)
 
     class Meta:
@@ -274,6 +263,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
         fields = super().get_fields()
         if self.context["request"].method in ["GET"]:
             fields["image"] = serializers.SerializerMethodField()
+
         return fields
 
     def get_image(self, obj):
@@ -282,18 +272,18 @@ class DepartmentSerializer(serializers.ModelSerializer):
             "title": obj.image.name if obj.image else "",
         }
 
-    # TODO: extract verify existence of name logic
+    # TODO: create a function to verify existence of name logic
     def validate(self, attrs):
         """Validate and authenticate the user"""
-
-        name = attrs.get("name", "")
+        # TODO: check for uniqueness of designation names
+        name = attrs.get("name")
         company = self.context["request"].user.company
         if self.context["request"].method in ["POST"]:
             if Department.objects.filter(company=company, name=name).exists():
                 msg = _("A department with this name already exists")
                 raise serializers.ValidationError(msg)
         elif (
-            Department.exclude(pk=self.instance.pk)
+            Department.objects.exclude(pk=self.instance.pk)
             .filter(company=company, name=name)
             .exists()
         ):
@@ -301,3 +291,56 @@ class DepartmentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(msg)
 
         return attrs
+
+    # TODO: make this a global function
+    def update_delete_or_create(self, instance, designations_data):
+        designation_set = instance.designation_set.all()
+        designations_data_count = len(designations_data)
+        designation_set_count = designation_set.count()
+        total = max(designations_data_count, designation_set_count)
+        # TODO: add company to instance of serializer? eg. self._company?
+        for i in range(total):
+            if i < designation_set_count:
+                if i < designations_data_count:
+                    designation = designation_set[i]
+                    designation_data = designations_data[i]
+                    # TODO: better way to filter out id and pk?
+                    designation_data.pop("id", None)
+                    designation_data.pop("pk", None)
+                    user_set = designation_data.pop("user_set")
+                    designation.user_set.set(user_set)
+                    # https://docs.djangoproject.com/en/3.2/ref/models/querysets/#update
+                    Designation.objects.filter(pk=designation.pk).update(
+                        **designation_data
+                    )
+
+                else:
+                    # remove extra in db
+                    designation_set[i].delete()
+
+            else:
+                # add extra to db
+                designation_data = designations_data[i]
+                designation_data.pop("id", None)
+                designation_data.pop("pk", None)
+                user_set = designation_data.pop("user_set")
+                designation = Designation.objects.create(
+                    department=instance, **designation_data
+                )
+                designation.user_set.set(user_set)
+
+    def create(self, validated_data):
+        designations_data = validated_data.pop("designation_set", [])
+        department = Department.objects.create(**validated_data)
+        for designation_data in designations_data:
+            user_set = designation_data.pop("user_set", [])
+            designation = Designation.objects.create(
+                department=department, **designation_data
+            )
+            designation.user_set.set(user_set)
+        return department
+
+    def update(self, instance, validated_data):
+        designations_data = validated_data.pop("designation_set", [])
+        self.update_delete_or_create(instance, designations_data)
+        return super().update(instance, validated_data)

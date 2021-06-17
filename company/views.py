@@ -1,3 +1,8 @@
+from django_filters import rest_framework as filters
+
+from rest_framework import status
+from rest_framework.response import Response
+
 from core.views import BaseAttrViewSet, BaseAssetAttrViewSet
 from core.models import (
     Product,
@@ -5,13 +10,9 @@ from core.models import (
     Payslip,
     Role,
     Department,
-    User,
     Designation,
     User,
 )
-
-from django_filters import rest_framework as filters
-
 from company import serializers
 
 
@@ -98,6 +99,15 @@ class DepartmentViewSet(BaseAssetAttrViewSet):
         "id",
         "name",
     ]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
 
 class DesignationViewSet(BaseAssetAttrViewSet):

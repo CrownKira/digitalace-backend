@@ -31,13 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """Update a user, setting the password correctly and return it"""
         password = validated_data.pop("password", None)
-        company_name = validated_data.pop("company_name", "")
         user = super().update(instance, validated_data)
-
-        if user.is_staff:
-            company = user.company
-            company.name = company_name
-            company.save(update_fields=["name"])
 
         if password:
             user.set_password(password)
@@ -49,8 +43,10 @@ class UserSerializer(serializers.ModelSerializer):
         """Validate and authenticate the user"""
 
         if self.context["request"].method in ["POST"]:
-            email = attrs.get("email", None)
-            confirm_email = self.initial_data.get("confirm_email", None)
+            email = attrs.get("email")
+            # TODO: assign a field to all self.initial_data
+            # TODO: make this a required field
+            confirm_email = self.initial_data.get("confirm_email")
 
             if email != confirm_email:
                 msg = _("Emails do not match")
@@ -58,11 +54,8 @@ class UserSerializer(serializers.ModelSerializer):
 
             attrs["company"] = self.initial_data.get("company", "")
 
-        if self.context["request"].method in ["PUT", "PATCH"]:
-            attrs["company_name"] = self.initial_data.get("company_name", "")
-
-        password = attrs.get("password", None)
-        confirm_password = self.initial_data.get("confirm_password", None)
+        password = attrs.get("password")
+        confirm_password = self.initial_data.get("confirm_password")
 
         if password != confirm_password:
             msg = _("Passwords do not match")
@@ -137,6 +130,33 @@ class OwnerProfileSerializer(UserSerializer):
 
     def get_company_name(self, obj):
         return obj.company.name if obj.company else ""
+
+    def validate(self, attrs):
+        """Validate and authenticate the user"""
+
+        super_attrs = super().validate(attrs)
+
+        if self.context["request"].method in ["PUT", "PATCH"]:
+            # TODO: make this a required field
+            # hint: need to assign a field to this
+            # to get validated (eg. CharField)
+            super_attrs["company_name"] = self.initial_data.get(
+                "company_name", ""
+            )
+
+        return super_attrs
+
+    def update(self, instance, validated_data):
+        """Update a user, setting the password correctly and return it"""
+        company_name = validated_data.pop("company_name")
+        user = super().update(instance, validated_data)
+
+        if user.is_staff:
+            company = user.company
+            company.name = company_name
+            company.save(update_fields=["name"])
+
+        return user
 
 
 class EmployeeProfileSerializer(UserSerializer):
