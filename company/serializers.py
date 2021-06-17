@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -232,14 +233,17 @@ class DesignationSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
-
-        fields["user_set"] = serializers.PrimaryKeyRelatedField(
-            many=True,
-            queryset=User.objects.filter(
-                is_staff=False,
-                company=self.context["request"].user.company,
-            ).distinct(),
-        )
+        try:
+            fields["user_set"] = serializers.PrimaryKeyRelatedField(
+                many=True,
+                queryset=User.objects.filter(
+                    is_staff=False,
+                    company=self.context["request"].user.company,
+                ).distinct(),
+            )
+        except KeyError:
+            # https://stackoverflow.com/questions/38316321/change-a-field-in-a-django-rest-framework-modelserializer-based-on-the-request-t
+            pass
         return fields
 
 
@@ -269,8 +273,11 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
-        if self.context["request"].method in ["GET"]:
-            fields["image"] = serializers.SerializerMethodField()
+        try:
+            if self.context["request"].method in ["GET"]:
+                fields["image"] = serializers.SerializerMethodField()
+        except KeyError:
+            pass
 
         return fields
 
@@ -279,6 +286,16 @@ class DepartmentSerializer(serializers.ModelSerializer):
             "src": obj.image.url if obj.image else "",
             "title": obj.image.name if obj.image else "",
         }
+
+    def validate_designation_set(self, designation_set):
+        if not isinstance(designation_set, list):
+            ValidationError(_("designation_set expects a list"))
+
+        for item in designation_set:
+            serializer = DesignationSerializer(data=item)
+            serializer.is_valid(raise_exception=True)
+
+        return designation_set
 
     # TODO: create a function to verify existence of name logic
     def validate(self, attrs):
@@ -296,6 +313,15 @@ class DepartmentSerializer(serializers.ModelSerializer):
         ):
             msg = _("A department with this name already exists")
             raise serializers.ValidationError(msg)
+
+        # # FIXME: designation_set not in attrs for multipart data
+        if "designation_set" not in attrs:
+            # serializer checks for existence of designation_set for some reason
+            # even if it is not writable for multipart data
+            # https://stackoverflow.com/questions/39565023/django-querydict-only-returns-the-last-value-of-a-list
+            designation_set = self.initial_data.getlist("designation_set")
+            self.validate_designation_set(designation_set)
+            attrs["designation_set"] = designation_set
 
         return attrs
 
@@ -338,8 +364,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
                 )
                 designation.user_set.set(user_set)
 
-        for delete_pk in delete_pks:
-            Designation.objects.get(pk=delete_pk).delete()
+        Designation.objects.filter(pk__in=delete_pks).delete()
 
     def create(self, validated_data):
         designations_data = validated_data.pop("designation_set", [])

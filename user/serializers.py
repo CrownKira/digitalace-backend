@@ -42,6 +42,7 @@ class UserSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         """Validate and authenticate the user"""
 
+        # TODO: create a function to abstract away confirm logic
         if self.context["request"].method in ["POST"]:
             email = attrs.get("email")
             # TODO: assign a field to all self.initial_data
