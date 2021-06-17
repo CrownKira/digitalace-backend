@@ -18,10 +18,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
-        if self.context["request"].method in ["GET"]:
-            fields["image"] = serializers.SerializerMethodField()
-        else:
-            fields["image"] = serializers.ImageField(allow_null=True)
+        try:
+            if self.context["request"].method in ["GET"]:
+                fields["image"] = serializers.SerializerMethodField()
+            else:
+                fields["image"] = serializers.ImageField(allow_null=True)
+        except KeyError:
+            pass
         return fields
 
     def create(self, validated_data):
@@ -209,8 +212,11 @@ class EmployeeProfileSerializer(UserSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
-        if self.context["request"].method in ["GET"]:
-            fields["resume"] = serializers.SerializerMethodField()
+        try:
+            if self.context["request"].method in ["GET"]:
+                fields["resume"] = serializers.SerializerMethodField()
+        except KeyError:
+            pass
         return fields
 
     def get_company_name(self, obj):

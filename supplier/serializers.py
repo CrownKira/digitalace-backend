@@ -31,8 +31,11 @@ class SupplierSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
-        if self.context["request"].method in ["GET"]:
-            fields["image"] = serializers.SerializerMethodField()
+        try:
+            if self.context["request"].method in ["GET"]:
+                fields["image"] = serializers.SerializerMethodField()
+        except KeyError:
+            pass
         return fields
 
     def get_image(self, obj):
