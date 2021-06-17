@@ -8,9 +8,12 @@ from rest_framework import serializers
 # [f.name for f in User._meta.fields]
 
 
+# TODO: refactor user serializer
 class UserSerializer(serializers.ModelSerializer):
     """Abstract serialier for user objects"""
 
+    # core arguments
+    # https://www.django-rest-framework.org/api-guide/fields/#core-arguments
     permissions = serializers.SerializerMethodField()
 
     class Meta:
@@ -19,10 +22,11 @@ class UserSerializer(serializers.ModelSerializer):
     def get_fields(self):
         fields = super().get_fields()
         try:
-            if self.context["request"].method in ["GET"]:
-                fields["image"] = serializers.SerializerMethodField()
-            else:
-                fields["image"] = serializers.ImageField(allow_null=True)
+            # qn: why is this field not required when update?
+            # TODO: make this required in POST only
+            fields["confirm_password"] = serializers.CharField(
+                max_length=128, write_only=True
+            )
         except KeyError:
             pass
         return fields
@@ -33,7 +37,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """Update a user, setting the password correctly and return it"""
-        password = validated_data.pop("password", None)
+        # password not required in update
+        password = validated_data.pop("password", "")
         user = super().update(instance, validated_data)
 
         if password:
@@ -45,23 +50,10 @@ class UserSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         """Validate and authenticate the user"""
 
-        # TODO: create a function to abstract away confirm logic
-        if self.context["request"].method in ["POST"]:
-            email = attrs.get("email")
-            # TODO: assign a field to all self.initial_data
-            # TODO: make this a required field
-            confirm_email = self.initial_data.get("confirm_email")
+        password = attrs.get("password", "")
+        confirm_password = attrs.pop("confirm_password", "")
 
-            if email != confirm_email:
-                msg = _("Emails do not match")
-                raise serializers.ValidationError(msg)
-
-            attrs["company"] = self.initial_data.get("company", "")
-
-        password = attrs.get("password")
-        confirm_password = self.initial_data.get("confirm_password")
-
-        if password != confirm_password:
+        if password and password != confirm_password:
             msg = _("Passwords do not match")
             raise serializers.ValidationError(msg)
 
@@ -83,21 +75,21 @@ class UserSerializer(serializers.ModelSerializer):
         return obj.get_role_permissions()
 
 
+# TODO: split create and retrieveupdate
 class OwnerProfileSerializer(UserSerializer):
     """
     Serializer for creating, updating and retrieving owner's profile.
     """
 
-    company_name = serializers.SerializerMethodField()
-
     class Meta:
         model = get_user_model()
+        # only for model fields
         fields = (
             "id",
             "password",
             # "last_login",
             # "is_superuser",
-            "company_name",
+            # "company_name",
             # "is_active",
             "is_staff",
             "email",
@@ -132,6 +124,30 @@ class OwnerProfileSerializer(UserSerializer):
         )
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
+    def get_fields(self):
+        fields = super().get_fields()
+        try:
+            if self.context["request"].method in ["GET"]:
+                fields["image"] = serializers.SerializerMethodField()
+                fields["company_name"] = serializers.SerializerMethodField()
+            else:
+                fields["company_name"] = serializers.CharField(
+                    max_length=255, write_only=True
+                )
+            if self.context["request"].method in ["PUT, PATCH"]:
+                fields["image"] = serializers.ImageField(allow_null=True)
+            if self.context["request"].method in ["POST"]:
+                fields["confirm_email"] = serializers.EmailField(
+                    max_length=255,
+                    # write_only is needed since serializer.data will
+                    # retrieve all readable fields of this instance
+                    # see create() in class CreateOwnerView
+                    write_only=True,
+                )
+        except KeyError:
+            pass
+        return fields
+
     def get_company_name(self, obj):
         return obj.company.name if obj.company else ""
 
@@ -140,13 +156,14 @@ class OwnerProfileSerializer(UserSerializer):
 
         super_attrs = super().validate(attrs)
 
-        if self.context["request"].method in ["PUT", "PATCH"]:
-            # TODO: make this a required field
-            # hint: need to assign a field to this
-            # to get validated (eg. CharField)
-            super_attrs["company_name"] = self.initial_data.get(
-                "company_name", ""
-            )
+        # TODO: create a function to abstract away confirm logic
+        if self.context["request"].method in ["POST"]:
+            email = attrs.get("email")
+            confirm_email = attrs.pop("confirm_email")
+
+            if email != confirm_email:
+                msg = _("Emails do not match")
+                raise serializers.ValidationError(msg)
 
         return super_attrs
 
@@ -177,7 +194,7 @@ class EmployeeProfileSerializer(UserSerializer):
             "password",
             # "last_login",
             # "is_superuser",
-            "company_name",
+            # "company_name",
             # "is_active",
             "is_staff",
             "email",
@@ -206,7 +223,6 @@ class EmployeeProfileSerializer(UserSerializer):
             "roles",
             "date_of_commencement",
             "date_of_cessation",
-            "resume",
         )
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
@@ -214,7 +230,10 @@ class EmployeeProfileSerializer(UserSerializer):
         fields = super().get_fields()
         try:
             if self.context["request"].method in ["GET"]:
-                fields["resume"] = serializers.SerializerMethodField()
+                # fields["resume"] = serializers.SerializerMethodField()
+                fields["image"] = serializers.SerializerMethodField()
+            else:
+                fields["image"] = serializers.ImageField(allow_null=True)
         except KeyError:
             pass
         return fields

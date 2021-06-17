@@ -33,6 +33,7 @@ class CreateOwnerView(generics.CreateAPIView):
         headers = self.get_success_headers(serializer.data)
         user = serializer.instance
         token, created = Token.objects.get_or_create(user=user)
+        # serializer.data will serialize all the readable fields
         return Response(
             {"token": token.key, **serializer.data},
             status=status.HTTP_201_CREATED,
@@ -41,7 +42,7 @@ class CreateOwnerView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         company = Company.objects.create(
-            name=serializer.validated_data.get("company", "")
+            name=serializer.validated_data.pop("company_name")
         )
         serializer.save(is_staff=True, company=company)
 

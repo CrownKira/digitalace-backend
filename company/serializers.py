@@ -169,7 +169,10 @@ class EmployeeSerializer(UserSerializer):
         fields = super().get_fields()
         try:
             if self.context["request"].method in ["GET"]:
+                fields["image"] = serializers.SerializerMethodField()
                 fields["resume"] = serializers.SerializerMethodField()
+            else:
+                fields["image"] = serializers.ImageField(allow_null=True)
             fields["roles"] = serializers.PrimaryKeyRelatedField(
                 many=True,
                 queryset=Role.objects.filter(
