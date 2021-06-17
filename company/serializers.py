@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
@@ -10,6 +11,7 @@ from core.models import (
     Department,
     Designation,
     Customer,
+    User,
 )
 from user.serializers import UserSerializer
 
@@ -115,62 +117,6 @@ class PayslipSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "company")
 
 
-class RoleSerializer(serializers.ModelSerializer):
-    """Serializer for role objects"""
-
-    class Meta:
-        model = Role
-        fields = ("id", "name", "image", "permissions")
-        read_only_fields = ("id",)
-        extra_kwargs = {"image": {"allow_null": True}}
-
-    def get_fields(self):
-        fields = super().get_fields()
-        if self.context["request"].method in ["GET"]:
-            fields["image"] = serializers.SerializerMethodField()
-        return fields
-
-    def get_image(self, obj):
-        return {
-            "src": obj.image.url if obj.image else "",
-            "title": obj.image.name if obj.image else "",
-        }
-
-
-class DepartmentSerializer(serializers.ModelSerializer):
-    """Serializer for department objects"""
-
-    class Meta:
-        model = Department
-        fields = ("id", "name", "image")
-        read_only_fields = ("id",)
-        extra_kwargs = {"image": {"allow_null": True}}
-
-    def get_fields(self):
-        fields = super().get_fields()
-        if self.context["request"].method in ["GET"]:
-            fields["image"] = serializers.SerializerMethodField()
-        return fields
-
-    def get_image(self, obj):
-        return {
-            "src": obj.image.url if obj.image else "",
-            "title": obj.image.name if obj.image else "",
-        }
-
-
-class DesignationSerializer(serializers.ModelSerializer):
-    """Serializer for designation objects"""
-
-    class Meta:
-        model = Designation
-        fields = (
-            "id",
-            "name",
-        )
-        read_only_fields = ("id",)
-
-
 class EmployeeSerializer(UserSerializer):
     """Serializer for employee objects"""
 
@@ -233,3 +179,125 @@ class EmployeeSerializer(UserSerializer):
             ).distinct(),
         )
         return fields
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    """Serializer for role objects"""
+
+    class Meta:
+        model = Role
+        fields = ("id", "name", "image", "permissions")
+        read_only_fields = ("id",)
+        extra_kwargs = {"image": {"allow_null": True}}
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context["request"].method in ["GET"]:
+            fields["image"] = serializers.SerializerMethodField()
+        return fields
+
+    def get_image(self, obj):
+        return {
+            "src": obj.image.url if obj.image else "",
+            "title": obj.image.name if obj.image else "",
+        }
+
+    def validate(self, attrs):
+        """Validate and authenticate the user"""
+
+        name = attrs.get("name", "")
+        company = self.context["request"].user.company
+        if self.context["request"].method in ["POST"]:
+            if Role.objects.filter(company=company, name=name).exists():
+                msg = _("A role with this name already exists")
+                raise serializers.ValidationError(msg)
+        elif (
+            Role.exclude(pk=self.instance.pk)
+            .filter(company=company, name=name)
+            .exists()
+        ):
+            msg = _("A role with this name already exists")
+            raise serializers.ValidationError(msg)
+
+        return attrs
+
+
+class DesignationSerializer(serializers.ModelSerializer):
+    """Serializer for designation objects"""
+
+    class Meta:
+        model = Designation
+        fields = ("id", "name", "user_set")
+        read_only_fields = ("id",)
+
+    def get_fields(self):
+        fields = super().get_fields()
+        fields["user_set"] = serializers.PrimaryKeyRelatedField(
+            many=True,
+            queryset=User.objects.filter(
+                is_staff=False, company=self.context["request"].user.company
+            ).distinct(),
+        )
+
+    def validate(self, attrs):
+        """Validate and authenticate the user"""
+
+        name = attrs.get("name", "")
+        company = self.context["request"].user.company
+        if self.context["request"].method in ["POST"]:
+            if Designation.objects.filter(company=company, name=name).exists():
+                msg = _("A designation with this name already exists")
+                raise serializers.ValidationError(msg)
+        elif (
+            Designation.exclude(pk=self.instance.pk)
+            .filter(company=company, name=name)
+            .exists()
+        ):
+            msg = _("A designation with this name already exists")
+            raise serializers.ValidationError(msg)
+
+        return attrs
+
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    """Serializer for department objects"""
+
+    designation_set = DesignationSerializer(many=True)
+
+    class Meta:
+        model = Department
+        fields = ("id", "name", "image", "designation_set")
+        read_only_fields = ("id",)
+        extra_kwargs = {"image": {"allow_null": True}}
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.context["request"].method in ["GET"]:
+            fields["image"] = serializers.SerializerMethodField()
+        return fields
+
+    def get_image(self, obj):
+        return {
+            "src": obj.image.url if obj.image else "",
+            "title": obj.image.name if obj.image else "",
+        }
+
+    # TODO: extract verify existence of name logic
+    def validate(self, attrs):
+        """Validate and authenticate the user"""
+
+        name = attrs.get("name", "")
+        company = self.context["request"].user.company
+        if self.context["request"].method in ["POST"]:
+            if Department.objects.filter(company=company, name=name).exists():
+                msg = _("A department with this name already exists")
+                raise serializers.ValidationError(msg)
+        elif (
+            Department.exclude(pk=self.instance.pk)
+            .filter(company=company, name=name)
+            .exists()
+        ):
+            msg = _("A department with this name already exists")
+            raise serializers.ValidationError(msg)
+
+        return attrs
