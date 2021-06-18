@@ -195,6 +195,17 @@ class EmployeeSerializer(UserSerializer):
             pass
         return fields
 
+    def create(self, validated_data):
+        """Create a new user with encrypted password and return it"""
+        roles = validated_data.pop("roles")
+        customer_set = validated_data.pop("customer_set")
+        product_set = validated_data.pop("product_set")
+        user = super().create(validated_data)
+        user.roles.set(roles)
+        user.customer_set.set(customer_set)
+        user.product_set.set(product_set)
+        return user
+
 
 class RoleSerializer(serializers.ModelSerializer):
     """Serializer for role objects"""
@@ -293,7 +304,6 @@ class DepartmentSerializer(serializers.ModelSerializer):
                 fields["image"] = serializers.SerializerMethodField()
         except KeyError:
             pass
-
         return fields
 
     def get_image(self, obj):
