@@ -312,7 +312,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
             "title": obj.image.name if obj.image else "",
         }
 
-    def validate_designation_set(self, designation_set):
+    def validate_multipart_designation_set(self, designation_set):
         if not isinstance(designation_set, list):
             ValidationError(_("designation_set expects a list"))
 
@@ -345,8 +345,18 @@ class DepartmentSerializer(serializers.ModelSerializer):
             # for some reason even if it is not writable for multipart data
             # https://stackoverflow.com/questions/39565023/django-querydict-only-returns-the-last-value-of-a-list
             designation_set = self.initial_data.getlist("designation_set")
-            self.validate_designation_set(designation_set)
-            attrs["designation_set"] = designation_set
+            self.validate_multipart_designation_set(designation_set)
+            # TODO: mutate user_set using to_internal_value
+            attrs["designation_set"] = [
+                {
+                    **designation_data,
+                    "user_set": [
+                        User.objects.get(pk=user_id)
+                        for user_id in designation_data.get("user_set")
+                    ],
+                }
+                for designation_data in designation_set
+            ]
 
         return attrs
 
@@ -369,9 +379,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
             if i < designation_set_count:
                 # update
                 designation_instance = designation_instances[i]
-                designation_instance.user_set.set(
-                    User.objects.filter(pk__in=user_set)
-                )
+                designation_instance.user_set.set(user_set)
                 for attr, value in designation_data.items():
                     setattr(designation_instance, attr, value)
                 bulk_updates.append(designation_instance)
@@ -391,9 +399,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
         new_designations = Designation.objects.bulk_create(bulk_creates)
 
         for i, new_designation in enumerate(new_designations):
-            new_designation.user_set.set(
-                User.objects.filter(pk__in=user_set_creates[i])
-            )
+            new_designation.user_set.set(user_set_creates[i])
 
     def create(self, validated_data):
         designations_data = validated_data.pop("designation_set", [])
