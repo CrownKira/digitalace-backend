@@ -41,11 +41,13 @@ class ProductCategorySerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
         try:
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
         except KeyError:
             pass
+
         return fields
 
     def get_image(self, obj):
@@ -84,12 +86,14 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
         try:
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
                 fields["thumbnail"] = serializers.SerializerMethodField()
         except KeyError:
             pass
+
         return fields
 
     def get_image(self, obj):
@@ -171,6 +175,29 @@ class EmployeeSerializer(UserSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
+        fields["department"] = serializers.SerializerMethodField(
+            read_only=True
+        )
+        fields["roles"] = serializers.PrimaryKeyRelatedField(
+            many=True,
+            queryset=Role.objects.filter(
+                company=self.context["request"].user.company
+            ).distinct(),
+        )
+        fields["customer_set"] = serializers.PrimaryKeyRelatedField(
+            many=True,
+            queryset=Customer.objects.filter(
+                company=self.context["request"].user.company
+            ).distinct(),
+        )
+        fields["product_set"] = serializers.PrimaryKeyRelatedField(
+            many=True,
+            queryset=Product.objects.filter(
+                category__company=self.context["request"].user.company
+            ).distinct(),
+        )
+
         try:
             if self.context["request"].method in ["GET"]:
                 # TODO: use read_only label instead?
@@ -179,27 +206,6 @@ class EmployeeSerializer(UserSerializer):
             else:
                 fields["image"] = serializers.ImageField(allow_null=True)
 
-            fields["department"] = serializers.SerializerMethodField(
-                read_only=True
-            )
-            fields["roles"] = serializers.PrimaryKeyRelatedField(
-                many=True,
-                queryset=Role.objects.filter(
-                    company=self.context["request"].user.company
-                ).distinct(),
-            )
-            fields["customer_set"] = serializers.PrimaryKeyRelatedField(
-                many=True,
-                queryset=Customer.objects.filter(
-                    company=self.context["request"].user.company
-                ).distinct(),
-            )
-            fields["product_set"] = serializers.PrimaryKeyRelatedField(
-                many=True,
-                queryset=Product.objects.filter(
-                    category__company=self.context["request"].user.company
-                ).distinct(),
-            )
         except KeyError:
             pass
         return fields
@@ -238,21 +244,24 @@ class RoleSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
+        fields["permissions"] = serializers.PrimaryKeyRelatedField(
+            many=True, queryset=Permission.objects.filter(pk__gte=29)
+        )
+        fields["user_set"] = serializers.PrimaryKeyRelatedField(
+            many=True,
+            queryset=User.objects.filter(
+                is_staff=False,
+                company=self.context["request"].user.company,
+            ).distinct(),
+        )
+
         try:
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
-            fields["permissions"] = serializers.PrimaryKeyRelatedField(
-                many=True, queryset=Permission.objects.filter(pk__gte=29)
-            )
-            fields["user_set"] = serializers.PrimaryKeyRelatedField(
-                many=True,
-                queryset=User.objects.filter(
-                    is_staff=False,
-                    company=self.context["request"].user.company,
-                ).distinct(),
-            )
         except KeyError:
             pass
+
         return fields
 
     def get_image(self, obj):
@@ -288,18 +297,13 @@ class DesignationSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
-        try:
-            fields["user_set"] = serializers.PrimaryKeyRelatedField(
-                many=True,
-                queryset=User.objects.filter(
-                    is_staff=False,
-                    company=self.context["request"].user.company,
-                ).distinct(),
-            )
-        except KeyError:
-            # https://stackoverflow.com/questions/38316321/change-a-field-in-a-django-rest-framework-modelserializer-based-on-the-request-t
-            pass
-        return fields
+        fields["user_set"] = serializers.PrimaryKeyRelatedField(
+            many=True,
+            queryset=User.objects.filter(
+                is_staff=False,
+                company=self.context["request"].user.company,
+            ).distinct(),
+        )
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -327,18 +331,20 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
+        fields["designation_set"] = DesignationSerializer(
+            many=True,
+            # required is set to false since get_value()
+            # returns empty for multipart data
+            # https://github.com/encode/django-rest-framework/blob/master/rest_framework/serializers.py#L474
+            required=False,
+        )
         try:
-            fields["designation_set"] = DesignationSerializer(
-                many=True,
-                # required is set to false since get_value() returns empty for multipart data
-                # https://github.com/encode/django-rest-framework/blob/master/rest_framework/serializers.py#L474
-                required=False,
-            )
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
-
         except KeyError:
             pass
+
         return fields
 
     def get_image(self, obj):

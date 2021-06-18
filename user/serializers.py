@@ -12,15 +12,21 @@ from rest_framework import serializers
 class UserSerializer(serializers.ModelSerializer):
     """Abstract serialier for user objects"""
 
-    # core arguments
-    # https://www.django-rest-framework.org/api-guide/fields/#core-arguments
-    permissions = serializers.SerializerMethodField()
-
     class Meta:
         abstract = True
 
     def get_fields(self):
         fields = super().get_fields()
+
+        # core arguments
+        # https://www.django-rest-framework.org/api-guide/fields/#core-arguments
+        fields["permissions"] = serializers.SerializerMethodField()
+        # qn: why is this field not required when update?
+        # TODO: make this required in POST only
+        fields["confirm_password"] = serializers.CharField(
+            max_length=128, write_only=True
+        )
+
         try:
             if self.context["request"].method in ["POST"]:
                 # note that this field will not appear in unittest
@@ -37,16 +43,9 @@ class UserSerializer(serializers.ModelSerializer):
                     # creating the object
                     write_only=True,
                 )
-            # core arguments
-            # https://www.django-rest-framework.org/api-guide/fields/#core-arguments
-            fields["permissions"] = serializers.SerializerMethodField()
-            # qn: why is this field not required when update?
-            # TODO: make this required in POST only
-            fields["confirm_password"] = serializers.CharField(
-                max_length=128, write_only=True
-            )
         except KeyError:
             pass
+
         return fields
 
     def create(self, validated_data):
@@ -146,6 +145,7 @@ class OwnerProfileSerializer(UserSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
         try:
             if self.context["request"].method in ["GET"]:
                 # read_only=True (w/o overriding) vs override on GET request
@@ -162,6 +162,7 @@ class OwnerProfileSerializer(UserSerializer):
                 fields["image"] = serializers.ImageField(allow_null=True)
         except KeyError:
             pass
+
         return fields
 
     def get_company_name(self, obj):
@@ -223,17 +224,19 @@ class EmployeeProfileSerializer(UserSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
+        fields["department"] = serializers.SerializerMethodField(
+            read_only=True
+        )
+
         try:
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
             else:
                 fields["image"] = serializers.ImageField(allow_null=True)
-
-            fields["department"] = serializers.SerializerMethodField(
-                read_only=True
-            )
         except KeyError:
             pass
+
         return fields
 
     def get_department(self, obj):
