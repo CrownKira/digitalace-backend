@@ -188,61 +188,22 @@ class PrivateInvoiceApiTest(TestCase):
         exists = Invoice.objects.all().filter(company=self.company).exists()
         self.assertTrue(exists)
 
-    # TODO: rewrite
-    # def test_create_invoice_successful(self):
-    #     """Test creating a new invoice"""
-    #     sales_order = SalesOrder.objects.create(
-    #         salesperson=self.user,
-    #         customer=self.customer,
-    #         company=self.company,
-    #         date="2001-01-10",
-    #         payment_date="2001-01-10",
-    #         gst_rate="0.07",
-    #         discount_rate="0",
-    #         gst_amount="0",
-    #         discount_amount="0",
-    #         net="0",
-    #         total_amount="0",
-    #         grand_total="0",
-    #         status="CP",
-    #     )
-    #     payload = {
-    #         "salesperson": self.user,
-    #         "testcustomer": self.customer,
-    #         "sales_order": sales_order,
-    #         "company": self.company,
-    #         "date": "2001-01-10",
-    #         "payment_date": "2001-01-10",
-    #         "gst_rate": "0.07",
-    #         "discount_rate": "0",
-    #         "gst_amount": "0",
-    #         "discount_amount": "0",
-    #         "net": "0",
-    #         "total_amount": "0",
-    #         "grand_total": "0",
-    #         "status": "PD",
-    #     }
-    #     self.client.post(INVOICE_URL, payload)
-    #     exists = Invoice.objects.filter(customer=payload["testcustomer"])
-    #     self.assertTrue(exists)
-
-    # def test_create_invoice_invalid(self):
-    #     """Test creating a new invoice with invalid payload"""
-    #     payload = {
-    #         "salesperson": "",
-    #         "testcustomer": self.customer,
-    #         "company": self.company,
-    #         "date": "2001-01-10",
-    #         "payment_date": "2001-01-10",
-    #         "gst_rate": "0.07",
-    #         "discount_rate": "0",
-    #         "gst_amount": "0",
-    #         "discount_amount": "0",
-    #         "net": "0",
-    #         "total_amount": "0",
-    #         "grand_total": "0",
-    #         "status": "PD",
-    #     }
-    #     res = self.client.post(INVOICE_URL, payload)
-
-    #     self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+    def test_create_invoice_invalid(self):
+        """Test creating a new invoice with invalid payload"""
+        payload = {
+            "salesperson": "",
+            "testcustomer": self.customer,
+            "company": self.company,
+            "date": "2001-01-10",
+            "payment_date": "2001-01-10",
+            "gst_rate": "0.07",
+            "discount_rate": "0",
+            "gst_amount": "0",
+            "discount_amount": "0",
+            "net": "0",
+            "total_amount": "0",
+            "grand_total": "0",
+            "status": "PD",
+        }
+        res = self.client.post(INVOICE_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

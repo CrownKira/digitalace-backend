@@ -130,8 +130,12 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
         "rest_framework.filters.SearchFilter",
     ),
+    "DEFAULT_PARSER_CLASSES": (
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.MultiPartParser",
+        # "core.parsers.MultiPartJSONParser",
+    ),
 }
-
 
 # S3 BUCKETS
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html

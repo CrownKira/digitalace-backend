@@ -74,6 +74,11 @@ class RoleViewSet(BaseAssetAttrViewSet):
     queryset = Role.objects.all()
     serializer_class = serializers.RoleSerializer
     search_fields = [
+<<<<<<< HEAD
+        'id',
+        'name',
+        'permissions',
+=======
         "id",
         "name",
         "permissions",
@@ -88,3 +93,5 @@ class DepartmentViewSet(BaseAssetAttrViewSet):
     search_fields = [
         "id",
         "name",
+>>>>>>> 54eece5661269a24cd7652b3ee1a2afad3e78902
+    ]
