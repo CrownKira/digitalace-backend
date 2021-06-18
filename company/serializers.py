@@ -3,8 +3,8 @@ from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
-
 from rest_framework import serializers
+
 
 from core.models import (
     Product,
@@ -284,7 +284,7 @@ class DesignationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Designation
         fields = ("id", "department", "name", "user_set")
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "department")
 
     def get_fields(self):
         fields = super().get_fields()
@@ -318,19 +318,25 @@ class DepartmentSerializer(serializers.ModelSerializer):
     # I, once, worked on it but got burnt out and lost that work.
     # Most of the work to do should be within
     # https://github.com/encode/django-rest-framework/blob/master/rest_framework/utils/html.py
-    designation_set = DesignationSerializer(many=True)
 
     class Meta:
         model = Department
-        fields = ("id", "name", "image", "designation_set")
+        fields = ("id", "name", "image")
         read_only_fields = ("id",)
         extra_kwargs = {"image": {"allow_null": True}}
 
     def get_fields(self):
         fields = super().get_fields()
         try:
+            fields["designation_set"] = DesignationSerializer(
+                many=True,
+                # required is set to false since get_value() returns empty for multipart data
+                # https://github.com/encode/django-rest-framework/blob/master/rest_framework/serializers.py#L474
+                required=False,
+            )
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
+
         except KeyError:
             pass
         return fields
