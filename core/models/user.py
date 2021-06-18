@@ -235,3 +235,9 @@ class UserConfig(models.Model):
 
     def __str__(self):
         return self.user.name
+
+    def delete(self, using=None, keep_parents=False):
+        # https://stackoverflow.com/questions/19182001/how-to-protect-objects-from-deletion-in-django
+        raise AssertionError(
+            "%s object can't be deleted." % (self._meta.object_name,)
+        )
