@@ -155,8 +155,8 @@ class OwnerProfileSerializer(UserSerializer):
 
         # TODO: create a function to abstract away confirm logic
         if self.context["request"].method in ["POST"]:
-            email = attrs.get("email")
-            confirm_email = attrs.pop("confirm_email")
+            email = super_attrs.get("email")
+            confirm_email = super_attrs.pop("confirm_email")
 
             if email != confirm_email:
                 msg = _("Emails do not match")

@@ -173,6 +173,11 @@ class EmployeeSerializer(UserSerializer):
                 fields["resume"] = serializers.SerializerMethodField()
             else:
                 fields["image"] = serializers.ImageField(allow_null=True)
+            if self.context["request"].method in ["POST"]:
+                fields["confirm_email"] = serializers.EmailField(
+                    max_length=255,
+                    write_only=True,
+                )
             fields["roles"] = serializers.PrimaryKeyRelatedField(
                 many=True,
                 queryset=Role.objects.filter(
@@ -194,6 +199,21 @@ class EmployeeSerializer(UserSerializer):
         except KeyError:
             pass
         return fields
+
+    def validate(self, attrs):
+        """Validate and authenticate the user"""
+        super_attrs = super().validate(attrs)
+
+        # TODO: create a function to abstract away confirm logic
+        if self.context["request"].method in ["POST"]:
+            email = super_attrs.get("email")
+            confirm_email = super_attrs.pop("confirm_email")
+
+            if email != confirm_email:
+                msg = _("Emails do not match")
+                raise serializers.ValidationError(msg)
+
+        return super_attrs
 
     def create(self, validated_data):
         """Create a new user with encrypted password and return it"""
@@ -311,7 +331,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
             "title": obj.image.name if obj.image else "",
         }
 
-    def validate_multipart_designation_set(self, designation_set):
+    def _validate_multipart_designation_set(self, designation_set):
         if not isinstance(designation_set, list):
             ValidationError(_("designation_set expects a list"))
 
@@ -349,14 +369,14 @@ class DepartmentSerializer(serializers.ModelSerializer):
             # for some reason even if it is not writable for multipart data
             # https://stackoverflow.com/questions/39565023/django-querydict-only-returns-the-last-value-of-a-list
             designation_set = self.initial_data.getlist("designation_set")
-            attrs["designation_set"] = self.validate_multipart_designation_set(
-                designation_set
-            )
+            attrs[
+                "designation_set"
+            ] = self._validate_multipart_designation_set(designation_set)
 
         return attrs
 
     # TODO: make this a global function
-    def update_delete_or_create(self, instance, designations_data):
+    def _update_delete_or_create(self, instance, designations_data):
         designation_instances = instance.designation_set.all()
         designation_set_count = designation_instances.count()
         bulk_updates = []
@@ -409,5 +429,5 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         designations_data = validated_data.pop("designation_set", [])
-        self.update_delete_or_create(instance, designations_data)
+        self._update_delete_or_create(instance, designations_data)
         return super().update(instance, validated_data)
