@@ -159,6 +159,35 @@ class PrivateInvoiceApiTest(TestCase):
         self.assertEqual(res.data.get("results", None), serializer.data)
         self.assertEqual(len(res.data.get("results", [])), 2)
 
+    def test_create_invoice_successful(self):
+        """Test creating a new invoice"""
+        sales_order = create_sales_order(
+            **{
+                "salesperson": self.user,
+                "customer": self.customer,
+                "company": self.company,
+            }
+        )
+        payload = {
+            "salesperson": self.user,
+            "customer": self.customer.id,
+            "sales_order": sales_order.id,
+            "company": self.company,
+            "date": "2001-01-10",
+            "payment_date": "2001-01-11",
+            "gst_rate": "0.07",
+            "discount_rate": "0",
+            "gst_amount": "0",
+            "discount_amount": "0",
+            "net": "0",
+            "total_amount": "0",
+            "grand_total": "0",
+            "status": "PD",
+        }
+        self.client.post(INVOICE_URL, payload)
+        exists = Invoice.objects.all().filter(company=self.company).exists()
+        self.assertTrue(exists)
+
     # TODO: rewrite
     # def test_create_invoice_successful(self):
     #     """Test creating a new invoice"""

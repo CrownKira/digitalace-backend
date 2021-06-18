@@ -55,30 +55,6 @@ class PrivateCustomerApiTest(TestCase):
     #     self.assertEqual(res.status_code, status.HTTP_200_OK)
     #     self.assertEqual(res.data.get("results", None), serializer.data)
 
-    # Deprecated: since user can only view customers owned by their company
-    # def test_customer_not_limited_to_user(self):
-    #     """Test that customers returned are visible by every user"""
-    #     testcompany2 = Company.objects.create(name="testcompany2")
-    #     testcompany = Company.objects.create(name="testcompany")
-    #     Customer.objects.create(name="testcustomer", company=testcompany)
-    #     Customer.objects.create(name="testcustomer2", company=testcompany2)
-    #     testuser = get_user_model().objects.create_user(
-    #         "testsales@crownkiraappdev.com",
-    #         "password1234",
-    #     )
-    #     res = self.client.get(CUSTOMER_URL)
-
-    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(len(res.data), 2)
-
-    #     self.user = testuser
-    #     self.client.force_authenticate(self.user)
-
-    #     res = self.client.get(CUSTOMER_URL)
-
-    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(len(res.data), 2)
-
     def test_create_customer_successful(self):
         """Test creating a new customer"""
         payload = {
