@@ -359,7 +359,9 @@ class DepartmentSerializer(serializers.ModelSerializer):
             if i < designation_set_count:
                 # update
                 designation_instance = designation_instances[i]
-                designation_instance.user_set.set(user_set)
+                designation_instance.user_set.set(
+                    User.objects.filter(pk__in=user_set)
+                )
                 for attr, value in designation_data.items():
                     setattr(designation_instance, attr, value)
                 bulk_updates.append(designation_instance)
@@ -379,7 +381,9 @@ class DepartmentSerializer(serializers.ModelSerializer):
         new_designations = Designation.objects.bulk_create(bulk_creates)
 
         for i, new_designation in enumerate(new_designations):
-            new_designation.user_set.set(user_set_creates[i])
+            new_designation.user_set.set(
+                User.objects.filter(pk__in=user_set_creates[i])
+            )
 
     def create(self, validated_data):
         designations_data = validated_data.pop("designation_set", [])
