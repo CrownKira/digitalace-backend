@@ -147,7 +147,6 @@ class EmployeeSerializer(UserSerializer):
             # "is_staff",
             "email",
             "name",
-            # "department",
             "roles",
             "image",
             "resume",
@@ -162,7 +161,6 @@ class EmployeeSerializer(UserSerializer):
             "date_of_commencement",
             "date_of_cessation",
             "phone_no",
-            "permissions",
         )
 
         read_only_fields = ("id",)
@@ -184,7 +182,6 @@ class EmployeeSerializer(UserSerializer):
             fields["department"] = serializers.SerializerMethodField(
                 read_only=True
             )
-
             fields["roles"] = serializers.PrimaryKeyRelatedField(
                 many=True,
                 queryset=Role.objects.filter(
@@ -209,11 +206,13 @@ class EmployeeSerializer(UserSerializer):
 
     def get_department(self, obj):
         return (
-            obj.designation.department.name
-            if obj.designation.department
-            else ""
+            (
+                obj.designation.department.pk
+                if obj.designation.department
+                else None
+            )
             if obj.designation
-            else ""
+            else None
         )
 
     def create(self, validated_data):

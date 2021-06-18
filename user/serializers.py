@@ -37,6 +37,9 @@ class UserSerializer(serializers.ModelSerializer):
                     # creating the object
                     write_only=True,
                 )
+            # core arguments
+            # https://www.django-rest-framework.org/api-guide/fields/#core-arguments
+            fields["permissions"] = serializers.SerializerMethodField()
             # qn: why is this field not required when update?
             # TODO: make this required in POST only
             fields["confirm_password"] = serializers.CharField(
@@ -115,7 +118,6 @@ class OwnerProfileSerializer(UserSerializer):
             "is_staff",
             "email",
             "name",
-            # "department",
             # "roles",
             "image",
             # "resume",
@@ -130,14 +132,12 @@ class OwnerProfileSerializer(UserSerializer):
             # "date_of_commencement",
             # "date_of_cessation",
             "phone_no",
-            "permissions",
         )
         # writable fields will be validated using model
         # validator and added to validated_data
         read_only_fields = (
             "id",
             "is_staff",
-            "department",
             "roles",
             "date_of_commencement",
             "date_of_cessation",
@@ -186,8 +186,6 @@ class EmployeeProfileSerializer(UserSerializer):
     Serializer for updating and retrieving employee's profile.
     """
 
-    company_name = serializers.SerializerMethodField()
-
     class Meta:
         model = get_user_model()
         fields = (
@@ -200,7 +198,6 @@ class EmployeeProfileSerializer(UserSerializer):
             "is_staff",
             "email",
             "name",
-            "department",
             "roles",
             "image",
             "resume",
@@ -215,12 +212,10 @@ class EmployeeProfileSerializer(UserSerializer):
             "date_of_commencement",
             "date_of_cessation",
             "phone_no",
-            "permissions",
         )
         read_only_fields = (
             "id",
             "is_staff",
-            "department",
             "roles",
             "date_of_commencement",
             "date_of_cessation",
@@ -231,16 +226,27 @@ class EmployeeProfileSerializer(UserSerializer):
         fields = super().get_fields()
         try:
             if self.context["request"].method in ["GET"]:
-                # fields["resume"] = serializers.SerializerMethodField()
                 fields["image"] = serializers.SerializerMethodField()
             else:
                 fields["image"] = serializers.ImageField(allow_null=True)
+
+            fields["department"] = serializers.SerializerMethodField(
+                read_only=True
+            )
         except KeyError:
             pass
         return fields
 
-    def get_company_name(self, obj):
-        return obj.company.name if obj.company else ""
+    def get_department(self, obj):
+        return (
+            (
+                obj.designation.department.pk
+                if obj.designation.department
+                else None
+            )
+            if obj.designation
+            else None
+        )
 
 
 class AuthTokenSerializer(serializers.Serializer):

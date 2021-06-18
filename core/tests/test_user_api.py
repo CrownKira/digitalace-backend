@@ -24,7 +24,7 @@ class PublicUserApiTests(TestCase):
     def test_create_valid_owner_success(self):
         """Test creating owner with valid payload is successful"""
         payload = {
-            "company": "DigitaLAce",
+            "company_name": "DigitaLAce",
             "email": "test@digitalace.com",
             "password": "testpass",
             "confirm_email": "test@digitalace.com",
