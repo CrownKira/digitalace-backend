@@ -173,11 +173,7 @@ class EmployeeSerializer(UserSerializer):
                 fields["resume"] = serializers.SerializerMethodField()
             else:
                 fields["image"] = serializers.ImageField(allow_null=True)
-            if self.context["request"].method in ["POST"]:
-                fields["confirm_email"] = serializers.EmailField(
-                    max_length=255,
-                    write_only=True,
-                )
+
             fields["roles"] = serializers.PrimaryKeyRelatedField(
                 many=True,
                 queryset=Role.objects.filter(
@@ -199,21 +195,6 @@ class EmployeeSerializer(UserSerializer):
         except KeyError:
             pass
         return fields
-
-    def validate(self, attrs):
-        """Validate and authenticate the user"""
-        super_attrs = super().validate(attrs)
-
-        # TODO: create a function to abstract away confirm logic
-        if self.context["request"].method in ["POST"]:
-            email = super_attrs.get("email")
-            confirm_email = super_attrs.pop("confirm_email")
-
-            if email != confirm_email:
-                msg = _("Emails do not match")
-                raise serializers.ValidationError(msg)
-
-        return super_attrs
 
     def create(self, validated_data):
         """Create a new user with encrypted password and return it"""

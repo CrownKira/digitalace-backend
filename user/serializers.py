@@ -22,6 +22,14 @@ class UserSerializer(serializers.ModelSerializer):
     def get_fields(self):
         fields = super().get_fields()
         try:
+            if self.context["request"].method in ["POST"]:
+                fields["confirm_email"] = serializers.EmailField(
+                    max_length=255,
+                    # write_only is needed since serializer.data will
+                    # retrieve all readable fields of this instance
+                    # see create() in class CreateOwnerView
+                    write_only=True,
+                )
             # qn: why is this field not required when update?
             # TODO: make this required in POST only
             fields["confirm_password"] = serializers.CharField(
@@ -49,6 +57,14 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """Validate and authenticate the user"""
+        if self.context["request"].method in ["POST"]:
+            email = attrs.get("email")
+            confirm_email = attrs.pop("confirm_email")
+
+            if email != confirm_email:
+                msg = _("Emails do not match")
+                raise serializers.ValidationError(msg)
+
         password = attrs.get("password", "")
         confirm_password = attrs.pop("confirm_password", "")
 
@@ -134,35 +150,12 @@ class OwnerProfileSerializer(UserSerializer):
                 )
             if self.context["request"].method in ["PUT, PATCH"]:
                 fields["image"] = serializers.ImageField(allow_null=True)
-            if self.context["request"].method in ["POST"]:
-                fields["confirm_email"] = serializers.EmailField(
-                    max_length=255,
-                    # write_only is needed since serializer.data will
-                    # retrieve all readable fields of this instance
-                    # see create() in class CreateOwnerView
-                    write_only=True,
-                )
         except KeyError:
             pass
         return fields
 
     def get_company_name(self, obj):
         return obj.company.name if obj.company else ""
-
-    def validate(self, attrs):
-        """Validate and authenticate the user"""
-        super_attrs = super().validate(attrs)
-
-        # TODO: create a function to abstract away confirm logic
-        if self.context["request"].method in ["POST"]:
-            email = super_attrs.get("email")
-            confirm_email = super_attrs.pop("confirm_email")
-
-            if email != confirm_email:
-                msg = _("Emails do not match")
-                raise serializers.ValidationError(msg)
-
-        return super_attrs
 
     def update(self, instance, validated_data):
         """Update a user, setting the password correctly and return it"""
