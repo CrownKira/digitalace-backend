@@ -23,11 +23,18 @@ class UserSerializer(serializers.ModelSerializer):
         fields = super().get_fields()
         try:
             if self.context["request"].method in ["POST"]:
+                # note that this field will not appear in unittest
+                # since the request method is not defined
                 fields["confirm_email"] = serializers.EmailField(
                     max_length=255,
                     # write_only is needed since serializer.data will
                     # retrieve all readable fields of this instance
                     # see create() in class CreateOwnerView
+                    # specifying write_only here so it will not appear
+                    # in serializer.data in response back to the client
+                    # set to write_only when you don't want this field to
+                    # appear in serializer.data over the course of
+                    # creating the object
                     write_only=True,
                 )
             # qn: why is this field not required when update?
@@ -142,6 +149,10 @@ class OwnerProfileSerializer(UserSerializer):
         fields = super().get_fields()
         try:
             if self.context["request"].method in ["GET"]:
+                # read_only=True (w/o overriding) vs override on GET request
+                # read_only=True, will override on any request,
+                # and it will be read_only regardless of the http method
+                # override on GET request, will only override on GET request
                 fields["image"] = serializers.SerializerMethodField()
                 fields["company_name"] = serializers.SerializerMethodField()
             else:

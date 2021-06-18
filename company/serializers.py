@@ -31,6 +31,10 @@ class ProductCategorySerializer(serializers.ModelSerializer):
             "image",
         )
         read_only_fields = ("id",)
+        # Please keep in mind that, if the field has already been
+        # explicitly declared on the serializer class, then
+        # the extra_kwargs option will be ignored.
+        # https://www.django-rest-framework.org/api-guide/serializers/#additional-keyword-arguments
         extra_kwargs = {"image": {"allow_null": True}}
 
     def get_fields(self):
