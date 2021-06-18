@@ -231,8 +231,7 @@ class RoleSerializer(serializers.ModelSerializer):
             "title": obj.image.name if obj.image else "",
         }
 
-    def validate(self, attrs):
-        name = attrs.get("name")
+    def validate_name(self, name):
         company = self.context["request"].user.company
         if self.context["request"].method in ["POST"]:
             if Role.objects.filter(company=company, name=name).exists():
@@ -246,7 +245,7 @@ class RoleSerializer(serializers.ModelSerializer):
             msg = _("A role with this name already exists")
             raise serializers.ValidationError(msg)
 
-        return attrs
+        return name
 
 
 class DesignationSerializer(serializers.ModelSerializer):
@@ -316,17 +315,17 @@ class DepartmentSerializer(serializers.ModelSerializer):
         if not isinstance(designation_set, list):
             ValidationError(_("designation_set expects a list"))
 
+        validated_data = []
         for item in designation_set:
             serializer = DesignationSerializer(data=item)
             serializer.is_valid(raise_exception=True)
+            validated_data.append(serializer.validated_data)
 
-        return designation_set
+        return validated_data
 
-    # TODO: create a function to verify existence of name logic
-    def validate(self, attrs):
-        # TODO: check for uniqueness of designation names
-        name = attrs.get("name")
+    def validate_name(self, name):
         company = self.context["request"].user.company
+
         if self.context["request"].method in ["POST"]:
             if Department.objects.filter(company=company, name=name).exists():
                 msg = _("A department with this name already exists")
@@ -339,24 +338,20 @@ class DepartmentSerializer(serializers.ModelSerializer):
             msg = _("A department with this name already exists")
             raise serializers.ValidationError(msg)
 
+        return name
+
+    # TODO: create a function to verify existence of name logic
+    def validate(self, attrs):
+        # TODO: check for uniqueness of designation names
         # FIXME: designation_set not in attrs for multipart data
         if "designation_set" not in attrs:
             # serializer checks for existence of designation_set
             # for some reason even if it is not writable for multipart data
             # https://stackoverflow.com/questions/39565023/django-querydict-only-returns-the-last-value-of-a-list
             designation_set = self.initial_data.getlist("designation_set")
-            self.validate_multipart_designation_set(designation_set)
-            # TODO: mutate user_set using to_internal_value
-            attrs["designation_set"] = [
-                {
-                    **designation_data,
-                    "user_set": [
-                        User.objects.get(pk=user_id)
-                        for user_id in designation_data.get("user_set")
-                    ],
-                }
-                for designation_data in designation_set
-            ]
+            attrs["designation_set"] = self.validate_multipart_designation_set(
+                designation_set
+            )
 
         return attrs
 

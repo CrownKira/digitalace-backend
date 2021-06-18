@@ -49,7 +49,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """Validate and authenticate the user"""
-
         password = attrs.get("password", "")
         confirm_password = attrs.pop("confirm_password", "")
 
@@ -152,7 +151,6 @@ class OwnerProfileSerializer(UserSerializer):
 
     def validate(self, attrs):
         """Validate and authenticate the user"""
-
         super_attrs = super().validate(attrs)
 
         # TODO: create a function to abstract away confirm logic
