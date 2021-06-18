@@ -137,7 +137,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     # if company is null, disable all functionalities
     # can be blank (if created from admin page)
     company = models.ForeignKey(
-        "Company", on_delete=models.CASCADE, null=True, blank=True
+        "Company", on_delete=models.SET_NULL, null=True, blank=True
     )
     is_active = models.BooleanField(default=True)
     # is the user an owner of his company?
@@ -150,10 +150,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     # below are employee fields (null fields for owner)
     # TODO: create a Profile model to store these fields
     department = models.ForeignKey(
-        "Department", on_delete=models.CASCADE, null=True, blank=True
+        "Department", on_delete=models.SET_NULL, null=True, blank=True
     )
     designation = models.ForeignKey(
-        "Designation", on_delete=models.CASCADE, null=True, blank=True
+        "Designation", on_delete=models.SET_NULL, null=True, blank=True
     )
     # https://stackoverflow.com/questions/18243039/migrating-manytomanyfield-to-null-true-blank-true-isnt-recognized
     roles = models.ManyToManyField("Role", blank=True)

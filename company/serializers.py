@@ -421,10 +421,10 @@ class DepartmentSerializer(serializers.ModelSerializer):
         department = Department.objects.create(**validated_data)
         for designation_data in designations_data:
             user_set = designation_data.pop("user_set", [])
-            designation = Designation.objects.create(
+            designation_instance = Designation.objects.create(
                 department=department, **designation_data
             )
-            designation.user_set.set(user_set)
+            designation_instance.user_set.set(user_set)
         return department
 
     def update(self, instance, validated_data):
