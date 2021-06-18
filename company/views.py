@@ -109,7 +109,7 @@ class DepartmentViewSet(BaseAssetAttrViewSet):
     ]
 
 
-class DesignationViewSet(BaseAssetAttrViewSet):
+class DesignationViewSet(BaseAttrViewSet):
     """Manage designations in the database"""
 
     queryset = Designation.objects.all()
@@ -118,6 +118,10 @@ class DesignationViewSet(BaseAssetAttrViewSet):
         "id",
         "name",
     ]
+
+    def get_queryset(self):
+        company = self.request.user.company
+        return self.queryset.filter(department__company=company).distinct()
 
 
 class EmployeeFilter(filters.FilterSet):

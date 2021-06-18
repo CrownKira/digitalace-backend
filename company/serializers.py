@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+
 
 from rest_framework import serializers
 
@@ -231,7 +233,7 @@ class RoleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Role
-        fields = ("id", "name", "image", "permissions")
+        fields = ("id", "name", "image")
         read_only_fields = ("id",)
         extra_kwargs = {"image": {"allow_null": True}}
 
@@ -240,6 +242,16 @@ class RoleSerializer(serializers.ModelSerializer):
         try:
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
+            fields["permissions"] = serializers.PrimaryKeyRelatedField(
+                many=True, queryset=Permission.objects.filter(pk__gte=29)
+            )
+            fields["user_set"] = serializers.PrimaryKeyRelatedField(
+                many=True,
+                queryset=User.objects.filter(
+                    is_staff=False,
+                    company=self.context["request"].user.company,
+                ).distinct(),
+            )
         except KeyError:
             pass
         return fields
@@ -272,7 +284,7 @@ class DesignationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Designation
-        fields = ("id", "name", "user_set")
+        fields = ("id", "department", "name", "user_set")
         read_only_fields = ("id",)
 
     def get_fields(self):
