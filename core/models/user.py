@@ -210,7 +210,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                 role__in=self.roles.all()
             ).distinct()
         )
-        return set(perm.codename for perm in perm_list)
+        return set(perm.pk for perm in perm_list)
 
     def __str__(self):
         return self.name

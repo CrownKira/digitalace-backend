@@ -11,7 +11,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             # "company",
-            # "attention",
+            "attention",
             "name",
             "address",
             "city",

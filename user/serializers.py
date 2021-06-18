@@ -109,7 +109,7 @@ class OwnerProfileSerializer(UserSerializer):
     class Meta:
         model = get_user_model()
         fields = (
-            "id",
+            "id",  # show id to facilitate testing
             "password",
             # "last_login",
             # "is_superuser",
@@ -141,7 +141,6 @@ class OwnerProfileSerializer(UserSerializer):
             "roles",
             "date_of_commencement",
             "date_of_cessation",
-            "resume",
         )
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
