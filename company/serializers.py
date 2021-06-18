@@ -141,7 +141,7 @@ class EmployeeSerializer(UserSerializer):
             # "is_staff",
             "email",
             "name",
-            "department",
+            # "department",
             "roles",
             "image",
             "resume",
@@ -169,10 +169,15 @@ class EmployeeSerializer(UserSerializer):
         fields = super().get_fields()
         try:
             if self.context["request"].method in ["GET"]:
+                # TODO: use read_only label instead?
                 fields["image"] = serializers.SerializerMethodField()
                 fields["resume"] = serializers.SerializerMethodField()
             else:
                 fields["image"] = serializers.ImageField(allow_null=True)
+
+            fields["department"] = serializers.SerializerMethodField(
+                read_only=True
+            )
 
             fields["roles"] = serializers.PrimaryKeyRelatedField(
                 many=True,
@@ -195,6 +200,15 @@ class EmployeeSerializer(UserSerializer):
         except KeyError:
             pass
         return fields
+
+    def get_department(self, obj):
+        return (
+            obj.designation.department.name
+            if obj.designation.department
+            else ""
+            if obj.designation
+            else ""
+        )
 
     def create(self, validated_data):
         """Create a new user with encrypted password and return it"""
