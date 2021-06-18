@@ -329,10 +329,10 @@ class DepartmentSerializer(serializers.ModelSerializer):
             msg = _("A department with this name already exists")
             raise serializers.ValidationError(msg)
 
-        # # FIXME: designation_set not in attrs for multipart data
+        # FIXME: designation_set not in attrs for multipart data
         if "designation_set" not in attrs:
-            # serializer checks for existence of designation_set for some reason
-            # even if it is not writable for multipart data
+            # serializer checks for existence of designation_set
+            # for some reason even if it is not writable for multipart data
             # https://stackoverflow.com/questions/39565023/django-querydict-only-returns-the-last-value-of-a-list
             designation_set = self.initial_data.getlist("designation_set")
             self.validate_designation_set(designation_set)
@@ -342,31 +342,30 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
     # TODO: make this a global function
     def update_delete_or_create(self, instance, designations_data):
-        designations = instance.designation_set.all()
-        designation_set_count = designations.count()
+        designation_instances = instance.designation_set.all()
+        designation_set_count = designation_instances.count()
         bulk_updates = []
         bulk_creates = []
-        user_set_updates = []
         user_set_creates = []
+
+        # this loop does not evaluate designation_instances
+        # TODO: test other approach: iterate over designation
+        # instances, update and delete in the loop. bulk create
+        # the rest after exiting the loop
         for i, designation_data in enumerate(designations_data):
+            designation_data.pop("id", None)
+            designation_data.pop("pk", None)
+            user_set = designation_data.pop("user_set")
             if i < designation_set_count:
                 # update
-                designation_instance = designations[i]
-                user_set = designation_data.pop("user_set")
-                user_set_updates.append((designation_instance, user_set))
-                designation_data.pop("id", None)
-                designation_data.pop("pk", None)
+                designation_instance = designation_instances[i]
+                designation_instance.user_set.set(user_set)
                 for attr, value in designation_data.items():
                     setattr(designation_instance, attr, value)
-
                 bulk_updates.append(designation_instance)
-
             else:
                 # create
-                user_set = designation_data.pop("user_set")
                 user_set_creates.append(user_set)
-                designation_data.pop("id", None)
-                designation_data.pop("pk", None)
                 bulk_creates.append(
                     Designation(department=instance, **designation_data)
                 )
@@ -376,13 +375,11 @@ class DepartmentSerializer(serializers.ModelSerializer):
         Designation.objects.exclude(
             pk__in=[obj.pk for obj in bulk_updates]
         ).delete()
-        created_designations = Designation.objects.bulk_create(bulk_creates)
+        # new_designations are in order of bulk_creates
+        new_designations = Designation.objects.bulk_create(bulk_creates)
 
-        for designation_instance, user_set in user_set_updates:
-            designation_instance.user_set.set(user_set)
-
-        for i, designation_instance in enumerate(created_designations):
-            designation_instance.user_set.set(user_set_creates[i])
+        for i, new_designation in enumerate(new_designations):
+            new_designation.user_set.set(user_set_creates[i])
 
     def create(self, validated_data):
         designations_data = validated_data.pop("designation_set", [])
