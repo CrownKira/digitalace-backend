@@ -412,7 +412,11 @@ class DepartmentSerializer(serializers.ModelSerializer):
                 # create
                 user_set_creates.append(user_set)
                 bulk_creates.append(
-                    Designation(department=instance, **designation_data)
+                    # unpack first to prevent overriding
+                    Designation(
+                        **designation_data,
+                        department=instance,
+                    )
                 )
 
         Designation.objects.bulk_update(bulk_updates, ["name"])
@@ -432,7 +436,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
         for designation_data in designations_data:
             user_set = designation_data.pop("user_set", [])
             designation_instance = Designation.objects.create(
-                department=department, **designation_data
+                **designation_data, department=department
             )
             designation_instance.user_set.set(user_set)
         return department

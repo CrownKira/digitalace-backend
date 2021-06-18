@@ -35,7 +35,10 @@ class CreateOwnerView(generics.CreateAPIView):
         token, created = Token.objects.get_or_create(user=user)
         # serializer.data will serialize all the readable fields
         return Response(
-            {"token": token.key, **serializer.data},
+            {
+                **serializer.data,
+                "token": token.key,
+            },
             status=status.HTTP_201_CREATED,
             headers=headers,
         )
