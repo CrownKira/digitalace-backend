@@ -6,20 +6,11 @@ from core.models import Receive, Supplier, PurchaseOrder
 class SupplierSerializer(serializers.ModelSerializer):
     """Serializer for Supplier objects"""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        try:
-            if self.context["request"].method in ["GET"]:
-                self.fields["image"] = serializers.SerializerMethodField()
-        except KeyError:
-            pass
-
     class Meta:
         model = Supplier
         fields = (
             "id",
-            "company",
+            # "company",
             "attention",
             "name",
             "address",
@@ -31,14 +22,27 @@ class SupplierSerializer(serializers.ModelSerializer):
             "phone_no",
             "email",
             "payables",
-            "image"
+            "image",
             # "first_seen",
             # "last_seen",
         )
-        read_only_fields = ("id", "company")
+        read_only_fields = ("id",)
+        extra_kwargs = {"image": {"allow_null": True}}
+
+    def get_fields(self):
+        fields = super().get_fields()
+        try:
+            if self.context["request"].method in ["GET"]:
+                fields["image"] = serializers.SerializerMethodField()
+        except KeyError:
+            pass
+        return fields
 
     def get_image(self, obj):
-        return obj.image.url if obj.image else ""
+        return {
+            "src": obj.image.url if obj.image else "",
+            "title": obj.image.name if obj.image else "",
+        }
 
 
 class ReceiveSerializer(serializers.ModelSerializer):
@@ -65,7 +69,10 @@ class ReceiveSerializer(serializers.ModelSerializer):
             "supplier",
             "purchase_order",
         )
-        read_only_fields = ("id", "company")
+        read_only_fields = (
+            "id",
+            "company",
+        )
 
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
@@ -91,4 +98,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             "status",
             "supplier",
         )
-        read_only_fields = ("id", "company")
+        read_only_fields = (
+            "id",
+            "company",
+        )

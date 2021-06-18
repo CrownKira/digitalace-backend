@@ -1,26 +1,17 @@
 from rest_framework import serializers
 
-from core.models import Invoice, Customer, SalesOrder
+from core.models import Invoice, Customer, SalesOrder, User
 
 
 class CustomerSerializer(serializers.ModelSerializer):
     """Serializer for customer objects"""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        try:
-            if self.context["request"].method in ["GET"]:
-                self.fields["image"] = serializers.SerializerMethodField()
-        except KeyError:
-            pass
-
     class Meta:
         model = Customer
         fields = (
             "id",
-            "company",
-            "attention",
+            # "company",
+            # "attention",
             "name",
             "address",
             "city",
@@ -35,10 +26,29 @@ class CustomerSerializer(serializers.ModelSerializer):
             # "first_seen",
             # "last_seen",
         )
-        read_only_fields = ("id", "company")
+        read_only_fields = ("id", "image")
+        extra_kwargs = {"image": {"allow_null": True}}
+
+    def get_fields(self):
+        fields = super().get_fields()
+        try:
+            if self.context["request"].method in ["GET"]:
+                fields["image"] = serializers.SerializerMethodField()
+            fields["agents"] = serializers.PrimaryKeyRelatedField(
+                many=True,
+                queryset=User.objects.filter(
+                    company=self.context["request"].user.company
+                ).distinct(),
+            )
+        except KeyError:
+            pass
+        return fields
 
     def get_image(self, obj):
-        return obj.image.url if obj.image else ""
+        return {
+            "src": obj.image.url if obj.image else "",
+            "title": obj.image.name if obj.image else "",
+        }
 
 
 class InvoiceSerializer(serializers.ModelSerializer):

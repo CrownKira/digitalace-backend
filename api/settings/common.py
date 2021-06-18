@@ -132,10 +132,12 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PARSER_CLASSES": (
         "rest_framework.parsers.JSONParser",
-        "rest_framework.parsers.MultiPartParser",
-        # "core.parsers.MultiPartJSONParser",
+        "rest_framework.parsers.FormParser",
+        # "rest_framework.parsers.MultiPartParser",
+        "core.parsers.MultiPartJSONParser",
     ),
 }
+
 
 # S3 BUCKETS
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html
@@ -148,6 +150,7 @@ AWS_SECRET_ACCESS_KEY = os.environ.get(
 AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
 AWS_DEFAULT_ACL = "public-read"
 
+# TODO: change to media
 AWS_LOCATION = "static"
 
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
