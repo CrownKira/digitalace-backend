@@ -208,6 +208,7 @@ class EmployeeSerializer(UserSerializer):
 
         except KeyError:
             pass
+
         return fields
 
     def get_department(self, obj):
@@ -297,6 +298,7 @@ class DesignationSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
         fields["user_set"] = serializers.PrimaryKeyRelatedField(
             many=True,
             queryset=User.objects.filter(
@@ -304,6 +306,8 @@ class DesignationSerializer(serializers.ModelSerializer):
                 company=self.context["request"].user.company,
             ).distinct(),
         )
+
+        return fields
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
