@@ -212,6 +212,7 @@ class EmployeeProfileSerializer(UserSerializer):
             "date_of_commencement",
             "date_of_cessation",
             "phone_no",
+            "designation",
         )
         read_only_fields = (
             "id",

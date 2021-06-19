@@ -32,16 +32,15 @@ class CustomerSerializer(serializers.ModelSerializer):
     def get_fields(self):
         fields = super().get_fields()
 
-        fields["agents"] = serializers.PrimaryKeyRelatedField(
-            many=True,
-            queryset=User.objects.filter(
-                company=self.context["request"].user.company
-            ).distinct(),
-        )
-
         try:
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
+            fields["agents"] = serializers.PrimaryKeyRelatedField(
+                many=True,
+                queryset=User.objects.filter(
+                    company=self.context["request"].user.company
+                ).distinct(),
+            )
         except KeyError:
             pass
 
