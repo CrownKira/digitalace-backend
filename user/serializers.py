@@ -3,37 +3,202 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
+# use the following command to easily
+# retrieve all fields of User:
+# [f.name for f in User._meta.fields]
 
+
+# TODO: refactor user serializer
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer for the users object"""
+    """Abstract serialier for user objects"""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # core arguments
+    # https://www.django-rest-framework.org/api-guide/fields/#core-arguments
+    permissions = serializers.SerializerMethodField()
 
+    class Meta:
+        abstract = True
+
+    def get_fields(self):
+        fields = super().get_fields()
         try:
-            if self.context["request"].method in ["GET"]:
-                self.fields["image"] = serializers.SerializerMethodField()
-                self.fields["resume"] = serializers.SerializerMethodField()
+            if self.context["request"].method in ["POST"]:
+                # note that this field will not appear in unittest
+                # since the request method is not defined
+                fields["confirm_email"] = serializers.EmailField(
+                    max_length=255,
+                    # write_only is needed since serializer.data will
+                    # retrieve all readable fields of this instance
+                    # see create() in class CreateOwnerView
+                    # specifying write_only here so it will not appear
+                    # in serializer.data in response back to the client
+                    # set to write_only when you don't want this field to
+                    # appear in serializer.data over the course of
+                    # creating the object
+                    write_only=True,
+                )
+            # core arguments
+            # https://www.django-rest-framework.org/api-guide/fields/#core-arguments
+            fields["permissions"] = serializers.SerializerMethodField()
+            # qn: why is this field not required when update?
+            # TODO: make this required in POST only
+            fields["confirm_password"] = serializers.CharField(
+                max_length=128, write_only=True
+            )
         except KeyError:
             pass
+        return fields
+
+    def create(self, validated_data):
+        """Create a new user with encrypted password and return it"""
+        return get_user_model().objects.create_user(**validated_data)
+
+    def update(self, instance, validated_data):
+        """Update a user, setting the password correctly and return it"""
+        # password not required in update
+        password = validated_data.pop("password", "")
+        user = super().update(instance, validated_data)
+
+        if password:
+            user.set_password(password)
+            user.save()
+
+        return user
+
+    def validate(self, attrs):
+        """Validate and authenticate the user"""
+        if self.context["request"].method in ["POST"]:
+            email = attrs.get("email")
+            confirm_email = attrs.pop("confirm_email")
+
+            if email != confirm_email:
+                msg = _("Emails do not match")
+                raise serializers.ValidationError(msg)
+
+        password = attrs.get("password", "")
+        confirm_password = attrs.pop("confirm_password", "")
+
+        if password and password != confirm_password:
+            msg = _("Passwords do not match")
+            raise serializers.ValidationError(msg)
+
+        return attrs
+
+    def get_image(self, obj):
+        return {
+            "src": obj.image.url if obj.image else "",
+            "title": obj.image.name if obj.image else "",
+        }
+
+    def get_resume(self, obj):
+        return {
+            "src": obj.resume.url if obj.resume else "",
+            "title": obj.resume.name if obj.resume else "",
+        }
+
+    def get_permissions(self, obj):
+        return obj.get_role_permissions()
+
+
+# TODO: split create and retrieveupdate
+class OwnerProfileSerializer(UserSerializer):
+    """
+    Serializer for creating, updating and retrieving owner's profile.
+    """
 
     class Meta:
         model = get_user_model()
-        # use the following command to easily
-        # retrieve all fields of User:
-        # [f.name for f in User._meta.fields]
         fields = (
             "id",
             "password",
             # "last_login",
             # "is_superuser",
-            # "company",
+            # "company_name",
             # "is_active",
-            # "is_staff",
+            "is_staff",
             "email",
             "name",
-            "department",
-            "role",
+            # "roles",
+            "image",
+            # "resume",
+            "first_name",
+            "last_name",
+            "residential_address",
+            "postal_code",
+            "ic_no",
+            "nationality",
+            "gender",
+            "date_of_birth",
+            # "date_of_commencement",
+            # "date_of_cessation",
+            "phone_no",
+        )
+        # writable fields will be validated using model
+        # validator and added to validated_data
+        read_only_fields = (
+            "id",
+            "is_staff",
+            "roles",
+            "date_of_commencement",
+            "date_of_cessation",
+            "resume",
+        )
+        extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
+
+    def get_fields(self):
+        fields = super().get_fields()
+        try:
+            if self.context["request"].method in ["GET"]:
+                # read_only=True (w/o overriding) vs override on GET request
+                # read_only=True, will override on any request,
+                # and it will be read_only regardless of the http method
+                # override on GET request, will only override on GET request
+                fields["image"] = serializers.SerializerMethodField()
+                fields["company_name"] = serializers.SerializerMethodField()
+            else:
+                fields["company_name"] = serializers.CharField(
+                    max_length=255, write_only=True
+                )
+            if self.context["request"].method in ["PUT, PATCH"]:
+                fields["image"] = serializers.ImageField(allow_null=True)
+        except KeyError:
+            pass
+        return fields
+
+    def get_company_name(self, obj):
+        return obj.company.name if obj.company else ""
+
+    def update(self, instance, validated_data):
+        """Update a user, setting the password correctly and return it"""
+        company_name = validated_data.pop("company_name")
+        user = super().update(instance, validated_data)
+
+        if user.is_staff:
+            company = user.company
+            company.name = company_name
+            company.save(update_fields=["name"])
+
+        return user
+
+
+class EmployeeProfileSerializer(UserSerializer):
+    """
+    Serializer for updating and retrieving employee's profile.
+    """
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            "id",
+            "password",
+            # "last_login",
+            # "is_superuser",
+            # "company_name",
+            # "is_active",
+            "is_staff",
+            "email",
+            "name",
+            "roles",
             "image",
             "resume",
             "first_name",
@@ -48,50 +213,40 @@ class UserSerializer(serializers.ModelSerializer):
             "date_of_cessation",
             "phone_no",
         )
+        read_only_fields = (
+            "id",
+            "is_staff",
+            "roles",
+            "date_of_commencement",
+            "date_of_cessation",
+        )
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
-    # TODO: create employee by POST /employees/
-    def create(self, validated_data):
-        """Create a new user with encrypted password and return it"""
-        return get_user_model().objects.create_user(**validated_data)
+    def get_fields(self):
+        fields = super().get_fields()
+        try:
+            if self.context["request"].method in ["GET"]:
+                fields["image"] = serializers.SerializerMethodField()
+            else:
+                fields["image"] = serializers.ImageField(allow_null=True)
 
-    def update(self, instance, validated_data):
-        """Update a user, setting the password correctly and return it"""
-        password = validated_data.pop("password", None)
-        user = super().update(instance, validated_data)
+            fields["department"] = serializers.SerializerMethodField(
+                read_only=True
+            )
+        except KeyError:
+            pass
+        return fields
 
-        if password:
-            user.set_password(password)
-            user.save()
-
-        return user
-
-    def validate(self, attrs):
-        """Validate and authenticate the user"""
-        if self.context["request"].method in ["POST"]:
-            email = attrs.get("email", None)
-            confirm_email = self.initial_data.get("confirm_email", None)
-
-            if email != confirm_email:
-                msg = _("Emails do not match")
-                raise serializers.ValidationError(msg)
-
-            attrs["company"] = self.initial_data.get("company", "")
-
-        password = attrs.get("password", None)
-        confirm_password = self.initial_data.get("confirm_password", None)
-
-        if password != confirm_password:
-            msg = _("Passwords do not match")
-            raise serializers.ValidationError(msg)
-
-        return attrs
-
-    def get_image(self, obj):
-        return obj.image.url if obj.image else ""
-
-    def get_resume(self, obj):
-        return obj.resume.url if obj.resume else ""
+    def get_department(self, obj):
+        return (
+            (
+                obj.designation.department.pk
+                if obj.designation.department
+                else None
+            )
+            if obj.designation
+            else None
+        )
 
 
 class AuthTokenSerializer(serializers.Serializer):

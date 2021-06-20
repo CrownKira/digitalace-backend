@@ -10,6 +10,7 @@ class CustomerFilter(filters.FilterSet):
         model = Customer
         fields = {
             "last_seen": ["lt", "gt", "lte", "gte", "exact"],
+            "agents": ["exact"],
         }
 
 

@@ -45,7 +45,7 @@ class Customer(models.Model):
     """Customer managed by a company"""
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
-    agent = models.ManyToManyField("User", blank=True)
+    agents = models.ManyToManyField("User", blank=True)
     attention = models.CharField(max_length=255, blank=True)
 
     name = models.CharField(max_length=255)
@@ -73,7 +73,7 @@ class Supplier(models.Model):
     """Supplier managed by a company"""
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
-    agent = models.ManyToManyField("User", blank=True)
+    agents = models.ManyToManyField("User", blank=True)
     attention = models.CharField(max_length=255, blank=True)
 
     name = models.CharField(max_length=255)
@@ -101,7 +101,6 @@ class ProductCategory(models.Model):
     """Category of a product"""
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
-    agent = models.ManyToManyField("User", blank=True)
 
     name = models.CharField(max_length=255)
     image = models.ImageField(upload_to=category_image_file_path, blank=True)
@@ -116,15 +115,17 @@ class ProductCategory(models.Model):
 class Product(models.Model):
     """Product managed by a company"""
 
+    # this field is non-null hence .set([...products]) doesn't work
     category = models.ForeignKey("ProductCategory", on_delete=models.CASCADE)
-    # TODO: mandatory?
     supplier = models.ForeignKey("Supplier", on_delete=models.CASCADE)
+    agents = models.ManyToManyField("User", blank=True)
 
     name = models.CharField(max_length=255)
     # TODO: create a class for unit
     unit = models.CharField(max_length=255)
     cost = models.DecimalField(max_digits=10, decimal_places=2)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True)
 
     image = models.ImageField(upload_to=product_image_file_path, blank=True)
     thumbnail = models.ImageField(

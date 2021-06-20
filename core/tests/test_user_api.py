@@ -24,7 +24,7 @@ class PublicUserApiTests(TestCase):
     def test_create_valid_owner_success(self):
         """Test creating owner with valid payload is successful"""
         payload = {
-            "company": "DigitaLAce",
+            "company_name": "DigitaLAce",
             "email": "test@digitalace.com",
             "password": "testpass",
             "confirm_email": "test@digitalace.com",
@@ -34,7 +34,7 @@ class PublicUserApiTests(TestCase):
         res = self.client.post(CREATE_USER_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        user = get_user_model().objects.get(id=res.data.get("id", None))
+        user = get_user_model().objects.get(pk=res.data.get("id", None))
         self.assertTrue(user.check_password(payload["password"]))
         self.assertNotIn("password", res.data)
 

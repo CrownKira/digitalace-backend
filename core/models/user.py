@@ -25,6 +25,18 @@ def user_image_file_path(instance, filename):
     return os.path.join("uploads/user/images/", get_unique_filename(filename))
 
 
+def department_image_file_path(instance, filename):
+    """Generate file path for new department image"""
+    return os.path.join(
+        "uploads/department/images/", get_unique_filename(filename)
+    )
+
+
+def role_image_file_path(instance, filename):
+    """Generate file path for new role image"""
+    return os.path.join("uploads/role/images/", get_unique_filename(filename))
+
+
 def user_resume_file_path(instance, filename):
     """Generate file path for new user resume"""
     return os.path.join("uploads/user/resumes/", get_unique_filename(filename))
@@ -57,7 +69,18 @@ class Department(models.Model):
     """Department in a company"""
 
     name = CharField(max_length=255)
+    image = models.ImageField(upload_to=department_image_file_path, blank=True)
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
+class Designation(models.Model):
+    """Designation in a company"""
+
+    name = CharField(max_length=255)
+    department = models.ForeignKey("Department", on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
@@ -67,6 +90,7 @@ class Role(models.Model):
     """Role in a department"""
 
     name = CharField(max_length=255)
+    image = models.ImageField(upload_to=role_image_file_path, blank=True)
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
     permissions = models.ManyToManyField(
         Permission,
@@ -78,14 +102,18 @@ class Role(models.Model):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(
+        self,
+        email,
+        password=None,
+        **extra_fields,
+    ):
         """Creates and save a new user"""
         if not email:
             raise ValueError("Users must have an email address")
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
-
         return user
 
     def create_superuser(self, email, password):
@@ -109,7 +137,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     # if company is null, disable all functionalities
     # can be blank (if created from admin page)
     company = models.ForeignKey(
-        "Company", on_delete=models.CASCADE, null=True, blank=True
+        "Company", on_delete=models.SET_NULL, null=True, blank=True
     )
     is_active = models.BooleanField(default=True)
     # is the user an owner of his company?
@@ -120,13 +148,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=255)
 
     # below are employee fields (null fields for owner)
-    department = models.ForeignKey(
-        "Department", on_delete=models.CASCADE, null=True, blank=True
+    # TODO: create a Profile model to store these fields
+    designation = models.ForeignKey(
+        "Designation", on_delete=models.SET_NULL, null=True, blank=True
     )
-    role = models.ForeignKey(
-        "Role", on_delete=models.CASCADE, null=True, blank=True
-    )
-
+    # https://stackoverflow.com/questions/18243039/migrating-manytomanyfield-to-null-true-blank-true-isnt-recognized
+    roles = models.ManyToManyField("Role", blank=True)
+    # if patch with None, image reference
+    # will become empty string (rather than NULL)
     image = models.ImageField(upload_to=user_image_file_path, blank=True)
     resume = models.FileField(
         upload_to=user_resume_file_path,
@@ -162,10 +191,23 @@ class User(AbstractBaseUser, PermissionsMixin):
     def has_role_perms(self, perm_list):
         """Check if user has all the permissions in the list"""
         # TODO: use filter(id__in=[...])?
-        return all(
-            Permission.objects.filter(role=self.role, id=perm).exists()
+        return self.is_staff or all(
+            Permission.objects.filter(
+                role__in=self.roles.all(), pk=perm
+            ).exists()
             for perm in perm_list
         )
+
+    def get_role_permissions(self):
+        """Retrieve all the role permissions of the user"""
+        perm_list = (
+            Permission.objects.all()
+            if self.is_staff
+            else Permission.objects.filter(
+                role__in=self.roles.all()
+            ).distinct()
+        )
+        return set(perm.codename for perm in perm_list)
 
     def __str__(self):
         return self.name

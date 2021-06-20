@@ -8,6 +8,7 @@ from django.http.multipartparser import (
 from rest_framework.exceptions import ParseError
 
 
+# https://stackoverflow.com/questions/23896441/how-can-i-send-multipart-form-data-that-contains-json-object-and-image-file-via
 class MultiPartJSONParser(BaseParser):
     """
     Parser for multipart form data which might contain JSON values
@@ -38,12 +39,21 @@ class MultiPartJSONParser(BaseParser):
                 meta, stream, upload_handlers, encoding
             )
             data, files = parser.parse()
-            for key in data:
-                if data[key]:
-                    try:
-                        data[key] = json.loads(data[key])
-                    except ValueError:
-                        pass
+
+            try:
+                json_data = json.loads(data.get("data", "{}"))
+            except ValueError as exc:
+                raise ParseError("JSON parse error - %s" % str(exc))
+
+            if json_data:
+                data = data.copy()
+                for key, value in json_data.items():
+                    if isinstance(value, list):
+                        data.setlist(key, value)
+                    else:
+                        data.__setitem__(key, value)
+                del data["data"]
+
             return DataAndFiles(data, files)
         except MultiPartParserError as exc:
             raise ParseError("Multipart form parse error - %s" % str(exc))
