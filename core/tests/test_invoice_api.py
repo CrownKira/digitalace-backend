@@ -71,9 +71,6 @@ class PrivateInvoiceApiTest(TestCase):
     def setUp(self):
         self.company = Company.objects.create(name="testcompany")
         self.company2 = Company.objects.create(name="testcompany2")
-        self.customer = Customer.objects.create(
-            company=self.company, name="testcompany"
-        )
         self.user = get_user_model().objects.create_user(
             "test@crownkiraappdev.com",
             "password123",
@@ -196,7 +193,7 @@ class PrivateInvoiceApiTest(TestCase):
             "company": self.company,
             "date": "2001-01-10",
             "payment_date": "2001-01-10",
-            "gst_rate": "0.07",
+            "gst_rate": "",
             "discount_rate": "0",
             "gst_amount": "0",
             "discount_amount": "0",

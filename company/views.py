@@ -106,6 +106,7 @@ class DepartmentViewSet(BaseAssetAttrViewSet):
     search_fields = [
         "id",
         "name",
+    ]
 
 
 class DesignationViewSet(BaseAttrViewSet):
