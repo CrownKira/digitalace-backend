@@ -50,6 +50,7 @@ class LineItem(models.Model):
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.IntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
         abstract = True

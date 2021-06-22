@@ -73,12 +73,17 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "net",
             "total_amount",
             "grand_total",
-            "status",
             "customer",
             "salesperson",
             "sales_order",
+            "status",
         )
-        read_only_fields = ("id", "company")
+        read_only_fields = (
+            "id",
+            "company",
+            "total_amount",
+            "grand_total",
+        )
 
 
 class SalesOrderSerializer(serializers.ModelSerializer):
