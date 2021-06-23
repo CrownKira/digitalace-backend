@@ -2,12 +2,14 @@ from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
+from core.custom_permission import CustomPermission
+
 
 class BaseAttrViewSet(viewsets.ModelViewSet):
     """Base attr viewset for all viewsets"""
 
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, CustomPermission)
     ordering_fields = "__all__"
     ordering = ["-id"]
 
