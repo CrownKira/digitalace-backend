@@ -60,16 +60,24 @@ class PrivateDepartmentApiTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data.get("results", [])), 2)
 
-    # TODO figure out payload for designation_set
-    # def test_create_department(self):
-    #     """Test creating department"""
-    #     payload = {
-    #         "name": "Human Resource",
-    #         "company": self.company,
-    #         "designation_set": [],
-    #     }
-    #     res = self.client.post(DEPARTMENT_URL, payload)
-    #     print(res.content)
-    #     self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-    #     exists = Department.objects.all().filter(company=self.company).exists()
-    #     self.assertTrue(exists)
+    def test_create_department(self):
+        """Test creating department"""
+        payload = {
+            "name": "Human Resource",
+            "company": self.company,
+            "designation_set": [],
+        }
+        res = self.client.post(DEPARTMENT_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        exists = Department.objects.all().filter(company=self.company).exists()
+        self.assertTrue(exists)
+
+    def test_create_department_invalid(self):
+        """Test creating department with invalid payload"""
+        payload = {
+            "name": "",
+            "company": self.company,
+            "designation_set": [],
+        }
+        res = self.client.post(DEPARTMENT_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
