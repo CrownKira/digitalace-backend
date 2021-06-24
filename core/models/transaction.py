@@ -19,6 +19,7 @@ class Document(models.Model):
         UNPAID = "UPD", _("Unpaid")
 
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
+    reference = models.CharField(max_length=255)
 
     date = models.DateField()
     description = models.TextField(blank=True)
