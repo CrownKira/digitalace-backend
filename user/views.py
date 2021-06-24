@@ -1,4 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
+from django.shortcuts import get_object_or_404
+
 
 from rest_framework import (
     generics,
@@ -16,8 +18,9 @@ from user.serializers import (
     OwnerProfileSerializer,
     EmployeeProfileSerializer,
     AuthTokenSerializer,
+    UserConfigSerializer,
 )
-from core.models import Company
+from core.models import Company, UserConfig
 
 
 # TODO: refactor owner and employee views and serializer
@@ -73,6 +76,19 @@ class ManageProfileView(generics.RetrieveUpdateAPIView):
             if self.request.user.is_staff
             else EmployeeProfileSerializer
         )
+
+
+class UserConfigView(generics.RetrieveUpdateAPIView):
+    """View for retrieving and updating user config"""
+
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = UserConfigSerializer
+
+    def get_object(self):
+        queryset = UserConfig.objects.all()
+        userconfig = get_object_or_404(queryset, user=self.request.user)
+        return userconfig
 
 
 class CreateTokenView(ObtainAuthToken):

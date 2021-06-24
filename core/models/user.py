@@ -117,6 +117,7 @@ class UserManager(BaseUserManager):
         )
         user.set_password(password)
         user.save(using=self._db)
+        UserConfig.objects.create(user=user)
         return user
 
     def create_superuser(self, email, password):
@@ -125,7 +126,7 @@ class UserManager(BaseUserManager):
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
-
+        UserConfig.objects.create(user=user)
         return user
 
 

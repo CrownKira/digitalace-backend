@@ -135,22 +135,22 @@ class PayslipSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "company")
 
 
-class EmployeeDepartmentSerializer(serializers.ModelSerializer):
-    """Serializer for employee department objects"""
+# class EmployeeDepartmentSerializer(serializers.ModelSerializer):
+#     """Serializer for employee department objects"""
 
-    class Meta:
-        model = Department
-        fields = ("id",)
-        read_only_fields = ("id",)
+#     class Meta:
+#         model = Department
+#         fields = ("id",)
+#         read_only_fields = ("id",)
 
-    def get_fields(self):
-        fields = super().get_fields()
+#     def get_fields(self):
+#         fields = super().get_fields()
 
-        fields["designation_set"] = serializers.PrimaryKeyRelatedField(
-            many=True, read_only=True
-        )
+#         fields["designation_set"] = serializers.PrimaryKeyRelatedField(
+#             many=True, read_only=True
+#         )
 
-        return fields
+#         return fields
 
 
 class EmployeeSerializer(UserSerializer):

@@ -152,7 +152,7 @@ class EmployeeViewSet(BaseAttrViewSet):
         # "is_staff",
         "email",
         "name",
-        "department__name",
+        # "department__name",
         "roles__name",
         # "image",
         # "resume",
