@@ -220,6 +220,14 @@ class User(AbstractBaseUser, PermissionsMixin):
 class UserConfig(models.Model):
     """User configuration"""
 
+    class Theme(models.TextChoices):
+        LIGHT = "light", _("light")
+        DARK = "dark", _("dark")
+
+    class Language(models.TextChoices):
+        ENGLISH = "en", _("en")
+        MANDARIN = "zh", _("zh")
+
     user = models.OneToOneField(
         "User",
         on_delete=models.CASCADE,
@@ -231,8 +239,18 @@ class UserConfig(models.Model):
     discount_rate = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00)
     )
-    theme = models.CharField(max_length=255, blank=True, default="light")
-    language = models.CharField(max_length=255, blank=True, default="en")
+    theme = models.CharField(
+        max_length=255,
+        blank=True,
+        default=Theme.LIGHT,
+        choices=Theme.choices,
+    )
+    language = models.CharField(
+        max_length=255,
+        blank=True,
+        default=Language.ENGLISH,
+        choices=Language.choices,
+    )
 
     def __str__(self):
         return self.user.name
