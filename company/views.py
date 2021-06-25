@@ -9,6 +9,7 @@ from core.models import (
     Department,
     Designation,
     User,
+    PaymentMethod,
 )
 from company import serializers
 
@@ -69,7 +70,18 @@ class ProductViewSet(BaseAttrViewSet):
         serializer.save()
 
 
-class PayslipViewset(BaseAssetAttrViewSet):
+class PaymentMethodViewSet(BaseAssetAttrViewSet):
+    """Manage payment methods in the database"""
+
+    queryset = PaymentMethod.objects.all()
+    serializer_class = serializers.PaymentMethodSerializer
+    search_fields = [
+        "id",
+        "name",
+    ]
+
+
+class PayslipViewSet(BaseAssetAttrViewSet):
     """Manage payslip in the database"""
 
     queryset = Payslip.objects.all()
@@ -144,18 +156,9 @@ class EmployeeViewSet(BaseAttrViewSet):
     # TODO: reduce possible search fields
     search_fields = [
         "id",
-        # "password",
-        # "last_login",
-        # "is_superuser",
-        # "company",
-        # "is_active",
-        # "is_staff",
         "email",
         "name",
-        # "department__name",
         "roles__name",
-        # "image",
-        # "resume",
         "first_name",
         "last_name",
         "residential_address",

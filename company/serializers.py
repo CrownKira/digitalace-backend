@@ -14,6 +14,7 @@ from core.models import (
     Designation,
     Customer,
     User,
+    PaymentMethod,
 )
 from user.serializers import UserSerializer
 
@@ -27,7 +28,6 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         model = ProductCategory
         fields = (
             "id",
-            # "company",
             "name",
             "image",
         )
@@ -108,6 +108,17 @@ class ProductSerializer(serializers.ModelSerializer):
         }
 
 
+class PaymentMethodSerializer(serializers.ModelSerializer):
+    """Serializer for payment method objects"""
+
+    class Meta:
+        model = PaymentMethod
+        fields = (
+            "id",
+            "name",
+        )
+
+
 class PayslipSerializer(serializers.ModelSerializer):
     """Serializer for payslip objects"""
 
@@ -135,24 +146,6 @@ class PayslipSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "company")
 
 
-# class EmployeeDepartmentSerializer(serializers.ModelSerializer):
-#     """Serializer for employee department objects"""
-
-#     class Meta:
-#         model = Department
-#         fields = ("id",)
-#         read_only_fields = ("id",)
-
-#     def get_fields(self):
-#         fields = super().get_fields()
-
-#         fields["designation_set"] = serializers.PrimaryKeyRelatedField(
-#             many=True, read_only=True
-#         )
-
-#         return fields
-
-
 class EmployeeSerializer(UserSerializer):
     """Serializer for employee objects"""
 
@@ -161,11 +154,6 @@ class EmployeeSerializer(UserSerializer):
         fields = (
             "id",
             "password",
-            # "last_login",
-            # "is_superuser",
-            # "company_name",
-            # "is_active",
-            # "is_staff",
             "email",
             "name",
             "roles",

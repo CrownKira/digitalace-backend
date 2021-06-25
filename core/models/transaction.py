@@ -25,7 +25,6 @@ class Document(models.Model):
     description = models.TextField(blank=True)
     payment_date = models.DateField(null=True, blank=True)
     # create a class for payment_method
-    # payment_method = models.CharField(max_length=255, blank=True)
     payment_method = models.ForeignKey(
         "PaymentMethod", on_delete=models.SET_NULL, null=True, blank=True
     )
