@@ -25,7 +25,10 @@ class Document(models.Model):
     description = models.TextField(blank=True)
     payment_date = models.DateField(null=True, blank=True)
     # create a class for payment_method
-    payment_method = models.CharField(max_length=255, blank=True)
+    # payment_method = models.CharField(max_length=255, blank=True)
+    payment_method = models.ForeignKey(
+        "PaymentMethod", on_delete=models.SET_NULL, null=True, blank=True
+    )
     payment_note = models.TextField(blank=True)
     gst_rate = models.DecimalField(max_digits=10, decimal_places=2)
     discount_rate = models.DecimalField(max_digits=10, decimal_places=2)
@@ -55,6 +58,16 @@ class LineItem(models.Model):
 
     class Meta:
         abstract = True
+
+
+class PaymentMethod(models.Model):
+    """Payment method in a company"""
+
+    name = models.CharField(max_length=255)
+    company = models.ForeignKey("Company", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 
 
 class Invoice(Document):

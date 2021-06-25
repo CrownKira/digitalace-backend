@@ -10,7 +10,6 @@ from django.contrib.auth.models import (
     Permission,
 )
 from django.core.validators import FileExtensionValidator
-from django.db.models.fields import CharField
 from django.utils.translation import gettext_lazy as _
 
 
@@ -68,7 +67,7 @@ class Company(models.Model):
 class Department(models.Model):
     """Department in a company"""
 
-    name = CharField(max_length=255)
+    name = models.CharField(max_length=255)
     image = models.ImageField(upload_to=department_image_file_path, blank=True)
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
 
@@ -79,7 +78,7 @@ class Department(models.Model):
 class Designation(models.Model):
     """Designation in a company"""
 
-    name = CharField(max_length=255)
+    name = models.CharField(max_length=255)
     department = models.ForeignKey("Department", on_delete=models.CASCADE)
 
     def __str__(self):
@@ -89,7 +88,7 @@ class Designation(models.Model):
 class Role(models.Model):
     """Role in a department"""
 
-    name = CharField(max_length=255)
+    name = models.CharField(max_length=255)
     image = models.ImageField(upload_to=role_image_file_path, blank=True)
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
     permissions = models.ManyToManyField(
