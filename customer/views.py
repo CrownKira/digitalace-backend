@@ -54,6 +54,63 @@ class InvoiceViewSet(BaseAssetAttrViewSet):
         "sales_order__id",
     ]
 
+    def _get_calculated_fields(self, serializer):
+        discount_rate = serializer.validated_data.pop("discount_rate")
+        gst_rate = serializer.validated_data.pop("gst_rate")
+        invoiceitem_set = serializer.validated_data.pop("invoiceitem_set")
+        # TODO: fix round down behavior
+        # https://stackoverflow.com/questions/20457038/how-to-round-to-2-decimals-with-python
+        # round quantity, unit_price, gst_rate and discount rate first
+        # then round the rest at the end of calculation
+        invoiceitem_set = [
+            {
+                **invoiceitem,
+                "amount": round(
+                    round(invoiceitem.get("quantity"))
+                    * round(invoiceitem.get("unit_price"), 2),
+                    2,
+                ),
+            }
+            for invoiceitem in invoiceitem_set
+        ]
+        total_amount = sum(
+            [
+                # recalculate amount here since it has been rounded up
+                round(invoiceitem.get("quantity"))
+                * round(invoiceitem.get("unit_price"), 2)
+                for invoiceitem in invoiceitem_set
+            ]
+        )
+        discount_rate = round(discount_rate, 2)
+        gst_rate = round(gst_rate, 2)
+        discount_amount = total_amount * discount_rate / 100
+        net = total_amount * (1 - discount_rate / 100)
+        gst_amount = net * gst_rate / 100
+        grand_total = net * (1 - gst_rate / 100)
+
+        return {
+            "total_amount": round(total_amount, 2),
+            "discount_rate": discount_rate,
+            "gst_rate": gst_rate,
+            "discount_amount": round(discount_amount, 2),
+            "gst_amount": round(gst_amount, 2),
+            "net": round(net, 2),
+            "grand_total": round(grand_total, 2),
+            "invoiceitem_set": invoiceitem_set,
+        }
+
+    def perform_create(self, serializer):
+        company = self.request.user.company
+        serializer.save(
+            company=company, **self._get_calculated_fields(serializer)
+        )
+
+    def perform_update(self, serializer):
+        company = self.request.user.company
+        serializer.save(
+            company=company, **self._get_calculated_fields(serializer)
+        )
+
 
 class SalesOrderViewSet(BaseAssetAttrViewSet):
     """Manage customer in the database"""
