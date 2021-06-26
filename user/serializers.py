@@ -113,16 +113,10 @@ class OwnerProfileSerializer(UserSerializer):
         fields = (
             "id",  # show id to facilitate testing
             "password",
-            # "last_login",
-            # "is_superuser",
-            # "company_name",
-            # "is_active",
             "is_staff",
             "email",
             "name",
-            # "roles",
             "image",
-            # "resume",
             "first_name",
             "last_name",
             "residential_address",
@@ -131,8 +125,6 @@ class OwnerProfileSerializer(UserSerializer):
             "nationality",
             "gender",
             "date_of_birth",
-            # "date_of_commencement",
-            # "date_of_cessation",
             "phone_no",
         )
         # writable fields will be validated using model
@@ -194,10 +186,6 @@ class EmployeeProfileSerializer(UserSerializer):
         fields = (
             "id",
             "password",
-            # "last_login",
-            # "is_superuser",
-            # "company_name",
-            # "is_active",
             "is_staff",
             "email",
             "name",

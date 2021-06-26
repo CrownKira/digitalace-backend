@@ -10,7 +10,6 @@ class SupplierSerializer(serializers.ModelSerializer):
         model = Supplier
         fields = (
             "id",
-            # "company",
             "attention",
             "name",
             "address",
@@ -23,8 +22,6 @@ class SupplierSerializer(serializers.ModelSerializer):
             "email",
             "payables",
             "image",
-            # "first_seen",
-            # "last_seen",
         )
         read_only_fields = ("id",)
         extra_kwargs = {"image": {"allow_null": True}}
