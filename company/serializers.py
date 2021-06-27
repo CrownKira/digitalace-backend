@@ -318,7 +318,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
     # I, once, worked on it but got burnt out and lost that work.
     # Most of the work to do should be within
     # https://github.com/encode/django-rest-framework/blob/master/rest_framework/utils/html.py
-    designation_set = DesignationSerializer(many=True)
+    designation_set = DesignationSerializer(many=True, required=False)
 
     class Meta:
         model = Department

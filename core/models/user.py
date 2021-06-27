@@ -193,7 +193,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         # TODO: use filter(id__in=[...])?
         return self.is_staff or all(
             Permission.objects.filter(
-                role__in=self.roles.all(), pk=perm
+                role__in=self.roles.all(), codename=perm
             ).exists()
             for perm in perm_list
         )

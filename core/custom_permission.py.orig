@@ -1,0 +1,36 @@
+<<<<<<< HEAD
+from rest_framework.permissions import BasePermission
+
+
+class CustomPermission(BasePermission):
+=======
+from rest_framework.permissions import DjangoModelPermissions
+
+
+class CustomPermission(DjangoModelPermissions):
+>>>>>>> 0cfd9fabae386d5fa67719644e8c8533268cd14f
+    """Custom permission"""
+
+    def has_permission(self, request, view):
+        # Workaround to ensure DjangoModelPermissions are not applied
+        # to the root view when using DefaultRouter.
+<<<<<<< HEAD
+        if getattr(view, '_ignore_model_permissions', False):
+            return True
+
+        if not request.user or (
+           not request.user.is_authenticated and self.authenticated_users_only):
+=======
+        if getattr(view, "_ignore_model_permissions", False):
+            return True
+
+        if not request.user or (
+            not request.user.is_authenticated and self.authenticated_users_only
+        ):
+>>>>>>> 0cfd9fabae386d5fa67719644e8c8533268cd14f
+            return False
+
+        queryset = self._queryset(view)
+        perms = self.get_required_permissions(request.method, queryset.model)
+
+        return request.user.is_staff or request.user.has_role_perms(perms)

@@ -12,6 +12,25 @@ from customer.serializers import SalesOrderSerializer
 SALESORDER_URL = reverse("customer:salesorder-list")
 
 
+def create_sales_order(**params):
+    return SalesOrder.objects.create(
+        date="2001-01-10",
+        payment_date="2001-01-10",
+        gst_rate="0.07",
+        discount_rate="0",
+        gst_amount="0",
+        discount_amount="0",
+        net="0",
+        total_amount="0",
+        grand_total="0",
+        status="CP",
+        **params
+        # company=self.company,
+        # customer=customer,
+        # salesperson=self.user,
+    )
+
+
 class PublicSalesOrderApiTest(TestCase):
     """Test the publicly available salesorder API"""
 
@@ -30,65 +49,64 @@ class PrivateSalesOrderApiTest(TestCase):
 
     def setUp(self):
         self.company = Company.objects.create(name="testcompany")
-        self.customer = Customer.objects.create(
-            company=self.company,
-            name="testcustomer",
-        )
+        self.company2 = Company.objects.create(name="testcompany2")
         self.user = get_user_model().objects.create_user(
             "test@crownkiraappdev.com",
             "password123",
             is_staff=True,
             company=self.company,
         )
+        self.user2 = get_user_model().objects.create_user(
+            "test2@crownkiraappdev.com",
+            "password123",
+            is_staff=True,
+            company=self.company2,
+        )
+        self.customer = Customer.objects.create(
+            company=self.company,
+            name="testcustomer",
+        )
+        self.customer2 = Customer.objects.create(
+            company=self.company2,
+            name="testcustomer2",
+        )
         self.client = APIClient()
         self.client.force_authenticate(self.user)
 
     def test_retreive_salesorder(self):
         """Test retreiving salesorder"""
-        customer = Customer.objects.create(
-            company=self.company,
-            name="testcustomer",
+        create_sales_order(
+            **{
+                "customer": self.customer,
+                "salesperson": self.user,
+                "company": self.company,
+            }
         )
-        customer2 = Customer.objects.create(
-            company=self.company,
-            name="testcustomer2",
+        create_sales_order(
+            **{
+                "customer": self.customer,
+                "salesperson": self.user,
+                "company": self.company,
+            }
         )
-        SalesOrder.objects.create(
-            company=self.company,
-            customer=customer,
-            salesperson=self.user,
-            date="2001-01-10",
-            payment_date="2001-01-10",
-            gst_rate="0.07",
-            discount_rate="0",
-            gst_amount="0",
-            discount_amount="0",
-            net="0",
-            total_amount="0",
-            grand_total="0",
-            status="CP",
-        )
-        SalesOrder.objects.create(
-            company=self.company,
-            customer=customer2,
-            salesperson=self.user,
-            date="2001-01-10",
-            payment_date="2001-01-10",
-            gst_rate="0.07",
-            discount_rate="0",
-            gst_amount="0",
-            discount_amount="0",
-            net="0",
-            total_amount="0",
-            grand_total="0",
-            status="CP",
+        create_sales_order(
+            **{
+                "customer": self.customer2,
+                "salesperson": self.user2,
+                "company": self.company2,
+            }
         )
         res = self.client.get(SALESORDER_URL)
 
-        receives = SalesOrder.objects.all().order_by("-id")
+        receives = (
+            SalesOrder.objects.all()
+            .filter(company=self.company)
+            .order_by("-id")
+        )
         serializer = SalesOrderSerializer(receives, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data.get("results", None), serializer.data)
+        self.assertEqual(len(res.data.get("results", [])), 2)
 
     # Deprecated
     # def test_salesorder_not_limited_to_user(self):

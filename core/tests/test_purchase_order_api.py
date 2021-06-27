@@ -13,6 +13,24 @@ from supplier.serializers import PurchaseOrderSerializer
 PURCHASEORDER_URL = reverse("supplier:purchaseorder-list")
 
 
+def create_purchase_order(**params):
+    return PurchaseOrder.objects.create(
+        date="2001-01-10",
+        payment_date="2001-01-10",
+        gst_rate="0.07",
+        discount_rate="0",
+        gst_amount="0",
+        discount_amount="0",
+        net="0",
+        total_amount="0",
+        grand_total="0",
+        status="CP",
+        **params
+        # supplier=supplier,
+        # company=self.company,
+    )
+
+
 class PublicPuchaseOrderApiTest(TestCase):
     """Test the publicly available purchase_order API"""
 
@@ -31,60 +49,60 @@ class PrivatePurchseOrderApiTest(TestCase):
 
     def setUp(self):
         self.company = Company.objects.create(name="testcompany")
-        self.supplier = Supplier.objects.create(
-            company=self.company, name="testsupplier"
-        )
+        self.company2 = Company.objects.create(name="testcompany2")
         self.user = get_user_model().objects.create_user(
             "test@crownkiraappdev.com",
             "password123",
             is_staff=True,
             company=self.company,
         )
+        self.user2 = get_user_model().objects.create_user(
+            "test2@crownkiraappdev.com",
+            "password123",
+            is_staff=True,
+            company=self.company2,
+        )
+        self.supplier = Supplier.objects.create(
+            company=self.company, name="testsupplier"
+        )
+        self.supplier2 = Supplier.objects.create(
+            company=self.company2, name="testsupplier2"
+        )
         self.client = APIClient()
         self.client.force_authenticate(self.user)
 
     def test_retreive_purchase_order(self):
         """Test retreiving purchase order"""
-        supplier = Supplier.objects.create(
-            company=self.company, name="testsupplier"
+
+        create_purchase_order(
+            **{
+                "supplier": self.supplier,
+                "company": self.company,
+            }
         )
-        supplier2 = Supplier.objects.create(
-            company=self.company, name="testsupplier2"
+        create_purchase_order(
+            **{
+                "supplier": self.supplier,
+                "company": self.company,
+            }
         )
-        PurchaseOrder.objects.create(
-            date="2001-01-10",
-            payment_date="2001-01-10",
-            gst_rate="0.07",
-            discount_rate="0",
-            gst_amount="0",
-            discount_amount="0",
-            net="0",
-            total_amount="0",
-            grand_total="0",
-            supplier=supplier,
-            company=self.company,
-            status="CP",
-        )
-        PurchaseOrder.objects.create(
-            date="2001-01-10",
-            payment_date="2001-01-10",
-            gst_rate="0.07",
-            discount_rate="0",
-            gst_amount="0",
-            discount_amount="0",
-            net="0",
-            total_amount="0",
-            grand_total="0",
-            supplier=supplier2,
-            company=self.company,
-            status="CP",
+        create_purchase_order(
+            **{
+                "supplier": self.supplier2,
+                "company": self.company2,
+            }
         )
         res = self.client.get(PURCHASEORDER_URL)
 
-        purchase_orders = PurchaseOrder.objects.all().order_by("-id")
+        purchase_orders = (
+            PurchaseOrder.objects.all()
+            .filter(company=self.company)
+            .order_by("-id")
+        )
         serializer = PurchaseOrderSerializer(purchase_orders, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data.get("results", None), serializer.data)
+        self.assertEqual(len(res.data.get("results", [])), 2)
 
     # Deprecated
     # def test_purchse_order_not_limited_to_user(self):
