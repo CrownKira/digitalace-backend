@@ -66,21 +66,18 @@ class PrivateDesingationApiTest(TestCase):
         )
         res = self.client.get(DESIGNATION_URL)
 
-        invoices = (
+        designations = (
             Designation.objects.all()
             .filter(department=self.department)
             .order_by("-id")
         )
-        serializer = DesignationSerializer(invoices, many=True)
+        serializer = DesignationSerializer(designations, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data.get("results", None), serializer.data)
         self.assertEqual(len(res.data.get("results", [])), 2)
 
     def test_create_designation_invalid(self):
         """Test creating designation with invalid payload"""
-        payload = {
-            "name": "",
-            "department":self.department
-        }
+        payload = {"name": "", "department": self.department}
         res = self.client.post(DESIGNATION_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

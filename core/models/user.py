@@ -191,7 +191,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def has_role_perms(self, perm_list):
         """Check if user has all the permissions in the list"""
         # TODO: use filter(id__in=[...])?
-        print(perm_list)
         return self.is_staff or all(
             Permission.objects.filter(
                 role__in=self.roles.all(), codename=perm
