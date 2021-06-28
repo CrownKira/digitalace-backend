@@ -106,6 +106,7 @@ class PrivateSupplierApiTest(TestCase):
     def test_create_supplier_successful(self):
         """Test creating a new Supplier"""
         payload = {
+            "reference": "S-0000",
             "company": self.company,
             "attention": self.user,
             "name": "testsupplier2",

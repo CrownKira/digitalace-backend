@@ -82,6 +82,7 @@ class PrivateCustomerApiTest(TestCase):
     def test_create_customer_successful(self):
         """Test creating a new customer"""
         payload = {
+            "reference": "C-0000",
             "company": self.company,
             "name": "testcustomer",
         }
