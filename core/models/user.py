@@ -116,7 +116,10 @@ class UserManager(BaseUserManager):
         )
         user.set_password(password)
         user.save(using=self._db)
+
+        # default objects that come with new users
         UserConfig.objects.create(user=user)
+
         return user
 
     def create_superuser(self, email, password):
@@ -125,7 +128,7 @@ class UserManager(BaseUserManager):
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
-        UserConfig.objects.create(user=user)
+
         return user
 
 
@@ -230,7 +233,7 @@ class UserConfig(models.Model):
     user = models.OneToOneField(
         "User",
         on_delete=models.CASCADE,
-        primary_key=True,
+        # primary_key=True,
     )
     gst_rate = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00)
@@ -252,7 +255,7 @@ class UserConfig(models.Model):
     )
 
     def __str__(self):
-        return self.user.name
+        return self.user.email
 
     def delete(self, using=None, keep_parents=False):
         # https://stackoverflow.com/questions/19182001/how-to-protect-objects-from-deletion-in-django

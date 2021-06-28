@@ -151,7 +151,8 @@ class OwnerProfileSerializer(UserSerializer):
                 fields["company_name"] = serializers.SerializerMethodField()
             else:
                 fields["company_name"] = serializers.CharField(
-                    max_length=255, write_only=True
+                    max_length=255,
+                    write_only=True,
                 )
             if self.context["request"].method in ["PUT, PATCH"]:
                 fields["image"] = serializers.ImageField(allow_null=True)
@@ -165,10 +166,12 @@ class OwnerProfileSerializer(UserSerializer):
 
     def update(self, instance, validated_data):
         """Update a user, setting the password correctly and return it"""
-        company_name = validated_data.pop("company_name")
+        # None: not given (prefer this)
+        # "": not given but save as empty string
+        company_name = validated_data.pop("company_name", None)
         user = super().update(instance, validated_data)
 
-        if user.is_staff:
+        if user.is_staff and company_name:  # company_name can't be blank
             company = user.company
             company.name = company_name
             company.save(update_fields=["name"])
