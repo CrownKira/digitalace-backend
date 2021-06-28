@@ -10,8 +10,16 @@ from .transaction import (
     ReceiveItem,
     PurchaseOrder,
     PurchaseOrderItem,
+    PaymentMethod,
 )
-from .user import Company, Department, Designation, Role, User, UserConfig
+from .user import (
+    Company,
+    Department,
+    Designation,
+    Role,
+    User,
+    UserConfig,
+)
 from .user import user_image_file_path, user_resume_file_path
 
 # TODO: review this
@@ -36,6 +44,7 @@ __all__ = [
     "Role",
     "User",
     "UserConfig",
+    "PaymentMethod",
     "user_image_file_path",
     "user_resume_file_path",
 ]

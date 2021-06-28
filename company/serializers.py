@@ -3,7 +3,6 @@ from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
-
 from rest_framework import serializers
 
 from core.models import (
@@ -15,6 +14,7 @@ from core.models import (
     Designation,
     Customer,
     User,
+    PaymentMethod,
 )
 from user.serializers import UserSerializer
 
@@ -28,7 +28,6 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         model = ProductCategory
         fields = (
             "id",
-            # "company",
             "name",
             "image",
         )
@@ -41,11 +40,13 @@ class ProductCategorySerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
         try:
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
         except KeyError:
             pass
+
         return fields
 
     def get_image(self, obj):
@@ -62,6 +63,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             "id",
+            "reference",
             "category",
             "supplier",
             "name",
@@ -84,12 +86,14 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
         try:
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
                 fields["thumbnail"] = serializers.SerializerMethodField()
         except KeyError:
             pass
+
         return fields
 
     def get_image(self, obj):
@@ -103,6 +107,36 @@ class ProductSerializer(serializers.ModelSerializer):
             "src": obj.thumbnail.url if obj.thumbnail else "",
             "title": obj.thumbnail.name if obj.thumbnail else "",
         }
+
+    def validate_reference(self, reference):
+        company = self.context["request"].user.company
+
+        if self.context["request"].method in ["POST"]:
+            if Product.objects.filter(
+                category__company=company, reference=reference
+            ).exists():
+                msg = _("A product with this reference already exists")
+                raise serializers.ValidationError(msg)
+        elif (
+            Product.objects.exclude(pk=self.instance.pk)
+            .filter(category__company=company, reference=reference)
+            .exists()
+        ):
+            msg = _("A product with this reference already exists")
+            raise serializers.ValidationError(msg)
+
+        return reference
+
+
+class PaymentMethodSerializer(serializers.ModelSerializer):
+    """Serializer for payment method objects"""
+
+    class Meta:
+        model = PaymentMethod
+        fields = (
+            "id",
+            "name",
+        )
 
 
 class PayslipSerializer(serializers.ModelSerializer):
@@ -140,11 +174,6 @@ class EmployeeSerializer(UserSerializer):
         fields = (
             "id",
             "password",
-            # "last_login",
-            # "is_superuser",
-            # "company_name",
-            # "is_active",
-            # "is_staff",
             "email",
             "name",
             "roles",
@@ -161,6 +190,7 @@ class EmployeeSerializer(UserSerializer):
             "date_of_commencement",
             "date_of_cessation",
             "phone_no",
+            "designation",
         )
 
         read_only_fields = ("id",)
@@ -171,17 +201,15 @@ class EmployeeSerializer(UserSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
+        fields["department"] = serializers.SerializerMethodField(
+            read_only=True
+        )
+
         try:
             if self.context["request"].method in ["GET"]:
-                # TODO: use read_only label instead?
                 fields["image"] = serializers.SerializerMethodField()
                 fields["resume"] = serializers.SerializerMethodField()
-            else:
-                fields["image"] = serializers.ImageField(allow_null=True)
-
-            fields["department"] = serializers.SerializerMethodField(
-                read_only=True
-            )
             fields["roles"] = serializers.PrimaryKeyRelatedField(
                 many=True,
                 queryset=Role.objects.filter(
@@ -202,6 +230,7 @@ class EmployeeSerializer(UserSerializer):
             )
         except KeyError:
             pass
+
         return fields
 
     def get_department(self, obj):
@@ -238,12 +267,14 @@ class RoleSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
+        fields["permissions"] = serializers.PrimaryKeyRelatedField(
+            many=True, queryset=Permission.objects.filter(pk__gte=29)
+        )
+
         try:
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
-            fields["permissions"] = serializers.PrimaryKeyRelatedField(
-                many=True, queryset=Permission.objects.filter(pk__gte=29)
-            )
             fields["user_set"] = serializers.PrimaryKeyRelatedField(
                 many=True,
                 queryset=User.objects.filter(
@@ -253,6 +284,7 @@ class RoleSerializer(serializers.ModelSerializer):
             )
         except KeyError:
             pass
+
         return fields
 
     def get_image(self, obj):
@@ -284,10 +316,11 @@ class DesignationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Designation
         fields = ("id", "department", "name", "user_set")
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "department")
 
     def get_fields(self):
         fields = super().get_fields()
+
         try:
             fields["user_set"] = serializers.PrimaryKeyRelatedField(
                 many=True,
@@ -297,8 +330,8 @@ class DesignationSerializer(serializers.ModelSerializer):
                 ).distinct(),
             )
         except KeyError:
-            # https://stackoverflow.com/questions/38316321/change-a-field-in-a-django-rest-framework-modelserializer-based-on-the-request-t
             pass
+
         return fields
 
 
@@ -318,21 +351,29 @@ class DepartmentSerializer(serializers.ModelSerializer):
     # I, once, worked on it but got burnt out and lost that work.
     # Most of the work to do should be within
     # https://github.com/encode/django-rest-framework/blob/master/rest_framework/utils/html.py
-    designation_set = DesignationSerializer(many=True)
 
     class Meta:
         model = Department
-        fields = ("id", "name", "image", "designation_set")
+        fields = ("id", "name", "image")
         read_only_fields = ("id",)
         extra_kwargs = {"image": {"allow_null": True}}
 
     def get_fields(self):
         fields = super().get_fields()
+
+        fields["designation_set"] = DesignationSerializer(
+            many=True,
+            # required is set to false since get_value()
+            # returns empty for multipart data
+            # https://github.com/encode/django-rest-framework/blob/master/rest_framework/serializers.py#L474
+            required=False,
+        )
         try:
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
         except KeyError:
             pass
+
         return fields
 
     def get_image(self, obj):
@@ -412,12 +453,16 @@ class DepartmentSerializer(serializers.ModelSerializer):
                 # create
                 user_set_creates.append(user_set)
                 bulk_creates.append(
-                    Designation(department=instance, **designation_data)
+                    # unpack first to prevent overriding
+                    Designation(
+                        **designation_data,
+                        department=instance,
+                    )
                 )
 
         Designation.objects.bulk_update(bulk_updates, ["name"])
         # delete
-        Designation.objects.exclude(
+        Designation.objects.filter(department=instance).exclude(
             pk__in=[obj.pk for obj in bulk_updates]
         ).delete()
         # new_designations are in order of bulk_creates
@@ -432,7 +477,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
         for designation_data in designations_data:
             user_set = designation_data.pop("user_set", [])
             designation_instance = Designation.objects.create(
-                department=department, **designation_data
+                **designation_data, department=department
             )
             designation_instance.user_set.set(user_set)
         return department

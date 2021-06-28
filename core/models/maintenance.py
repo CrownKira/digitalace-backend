@@ -44,6 +44,7 @@ def supplier_image_file_path(instance, filename):
 class Customer(models.Model):
     """Customer managed by a company"""
 
+    reference = models.CharField(max_length=255)
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
     agents = models.ManyToManyField("User", blank=True)
     attention = models.CharField(max_length=255, blank=True)
@@ -72,6 +73,7 @@ class Customer(models.Model):
 class Supplier(models.Model):
     """Supplier managed by a company"""
 
+    reference = models.CharField(max_length=255)
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
     agents = models.ManyToManyField("User", blank=True)
     attention = models.CharField(max_length=255, blank=True)
@@ -116,6 +118,7 @@ class Product(models.Model):
     """Product managed by a company"""
 
     # this field is non-null hence .set([...products]) doesn't work
+    reference = models.CharField(max_length=255)
     category = models.ForeignKey("ProductCategory", on_delete=models.CASCADE)
     supplier = models.ForeignKey("Supplier", on_delete=models.CASCADE)
     agents = models.ManyToManyField("User", blank=True)

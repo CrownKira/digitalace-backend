@@ -10,7 +10,6 @@ from django.contrib.auth.models import (
     Permission,
 )
 from django.core.validators import FileExtensionValidator
-from django.db.models.fields import CharField
 from django.utils.translation import gettext_lazy as _
 
 
@@ -68,7 +67,7 @@ class Company(models.Model):
 class Department(models.Model):
     """Department in a company"""
 
-    name = CharField(max_length=255)
+    name = models.CharField(max_length=255)
     image = models.ImageField(upload_to=department_image_file_path, blank=True)
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
 
@@ -79,7 +78,7 @@ class Department(models.Model):
 class Designation(models.Model):
     """Designation in a company"""
 
-    name = CharField(max_length=255)
+    name = models.CharField(max_length=255)
     department = models.ForeignKey("Department", on_delete=models.CASCADE)
 
     def __str__(self):
@@ -89,7 +88,7 @@ class Designation(models.Model):
 class Role(models.Model):
     """Role in a department"""
 
-    name = CharField(max_length=255)
+    name = models.CharField(max_length=255)
     image = models.ImageField(upload_to=role_image_file_path, blank=True)
     company = models.ForeignKey("Company", on_delete=models.CASCADE)
     permissions = models.ManyToManyField(
@@ -111,9 +110,16 @@ class UserManager(BaseUserManager):
         """Creates and save a new user"""
         if not email:
             raise ValueError("Users must have an email address")
-        user = self.model(email=self.normalize_email(email), **extra_fields)
+        user = self.model(
+            **extra_fields,
+            email=self.normalize_email(email),
+        )
         user.set_password(password)
         user.save(using=self._db)
+
+        # default objects that come with new users
+        UserConfig.objects.create(user=user)
+
         return user
 
     def create_superuser(self, email, password):
@@ -207,7 +213,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                 role__in=self.roles.all()
             ).distinct()
         )
-        return set(perm.codename for perm in perm_list)
+        return set(perm.pk for perm in perm_list)
 
     def __str__(self):
         return self.name
@@ -216,10 +222,18 @@ class User(AbstractBaseUser, PermissionsMixin):
 class UserConfig(models.Model):
     """User configuration"""
 
+    class Theme(models.TextChoices):
+        LIGHT = "light", _("light")
+        DARK = "dark", _("dark")
+
+    class Language(models.TextChoices):
+        ENGLISH = "en", _("en")
+        MANDARIN = "zh", _("zh")
+
     user = models.OneToOneField(
         "User",
         on_delete=models.CASCADE,
-        primary_key=True,
+        # primary_key=True,
     )
     gst_rate = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00)
@@ -227,8 +241,24 @@ class UserConfig(models.Model):
     discount_rate = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00)
     )
-    theme = models.CharField(max_length=255, blank=True, default="light")
-    language = models.CharField(max_length=255, blank=True, default="en")
+    theme = models.CharField(
+        max_length=255,
+        blank=True,
+        default=Theme.LIGHT,
+        choices=Theme.choices,
+    )
+    language = models.CharField(
+        max_length=255,
+        blank=True,
+        default=Language.ENGLISH,
+        choices=Language.choices,
+    )
 
     def __str__(self):
-        return self.user.name
+        return self.user.email
+
+    def delete(self, using=None, keep_parents=False):
+        # https://stackoverflow.com/questions/19182001/how-to-protect-objects-from-deletion-in-django
+        raise AssertionError(
+            "%s object can't be deleted." % (self._meta.object_name,)
+        )

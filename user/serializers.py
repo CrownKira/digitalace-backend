@@ -1,7 +1,10 @@
 from django.contrib.auth import get_user_model, authenticate
 from django.utils.translation import ugettext_lazy as _
 
+
 from rest_framework import serializers
+
+from core.models import UserConfig
 
 # use the following command to easily
 # retrieve all fields of User:
@@ -12,15 +15,21 @@ from rest_framework import serializers
 class UserSerializer(serializers.ModelSerializer):
     """Abstract serialier for user objects"""
 
-    # core arguments
-    # https://www.django-rest-framework.org/api-guide/fields/#core-arguments
-    permissions = serializers.SerializerMethodField()
-
     class Meta:
         abstract = True
 
     def get_fields(self):
         fields = super().get_fields()
+
+        # core arguments
+        # https://www.django-rest-framework.org/api-guide/fields/#core-arguments
+        fields["permissions"] = serializers.SerializerMethodField()
+        # qn: why is this field not required when update?
+        # TODO: make this required in POST only
+        fields["confirm_password"] = serializers.CharField(
+            max_length=128, write_only=True
+        )
+
         try:
             if self.context["request"].method in ["POST"]:
                 # note that this field will not appear in unittest
@@ -37,16 +46,9 @@ class UserSerializer(serializers.ModelSerializer):
                     # creating the object
                     write_only=True,
                 )
-            # core arguments
-            # https://www.django-rest-framework.org/api-guide/fields/#core-arguments
-            fields["permissions"] = serializers.SerializerMethodField()
-            # qn: why is this field not required when update?
-            # TODO: make this required in POST only
-            fields["confirm_password"] = serializers.CharField(
-                max_length=128, write_only=True
-            )
         except KeyError:
             pass
+
         return fields
 
     def create(self, validated_data):
@@ -109,18 +111,12 @@ class OwnerProfileSerializer(UserSerializer):
     class Meta:
         model = get_user_model()
         fields = (
-            "id",
+            "id",  # show id to facilitate testing
             "password",
-            # "last_login",
-            # "is_superuser",
-            # "company_name",
-            # "is_active",
             "is_staff",
             "email",
             "name",
-            # "roles",
             "image",
-            # "resume",
             "first_name",
             "last_name",
             "residential_address",
@@ -129,8 +125,6 @@ class OwnerProfileSerializer(UserSerializer):
             "nationality",
             "gender",
             "date_of_birth",
-            # "date_of_commencement",
-            # "date_of_cessation",
             "phone_no",
         )
         # writable fields will be validated using model
@@ -141,12 +135,12 @@ class OwnerProfileSerializer(UserSerializer):
             "roles",
             "date_of_commencement",
             "date_of_cessation",
-            "resume",
         )
         extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
     def get_fields(self):
         fields = super().get_fields()
+
         try:
             if self.context["request"].method in ["GET"]:
                 # read_only=True (w/o overriding) vs override on GET request
@@ -157,12 +151,14 @@ class OwnerProfileSerializer(UserSerializer):
                 fields["company_name"] = serializers.SerializerMethodField()
             else:
                 fields["company_name"] = serializers.CharField(
-                    max_length=255, write_only=True
+                    max_length=255,
+                    write_only=True,
                 )
             if self.context["request"].method in ["PUT, PATCH"]:
                 fields["image"] = serializers.ImageField(allow_null=True)
         except KeyError:
             pass
+
         return fields
 
     def get_company_name(self, obj):
@@ -170,10 +166,12 @@ class OwnerProfileSerializer(UserSerializer):
 
     def update(self, instance, validated_data):
         """Update a user, setting the password correctly and return it"""
-        company_name = validated_data.pop("company_name")
+        # None: not given (prefer this)
+        # "": not given but save as empty string
+        company_name = validated_data.pop("company_name", None)
         user = super().update(instance, validated_data)
 
-        if user.is_staff:
+        if user.is_staff and company_name:  # company_name can't be blank
             company = user.company
             company.name = company_name
             company.save(update_fields=["name"])
@@ -191,10 +189,6 @@ class EmployeeProfileSerializer(UserSerializer):
         fields = (
             "id",
             "password",
-            # "last_login",
-            # "is_superuser",
-            # "company_name",
-            # "is_active",
             "is_staff",
             "email",
             "name",
@@ -212,6 +206,7 @@ class EmployeeProfileSerializer(UserSerializer):
             "date_of_commencement",
             "date_of_cessation",
             "phone_no",
+            "designation",
         )
         read_only_fields = (
             "id",
@@ -224,17 +219,19 @@ class EmployeeProfileSerializer(UserSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+
+        fields["department"] = serializers.SerializerMethodField(
+            read_only=True
+        )
+
         try:
             if self.context["request"].method in ["GET"]:
                 fields["image"] = serializers.SerializerMethodField()
             else:
                 fields["image"] = serializers.ImageField(allow_null=True)
-
-            fields["department"] = serializers.SerializerMethodField(
-                read_only=True
-            )
         except KeyError:
             pass
+
         return fields
 
     def get_department(self, obj):
@@ -247,6 +244,17 @@ class EmployeeProfileSerializer(UserSerializer):
             if obj.designation
             else None
         )
+
+
+class UserConfigSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating and retrieving user's config.
+    """
+
+    class Meta:
+        model = UserConfig
+        fields = ("gst_rate", "discount_rate", "theme", "language")
+        read_only_fields = ()
 
 
 class AuthTokenSerializer(serializers.Serializer):
