@@ -53,14 +53,10 @@ class ProductViewSet(BaseAttrViewSet):
     serializer_class = serializers.ProductSerializer
     filterset_class = ProductFilter
     search_fields = [
-        "category__name",
-        "supplier__name",
         "name",
-        "unit",
-        "cost",
+        "reference",
         "unit_price",
-        "stock",
-        "sales",
+        "category__name",
     ]
 
     def get_queryset(self):
@@ -156,21 +152,12 @@ class EmployeeViewSet(BaseAttrViewSet):
     # TODO: remove id from all search fields?
     # TODO: reduce possible search fields
     search_fields = [
-        "id",
-        "email",
         "name",
-        "roles__name",
         "first_name",
         "last_name",
-        "residential_address",
-        "postal_code",
-        "ic_no",
-        "nationality",
-        "gender",
-        "date_of_birth",
-        "date_of_commencement",
-        "date_of_cessation",
-        "phone_no",
+        "email",
+        "designation__department__name",
+        "roles__name",
     ]
 
     def get_queryset(self):

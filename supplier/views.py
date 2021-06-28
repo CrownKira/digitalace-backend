@@ -21,16 +21,10 @@ class SupplierViewSet(BaseAssetAttrViewSet):
     serializer_class = serializers.SupplierSerializer
     filterset_class = SupplierFilter
     search_fields = [
-        "attention",
         "name",
-        "address",
-        "city",
-        "state",
-        "zipcode",
-        "contact",
-        "term",
-        "phone_no",
+        "attention",
         "email",
+        "phone_no",
         "payables",
     ]
 
@@ -50,17 +44,13 @@ class ReceiveViewSet(BaseAssetAttrViewSet):
     serializer_class = serializers.ReceiveSerializer
     filterset_class = ReceiveFilter
     search_fields = [
-        "id",
         "reference",
         "date",
-        # "description",
-        # "payment_date",
-        # "payment_method",
-        # "payment_note",
-        # "grand_total",
-        # "status",
-        # "supplier__name",
-        # "purchase_order__id",
+        "supplier__name",
+        "supplier__address",
+        "purchase_order__reference",
+        "status",
+        "grand_total",
     ]
 
     def _get_calculated_fields(self, serializer):
@@ -137,16 +127,13 @@ class PurchaseOrderViewSet(BaseAssetAttrViewSet):
 
     filterset_class = PurchaseOrderFilter
     search_fields = [
-        "id",
         "reference",
         "date",
-        # "description",
-        # "payment_date",
-        # "payment_method",
-        # "payment_note",
-        # "grand_total",
-        # "status",
-        # "supplier__name",
+        "supplier__name",
+        "supplier__address",
+        "receive__reference",
+        "status",
+        "grand_total",
     ]
 
     def _get_calculated_fields(self, serializer):
