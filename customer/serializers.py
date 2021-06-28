@@ -19,6 +19,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = (
             "id",
+            "reference",
             "attention",
             "name",
             "address",
@@ -57,6 +58,26 @@ class CustomerSerializer(serializers.ModelSerializer):
             "src": obj.image.url if obj.image else "",
             "title": obj.image.name if obj.image else "",
         }
+
+    # TODO: create a validate_reference global function
+    def validate_reference(self, reference):
+        company = self.context["request"].user.company
+
+        if self.context["request"].method in ["POST"]:
+            if Customer.objects.filter(
+                company=company, reference=reference
+            ).exists():
+                msg = _("A customer with this reference already exists")
+                raise serializers.ValidationError(msg)
+        elif (
+            Customer.objects.exclude(pk=self.instance.pk)
+            .filter(company=company, reference=reference)
+            .exists()
+        ):
+            msg = _("A customer with this reference already exists")
+            raise serializers.ValidationError(msg)
+
+        return reference
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):

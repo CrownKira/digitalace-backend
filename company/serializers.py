@@ -63,6 +63,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             "id",
+            "reference",
             "category",
             "supplier",
             "name",
@@ -106,6 +107,25 @@ class ProductSerializer(serializers.ModelSerializer):
             "src": obj.thumbnail.url if obj.thumbnail else "",
             "title": obj.thumbnail.name if obj.thumbnail else "",
         }
+
+    def validate_reference(self, reference):
+        company = self.context["request"].user.company
+
+        if self.context["request"].method in ["POST"]:
+            if Product.objects.filter(
+                category__company=company, reference=reference
+            ).exists():
+                msg = _("A product with this reference already exists")
+                raise serializers.ValidationError(msg)
+        elif (
+            Product.objects.exclude(pk=self.instance.pk)
+            .filter(category__company=company, reference=reference)
+            .exists()
+        ):
+            msg = _("A product with this reference already exists")
+            raise serializers.ValidationError(msg)
+
+        return reference
 
 
 class PaymentMethodSerializer(serializers.ModelSerializer):

@@ -18,6 +18,7 @@ class SupplierSerializer(serializers.ModelSerializer):
         model = Supplier
         fields = (
             "id",
+            "reference",
             "attention",
             "name",
             "address",
@@ -50,6 +51,25 @@ class SupplierSerializer(serializers.ModelSerializer):
             "src": obj.image.url if obj.image else "",
             "title": obj.image.name if obj.image else "",
         }
+
+    def validate_reference(self, reference):
+        company = self.context["request"].user.company
+
+        if self.context["request"].method in ["POST"]:
+            if Supplier.objects.filter(
+                company=company, reference=reference
+            ).exists():
+                msg = _("A supplier with this reference already exists")
+                raise serializers.ValidationError(msg)
+        elif (
+            Supplier.objects.exclude(pk=self.instance.pk)
+            .filter(company=company, reference=reference)
+            .exists()
+        ):
+            msg = _("A supplier with this reference already exists")
+            raise serializers.ValidationError(msg)
+
+        return reference
 
 
 class ReceiveItemSerializer(serializers.ModelSerializer):
