@@ -9,6 +9,7 @@ class CustomerFilter(filters.FilterSet):
     class Meta:
         model = Customer
         fields = {
+            "name": ["icontains"],
             "last_seen": ["lt", "gt", "lte", "gte", "exact"],
             "agents": ["exact"],
         }
@@ -35,23 +36,33 @@ class CustomerViewSet(BaseAssetAttrViewSet):
     ]
 
 
+class InvoiceFilter(filters.FilterSet):
+    class Meta:
+        model = Invoice
+        fields = {
+            "reference": ["icontains"],
+        }
+
+
 class InvoiceViewSet(BaseAssetAttrViewSet):
     """Manage invoice in the database"""
 
     queryset = Invoice.objects.all()
     serializer_class = serializers.InvoiceSerializer
+    filterset_class = InvoiceFilter
     search_fields = [
         "id",
+        "reference",
         "date",
-        "description",
-        "payment_date",
-        "payment_method",
-        "payment_note",
-        "grand_total",
-        "status",
-        "customer__name",
-        "salesperson__name",
-        "sales_order__id",
+        # "description",
+        # "payment_date",
+        # "payment_method",
+        # "payment_note",
+        # "grand_total",
+        # "status",
+        # "customer__name",
+        # "salesperson__name",
+        # "sales_order__id",
     ]
 
     def _get_calculated_fields(self, serializer):
@@ -112,20 +123,89 @@ class InvoiceViewSet(BaseAssetAttrViewSet):
         )
 
 
+class SalesOrderFilter(filters.FilterSet):
+    class Meta:
+        model = SalesOrder
+        fields = {
+            "reference": ["icontains"],
+        }
+
+
 class SalesOrderViewSet(BaseAssetAttrViewSet):
     """Manage customer in the database"""
 
     queryset = SalesOrder.objects.all()
     serializer_class = serializers.SalesOrderSerializer
+    filterset_class = SalesOrderFilter
     search_fields = [
         "id",
+        "reference",
         "date",
-        "description",
-        "payment_date",
-        "payment_method",
-        "payment_note",
-        "grand_total",
-        "status",
-        "customer__name",
-        "salesperson__name",
+        # "description",
+        # "payment_date",
+        # "payment_method",
+        # "payment_note",
+        # "grand_total",
+        # "status",
+        # "customer__name",
+        # "salesperson__name",
     ]
+
+    def _get_calculated_fields(self, serializer):
+        discount_rate = serializer.validated_data.pop("discount_rate")
+        gst_rate = serializer.validated_data.pop("gst_rate")
+        salesorderitem_set = serializer.validated_data.pop(
+            "salesorderitem_set"
+        )
+        # TODO: fix round down behavior
+        # https://stackoverflow.com/questions/20457038/how-to-round-to-2-decimals-with-python
+        # round quantity, unit_price, gst_rate and discount rate first
+        # then round the rest at the end of calculation
+        salesorderitem_set = [
+            {
+                **salesorderitem,
+                "amount": round(
+                    round(salesorderitem.get("quantity"))
+                    * round(salesorderitem.get("unit_price"), 2),
+                    2,
+                ),
+            }
+            for salesorderitem in salesorderitem_set
+        ]
+        total_amount = sum(
+            [
+                # recalculate amount here since it has been rounded up
+                round(salesorderitem.get("quantity"))
+                * round(salesorderitem.get("unit_price"), 2)
+                for salesorderitem in salesorderitem_set
+            ]
+        )
+        discount_rate = round(discount_rate, 2)
+        gst_rate = round(gst_rate, 2)
+        discount_amount = total_amount * discount_rate / 100
+        net = total_amount * (1 - discount_rate / 100)
+        gst_amount = net * gst_rate / 100
+        grand_total = net * (1 - gst_rate / 100)
+
+        return {
+            "total_amount": round(total_amount, 2),
+            "discount_rate": discount_rate,
+            "gst_rate": gst_rate,
+            "discount_amount": round(discount_amount, 2),
+            "gst_amount": round(gst_amount, 2),
+            "net": round(net, 2),
+            "grand_total": round(grand_total, 2),
+            "salesorderitem_set": salesorderitem_set,
+        }
+
+    def perform_create(self, serializer):
+        company = self.request.user.company
+        serializer.save(
+            company=company, **self._get_calculated_fields(serializer)
+        )
+
+    def perform_update(self, serializer):
+        company = self.request.user.company
+        serializer.save(
+            company=company, **self._get_calculated_fields(serializer)
+        )

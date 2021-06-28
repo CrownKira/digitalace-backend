@@ -23,8 +23,8 @@ class Document(models.Model):
 
     date = models.DateField()
     description = models.TextField(blank=True)
+    # TODO: remove payment for orders
     payment_date = models.DateField(null=True, blank=True)
-    # create a class for payment_method
     payment_method = models.ForeignKey(
         "PaymentMethod", on_delete=models.SET_NULL, null=True, blank=True
     )

@@ -442,7 +442,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
         Designation.objects.bulk_update(bulk_updates, ["name"])
         # delete
-        Designation.objects.exclude(
+        Designation.objects.filter(department=instance).exclude(
             pk__in=[obj.pk for obj in bulk_updates]
         ).delete()
         # new_designations are in order of bulk_creates

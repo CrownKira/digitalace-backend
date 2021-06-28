@@ -39,6 +39,7 @@ class ProductFilter(filters.FilterSet):
     class Meta:
         model = Product
         fields = {
+            "name": ["icontains"],
             "stock": ["lt", "gt", "lte", "gte", "exact"],
             "sales": ["lt", "gt", "lte", "gte", "exact"],
             "category": ["exact"],
