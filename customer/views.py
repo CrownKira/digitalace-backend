@@ -35,7 +35,11 @@ class InvoiceFilter(filters.FilterSet):
     class Meta:
         model = Invoice
         fields = {
-            "reference": ["icontains"],
+            # https://docs.djangoproject.com/en/3.2/ref/models/lookups/#module-django.db.models.lookups
+            # https://django-filter.readthedocs.io/en/stable/ref/filterset.html#declaring-filterable-fields
+            # reference__icontains=
+            # there is no reference__exact=, just reference= will do
+            "reference": ["icontains", "exact"],
         }
 
 
@@ -117,7 +121,7 @@ class SalesOrderFilter(filters.FilterSet):
     class Meta:
         model = SalesOrder
         fields = {
-            "reference": ["icontains"],
+            "reference": ["icontains", "exact"],
         }
 
 
