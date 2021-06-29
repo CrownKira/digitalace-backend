@@ -9,6 +9,7 @@ class CustomerFilter(filters.FilterSet):
     class Meta:
         model = Customer
         fields = {
+            "reference": ["exact"],
             "name": ["icontains"],
             "last_seen": ["lt", "gt", "lte", "gte", "exact"],
             "agents": ["exact"],
@@ -22,16 +23,10 @@ class CustomerViewSet(BaseAssetAttrViewSet):
     serializer_class = serializers.CustomerSerializer
     filterset_class = CustomerFilter
     search_fields = [
-        "attention",
         "name",
-        "address",
-        "city",
-        "state",
-        "zipcode",
-        "contact",
-        "term",
-        "phone_no",
+        "attention",
         "email",
+        "phone_no",
         "receivables",
     ]
 
@@ -51,18 +46,13 @@ class InvoiceViewSet(BaseAssetAttrViewSet):
     serializer_class = serializers.InvoiceSerializer
     filterset_class = InvoiceFilter
     search_fields = [
-        "id",
         "reference",
         "date",
-        # "description",
-        # "payment_date",
-        # "payment_method",
-        # "payment_note",
-        # "grand_total",
-        # "status",
-        # "customer__name",
-        # "salesperson__name",
-        # "sales_order__id",
+        "customer__name",
+        "customer__address",
+        "sales_order__reference",
+        "status",
+        "grand_total",
     ]
 
     def _get_calculated_fields(self, serializer):
@@ -138,17 +128,13 @@ class SalesOrderViewSet(BaseAssetAttrViewSet):
     serializer_class = serializers.SalesOrderSerializer
     filterset_class = SalesOrderFilter
     search_fields = [
-        "id",
         "reference",
         "date",
-        # "description",
-        # "payment_date",
-        # "payment_method",
-        # "payment_note",
-        # "grand_total",
-        # "status",
-        # "customer__name",
-        # "salesperson__name",
+        "customer__name",
+        "customer__address",
+        "invoice__reference",
+        "status",
+        "grand_total",
     ]
 
     def _get_calculated_fields(self, serializer):
