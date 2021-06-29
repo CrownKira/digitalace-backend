@@ -9,6 +9,7 @@ class CustomerFilter(filters.FilterSet):
     class Meta:
         model = Customer
         fields = {
+            "reference": ["exact"],
             "name": ["icontains"],
             "last_seen": ["lt", "gt", "lte", "gte", "exact"],
             "agents": ["exact"],

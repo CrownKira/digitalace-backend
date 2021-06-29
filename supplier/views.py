@@ -9,6 +9,7 @@ class SupplierFilter(filters.FilterSet):
     class Meta:
         model = Supplier
         fields = {
+            "reference": ["exact"],
             "name": ["icontains"],
             "last_seen": ["lt", "gt", "lte", "gte", "exact"],
         }
