@@ -5,6 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
+
 from core.models import (
     Product,
     ProductCategory,
@@ -13,7 +14,6 @@ from core.models import (
     Department,
     Designation,
     Customer,
-    User,
     PaymentMethod,
 )
 from user.serializers import UserSerializer
@@ -277,10 +277,12 @@ class RoleSerializer(serializers.ModelSerializer):
                 fields["image"] = serializers.SerializerMethodField()
             fields["user_set"] = serializers.PrimaryKeyRelatedField(
                 many=True,
-                queryset=User.objects.filter(
+                queryset=get_user_model()
+                .objects.filter(
                     is_staff=False,
                     company=self.context["request"].user.company,
-                ).distinct(),
+                )
+                .distinct(),
             )
         except KeyError:
             pass
@@ -324,10 +326,12 @@ class DesignationSerializer(serializers.ModelSerializer):
         try:
             fields["user_set"] = serializers.PrimaryKeyRelatedField(
                 many=True,
-                queryset=User.objects.filter(
+                queryset=get_user_model()
+                .objects.filter(
                     is_staff=False,
                     company=self.context["request"].user.company,
-                ).distinct(),
+                )
+                .distinct(),
             )
         except KeyError:
             pass

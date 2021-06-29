@@ -1,4 +1,10 @@
+from django.contrib.auth import get_user_model
 from django_filters import rest_framework as filters
+
+from rest_framework import viewsets, mixins
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 
 from core.views import BaseAttrViewSet, BaseAssetAttrViewSet
 from core.models import (
@@ -12,6 +18,7 @@ from core.models import (
     PaymentMethod,
 )
 from company import serializers
+from user.serializers import OwnerProfileSerializer, EmployeeProfileSerializer
 
 
 # for debug
@@ -23,6 +30,32 @@ from company import serializers
 #     return Response(
 #         serializer.data, status=status.HTTP_201_CREATED, headers=headers
 #     )
+
+
+class UserFilter(filters.FilterSet):
+    class Meta:
+        model = get_user_model()
+        fields = {
+            "email": ["exact"],
+        }
+
+
+class ListUserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    """Base viewset for listing users"""
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    ordering_fields = "__all__"
+    ordering = ["-id"]
+    filterset_class = UserFilter
+    queryset = get_user_model().objects.all()
+
+    def get_serializer_class(self):
+        return (
+            OwnerProfileSerializer
+            if self.request.user.is_staff
+            else EmployeeProfileSerializer
+        )
 
 
 class ProductCategoryViewSet(BaseAssetAttrViewSet):
@@ -147,7 +180,7 @@ class EmployeeFilter(filters.FilterSet):
 class EmployeeViewSet(BaseAttrViewSet):
     """Manage employee in the database"""
 
-    queryset = User.objects.all()
+    queryset = get_user_model().objects.all()
     serializer_class = serializers.EmployeeSerializer
     filterset_class = EmployeeFilter
     # TODO: remove id from all search fields?

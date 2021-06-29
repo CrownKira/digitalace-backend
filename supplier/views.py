@@ -34,7 +34,7 @@ class ReceiveFilter(filters.FilterSet):
     class Meta:
         model = Receive
         fields = {
-            "reference": ["icontains"],
+            "reference": ["icontains", "exact"],
         }
 
 
@@ -116,7 +116,7 @@ class PurchaseOrderFilter(filters.FilterSet):
     class Meta:
         model = PurchaseOrder
         fields = {
-            "reference": ["icontains"],
+            "reference": ["icontains", "exact"],
         }
 
 

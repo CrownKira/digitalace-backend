@@ -1,4 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth import get_user_model
+
 
 from rest_framework import serializers
 
@@ -6,7 +8,6 @@ from core.models import (
     Invoice,
     Customer,
     SalesOrder,
-    User,
     InvoiceItem,
     SalesOrderItem,
 )
@@ -44,9 +45,9 @@ class CustomerSerializer(serializers.ModelSerializer):
                 fields["image"] = serializers.SerializerMethodField()
             fields["agents"] = serializers.PrimaryKeyRelatedField(
                 many=True,
-                queryset=User.objects.filter(
-                    company=self.context["request"].user.company
-                ).distinct(),
+                queryset=get_user_model()
+                .objects.filter(company=self.context["request"].user.company)
+                .distinct(),
             )
         except KeyError:
             pass

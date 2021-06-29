@@ -1,4 +1,3 @@
-from django.utils.translation import ugettext_lazy as _
 from django.shortcuts import get_object_or_404
 
 
@@ -8,7 +7,6 @@ from rest_framework import (
     permissions,
     status,
 )
-from rest_framework.decorators import action
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
