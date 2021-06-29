@@ -171,6 +171,7 @@ class EmployeeFilter(filters.FilterSet):
     class Meta:
         model = User
         fields = {
+            "name": ["icontains"],
             "designation__department": ["exact"],
             "designation": ["exact"],
             "roles": ["exact"],
