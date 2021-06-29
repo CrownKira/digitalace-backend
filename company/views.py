@@ -43,19 +43,15 @@ class UserFilter(filters.FilterSet):
 class ListUserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     """Base viewset for listing users"""
 
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
     ordering_fields = "__all__"
     ordering = ["-id"]
     filterset_class = UserFilter
     queryset = get_user_model().objects.all()
 
     def get_serializer_class(self):
-        return (
-            OwnerProfileSerializer
-            if self.request.user.is_staff
-            else EmployeeProfileSerializer
-        )
+
+        # TODO: make a PublicProfileSerializer
+        return OwnerProfileSerializer
 
 
 class ProductCategoryViewSet(BaseAssetAttrViewSet):
