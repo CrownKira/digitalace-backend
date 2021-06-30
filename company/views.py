@@ -2,8 +2,6 @@ from django.contrib.auth import get_user_model
 from django_filters import rest_framework as filters
 
 from rest_framework import viewsets, mixins
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
 
 
 from core.views import BaseAttrViewSet, BaseAssetAttrViewSet
@@ -18,7 +16,7 @@ from core.models import (
     PaymentMethod,
 )
 from company import serializers
-from user.serializers import OwnerProfileSerializer, EmployeeProfileSerializer
+from user.serializers import OwnerProfileSerializer
 
 
 # for debug
