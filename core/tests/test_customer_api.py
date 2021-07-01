@@ -1,11 +1,12 @@
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.models import Permission
 
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Customer, Company
+from core.models import Customer, Company, Role
 
 # from customer.serializers import CustomerSerializer
 
@@ -74,3 +75,40 @@ class PrivateCustomerApiTest(TestCase):
         res = self.client.post(CUSTOMER_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_role_permission(self):
+        """Test roles permission"""
+        no_role_user = get_user_model().objects.create_user(
+            "norole@crownkira.com",
+            "password123",
+            company=self.company,
+            is_staff=False,
+        )
+
+        customer_role = Role.objects.create(
+            name="customers", company=self.company
+        )
+        view_customer = Permission.objects.get(codename="view_customer")
+        add_customer = Permission.objects.get(codename="add_customer")
+        customer_role.permissions.add(view_customer.id, add_customer)
+
+        has_role_user = get_user_model().objects.create_user(
+            "role@crownkira.com",
+            "password123",
+            company=self.company,
+            is_staff=False,
+        )
+        payload = {"company": self.company, "name": "testcustomer"}
+        has_role_user.roles.set([customer_role])
+
+        self.client.force_authenticate(no_role_user)
+        res = self.client.post(CUSTOMER_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.client.force_authenticate(has_role_user)
+        res = self.client.post(CUSTOMER_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        exists = Customer.objects.filter(company=payload["company"])
+        self.assertTrue(exists)
+        self.client.force_authenticate(self.user)

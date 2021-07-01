@@ -17,5 +17,4 @@ class CustomPermission(DjangoModelPermissions):
 
         queryset = self._queryset(view)
         perms = self.get_required_permissions(request.method, queryset.model)
-
-        return request.user.is_staff or request.user.has_role_perms(perms)
+        return request.user.has_role_perms(perms)
