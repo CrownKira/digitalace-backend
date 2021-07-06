@@ -55,11 +55,16 @@ class Customer(models.Model):
     state = models.CharField(max_length=255, blank=True)
     zipcode = models.CharField(max_length=255, blank=True)
     contact = models.CharField(max_length=255, blank=True)
+    # TODO: business field
+    # TODO: create a model for term
     term = models.CharField(max_length=255, blank=True)
     phone_no = models.CharField(max_length=255, blank=True)
 
     email = models.EmailField(max_length=255, blank=True)
     receivables = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, default=Decimal("0.00")
+    )
+    unused_credits = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, default=Decimal("0.00")
     )
     first_seen = models.DateField(null=True, blank=True)

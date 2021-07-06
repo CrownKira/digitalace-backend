@@ -11,6 +11,9 @@ from .transaction import (
     PurchaseOrder,
     PurchaseOrderItem,
     PaymentMethod,
+    CreditNote,
+    CreditNoteItem,
+    CreditsApplication,
 )
 from .user import (
     Company,
@@ -38,6 +41,9 @@ __all__ = [
     "ReceiveItem",
     "PurchaseOrder",
     "PurchaseOrderItem",
+    "CreditNote",
+    "CreditNoteItem",
+    "CreditsApplication",
     "Company",
     "Department",
     "Designation",

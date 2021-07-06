@@ -9,6 +9,7 @@ from core.models import (
     ReceiveItem,
     PurchaseOrderItem,
 )
+from customer.serializers import LineItemSerializer, DocumentSerializer
 
 
 class SupplierSerializer(serializers.ModelSerializer):
@@ -72,7 +73,7 @@ class SupplierSerializer(serializers.ModelSerializer):
         return reference
 
 
-class ReceiveItemSerializer(serializers.ModelSerializer):
+class ReceiveItemSerializer(LineItemSerializer):
     """Serializer for receive item objects"""
 
     class Meta:
@@ -92,7 +93,7 @@ class ReceiveItemSerializer(serializers.ModelSerializer):
         )
 
 
-class ReceiveSerializer(serializers.ModelSerializer):
+class ReceiveSerializer(DocumentSerializer):
     """Serializer for Receive objects"""
 
     class Meta:
@@ -214,7 +215,7 @@ class ReceiveSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class PurchaseOrderItemSerializer(serializers.ModelSerializer):
+class PurchaseOrderItemSerializer(LineItemSerializer):
     """Serializer for purchase order item objects"""
 
     class Meta:
@@ -234,7 +235,7 @@ class PurchaseOrderItemSerializer(serializers.ModelSerializer):
         )
 
 
-class PurchaseOrderSerializer(serializers.ModelSerializer):
+class PurchaseOrderSerializer(DocumentSerializer):
     """Serializer for Receive objects"""
 
     class Meta:
