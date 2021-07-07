@@ -3,7 +3,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 # from rest_framework.pagination import PageNumberPagination
-# from .pagination import StandardResultsSetPagination
+from .pagination import StandardResultsSetPagination
 
 
 class BaseAttrViewSet(viewsets.ModelViewSet):
@@ -11,6 +11,7 @@ class BaseAttrViewSet(viewsets.ModelViewSet):
 
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
+    pagination_class = StandardResultsSetPagination
     ordering_fields = "__all__"
     ordering = ["-id"]
 

@@ -1,4 +1,6 @@
 from rest_framework.pagination import PageNumberPagination
+from django.core.paginator import InvalidPage
+from rest_framework.exceptions import NotFound
 
 
 class StandardResultsSetPagination(PageNumberPagination):
