@@ -24,16 +24,19 @@ class LineItemSerializer(serializers.ModelSerializer):
         if amount < 0:
             msg = _("Amount cannot be negative")
             raise serializers.ValidationError(msg)
+        return amount
 
     def validate_quantity(self, quantity):
         if quantity < 0:
             msg = _("Quantity cannot be negative")
             raise serializers.ValidationError(msg)
+        return quantity
 
     def validate_unit_price(self, unit_price):
         if unit_price < 0:
             msg = _("Unit price cannot be negative")
             raise serializers.ValidationError(msg)
+        return unit_price
 
 
 class DocumentSerializer(serializers.ModelSerializer):
@@ -44,11 +47,13 @@ class DocumentSerializer(serializers.ModelSerializer):
         if gst_rate < 0:
             msg = _("GST Rate cannot be negative")
             raise serializers.ValidationError(msg)
+        return gst_rate
 
     def validate_discount_rate(self, discount_rate):
         if discount_rate < 0:
             msg = _("Discount Rate cannot be negative")
             raise serializers.ValidationError(msg)
+        return discount_rate
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -155,9 +160,9 @@ class CreditNoteSerializer(DocumentSerializer):
             "reference",
             "date",
             "description",
-            "payment_date",
-            "payment_method",
-            "payment_note",
+            # "payment_date",
+            # "payment_method",
+            # "payment_note",
             "gst_rate",
             "discount_rate",
             "gst_amount",
@@ -167,9 +172,12 @@ class CreditNoteSerializer(DocumentSerializer):
             "grand_total",
             "customer",
             "salesperson",
-            "sales_order",
+            # "sales_order",
             "status",
             "refund",
+            "credits_used",
+            "credits_remaining",
+            "created_from",
         )
         read_only_fields = (
             "id",
@@ -179,6 +187,8 @@ class CreditNoteSerializer(DocumentSerializer):
             "net",
             "total_amount",
             "grand_total",
+            "credits_used",
+            "credits_remaining",
         )
 
     def get_fields(self):
@@ -198,6 +208,7 @@ class CreditNoteSerializer(DocumentSerializer):
         if refund < 0:
             msg = _("Refund cannot be negative")
             raise serializers.ValidationError(msg)
+        return refund
 
     def validate_reference(self, reference):
         company = self.context["request"].user.company
@@ -309,7 +320,7 @@ class CreditsApplicationSerializer(serializers.ModelSerializer):
         )
 
 
-class InvoiceItemSerializer(serializers.ModelSerializer):
+class InvoiceItemSerializer(LineItemSerializer):
     """Serializer for invoice item objects"""
 
     class Meta:
@@ -327,21 +338,6 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
             "id",
             "invoice",
         )
-
-    def validate_amount(self, amount):
-        if amount < 0:
-            msg = _("Amount cannot be negative")
-            raise serializers.ValidationError(msg)
-
-    def validate_quantity(self, quantity):
-        if quantity < 0:
-            msg = _("Quantity cannot be negative")
-            raise serializers.ValidationError(msg)
-
-    def validate_unit_price(self, unit_price):
-        if unit_price < 0:
-            msg = _("Unit price cannot be negative")
-            raise serializers.ValidationError(msg)
 
 
 class InvoiceSerializer(DocumentSerializer):
@@ -405,7 +401,11 @@ class InvoiceSerializer(DocumentSerializer):
     def get_creditsapplication_set(self, obj):
         # return obj.company.name if obj.company else ""
 
-        return CreditNote.objects.filter(customer=obj.customer).distinct()
+        credit_notes = CreditNote.objects.filter(
+            customer=obj.customer
+        ).distinct()
+
+        return CreditNoteSerializer(credit_notes, many=True).data
 
     def get_company_name(self, obj):
         return obj.company.name if obj.company else ""

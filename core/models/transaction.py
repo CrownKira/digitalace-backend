@@ -14,12 +14,6 @@ class Document(models.Model):
 
     date = models.DateField()
     description = models.TextField(blank=True)
-    # TODO: remove payment for orders
-    payment_date = models.DateField(null=True, blank=True)
-    payment_method = models.ForeignKey(
-        "PaymentMethod", on_delete=models.SET_NULL, null=True, blank=True
-    )
-    payment_note = models.TextField(blank=True)
     # can't be blank since these are calculated fields
     # TODO: move calculation logic to Document manager
     gst_rate = models.DecimalField(max_digits=10, decimal_places=2)
@@ -199,6 +193,11 @@ class Invoice(Document):
     )
     credits_applied = models.DecimalField(max_digits=10, decimal_places=2)
     balance_due = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_date = models.DateField(null=True, blank=True)
+    payment_method = models.ForeignKey(
+        "PaymentMethod", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    payment_note = models.TextField(blank=True)
 
 
 class InvoiceItem(LineItem):
@@ -256,6 +255,11 @@ class Receive(Document):
         choices=Status.choices,
         default=Status.DRAFT,
     )
+    payment_date = models.DateField(null=True, blank=True)
+    payment_method = models.ForeignKey(
+        "PaymentMethod", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    payment_note = models.TextField(blank=True)
 
 
 class ReceiveItem(LineItem):

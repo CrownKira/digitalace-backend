@@ -174,7 +174,12 @@ class CreditNoteViewSet(BaseAssetAttrViewSet):
             "creditnoteitem_set": creditnoteitem_set,
             "credits_used": credits_used,
             "credits_remaining": credits_remaining,
+            "refund": refund,
         }
+
+
+
+
 
     def perform_create(self, serializer):
         company = self.request.user.company
