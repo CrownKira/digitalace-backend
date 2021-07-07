@@ -1,14 +1,15 @@
 from decimal import Decimal
+from datetime import datetime
 
-from django.utils.timezone import now
+from django.utils import formats
+
 
 from django_filters import rest_framework as filters
 from rest_framework import viewsets, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models.transaction import CreditNoteItem
-from core.views import BaseAssetAttrViewSet, BaseAttrViewSet
+from core.views import BaseAssetAttrViewSet
 from core.models import (
     Invoice,
     Customer,
@@ -99,9 +100,7 @@ class CreditsApplicationViewSet(
 class CreditNoteFilter(filters.FilterSet):
     class Meta:
         model = CreditNote
-        fields = {
-            "reference": ["icontains", "exact"],
-        }
+        fields = {"reference": ["icontains", "exact"], "customer": ["exact"]}
 
 
 class CreditNoteViewSet(BaseAssetAttrViewSet):
@@ -177,10 +176,6 @@ class CreditNoteViewSet(BaseAssetAttrViewSet):
             "refund": refund,
         }
 
-
-
-
-
     def perform_create(self, serializer):
         company = self.request.user.company
         serializer.save(
@@ -226,7 +221,7 @@ class InvoiceViewSet(BaseAssetAttrViewSet):
         discount_rate = serializer.validated_data.pop("discount_rate")
         gst_rate = serializer.validated_data.pop("gst_rate")
         invoiceitem_set = serializer.validated_data.pop("invoiceitem_set")
-        customer = serializer.validated_data.pop("customer")
+        customer = serializer.validated_data.get("customer")
         creditsapplication_set = serializer.validated_data.pop(
             "creditsapplication_set"
         )
@@ -241,7 +236,8 @@ class InvoiceViewSet(BaseAssetAttrViewSet):
         for credits_application in creditsapplication_set:
             # update customer unused credits
             amount_to_credit = round(
-                credits_application.get("amount_to_credit"), 2
+                credits_application.get("amount_to_credit") or Decimal("0.00"),
+                2,
             )
             credit_note = credits_application.get("credit_note")
 
@@ -262,7 +258,7 @@ class InvoiceViewSet(BaseAssetAttrViewSet):
             new_creditsapplication_set.append(
                 {
                     **credits_application,
-                    "date": now,
+                    "date": formats.date_format(datetime.now(), "Y-m-d"),
                     "amount_to_credit": new_amount_to_credit,
                 }
             )

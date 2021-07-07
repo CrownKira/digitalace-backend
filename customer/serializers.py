@@ -318,6 +318,7 @@ class CreditsApplicationSerializer(serializers.ModelSerializer):
             "id",
             "date",
         )
+        extra_kwargs = {"amount_to_credit": {"required": False}}
 
 
 class InvoiceItemSerializer(LineItemSerializer):
@@ -383,14 +384,14 @@ class InvoiceSerializer(DocumentSerializer):
     def get_fields(self):
         fields = super().get_fields()
 
-        if self.context["request"].method in ["GET"]:
-            fields[
-                "creditsapplication_set"
-            ] = serializers.SerializerMethodField()
-        else:
-            fields["creditsapplication_set"] = CreditsApplicationSerializer(
-                many=True,
-            )
+        # if self.context["request"].method in ["GET", "POST"]:
+        #     fields[
+        #         "creditsapplication_set"
+        #     ] = serializers.SerializerMethodField()
+        # else:
+        fields["creditsapplication_set"] = CreditsApplicationSerializer(
+            many=True,
+        )
         fields["invoiceitem_set"] = InvoiceItemSerializer(
             many=True,
         )
@@ -398,14 +399,25 @@ class InvoiceSerializer(DocumentSerializer):
 
         return fields
 
-    def get_creditsapplication_set(self, obj):
-        # return obj.company.name if obj.company else ""
+    # def get_creditsapplication_set(self, obj):
+    #     # return obj.company.name if obj.company else ""
 
-        credit_notes = CreditNote.objects.filter(
-            customer=obj.customer
-        ).distinct()
+    #     credit_notes = CreditNote.objects.filter(
+    #         customer=obj.customer
+    #     ).distinct()
 
-        return CreditNoteSerializer(credit_notes, many=True).data
+    #     return [
+    #         {
+    #             "credit_note_reference": credit_note.get("reference"),
+    #             "credit_note": credit_note.get("id"),
+    #             "credit_amount": credit_note.get("grand_total"),
+    #             "credits_remaining": credit_note.get("credits_remaining"),
+    #             "amount_to_credit": "0.00",
+    #         }
+    #         for credit_note in CreditNoteSerializer(
+    #             credit_notes, many=True
+    #         ).data
+    #     ]
 
     def get_company_name(self, obj):
         return obj.company.name if obj.company else ""
@@ -415,6 +427,12 @@ class InvoiceSerializer(DocumentSerializer):
         ## split post and patch vs get from validated data?
         customer = attrs.get("customer")
         creditsapplication_set = attrs.get("creditsapplication_set")
+        # print("kw")
+        # print(creditsapplication_set)
+        # for creditsapplication in creditsapplication_set:
+        #     print(creditsapplication)
+        #     print(creditsapplication.get("id"))
+        #     print(creditsapplication.get("reference"))
 
         if any(
             [
@@ -430,7 +448,8 @@ class InvoiceSerializer(DocumentSerializer):
 
         if self.context["request"].method in ["PUT", "PATCH"]:
             if (
-                self.instance.customer.id != customer.id
+                self.instance.customer
+                and self.instance.customer.id != customer.id
                 and self.instance.credits_applied > 0
             ):
                 msg = _(
@@ -530,49 +549,51 @@ class InvoiceSerializer(DocumentSerializer):
         ).delete()
         InvoiceItem.objects.bulk_create(bulk_creates)
 
-    def _update_delete_or_create_credit_applications(
-        self, instance, creditapplications_data
-    ):
-        creditapplication_instances = instance.creditapplication_set.all()
-        creditapplication_set_count = creditapplication_instances.count()
-        bulk_updates = []
-        bulk_creates = []
+    # def _update_delete_or_create_credits_applications(
+    #     self, instance, creditapplications_data
+    # ):
+    #     creditapplication_instances = instance.creditsapplication_set.all()
+    #     creditsapplication_set_count = creditapplication_instances.count()
+    #     bulk_updates = []
+    #     bulk_creates = []
 
-        for i, creditapplication_data in enumerate(creditapplications_data):
-            creditapplication_data.pop("id", None)
-            creditapplication_data.pop("pk", None)
-            if i < creditapplication_set_count:
-                # update
-                creditapplication_instance = creditapplication_instances[i]
-                for attr, value in creditapplication_data.items():
-                    setattr(creditapplication_instance, attr, value)
-                bulk_updates.append(creditapplication_instance)
-            else:
-                # create
-                bulk_creates.append(
-                    # unpack first to prevent overriding
-                    CreditsApplication(
-                        **creditapplication_data,
-                        invoice=instance,
-                    )
-                )
+    #     for i, creditapplication_data in enumerate(creditapplications_data):
+    #         creditapplication_data.pop("id", None)
+    #         creditapplication_data.pop("pk", None)
+    #         if i < creditsapplication_set_count:
+    #             # update
+    #             creditapplication_instance = creditapplication_instances[i]
+    #             for attr, value in creditapplication_data.items():
+    #                 setattr(creditapplication_instance, attr, value)
+    #             bulk_updates.append(creditapplication_instance)
+    #         else:
+    #             # create
+    #             bulk_creates.append(
+    #                 # unpack first to prevent overriding
+    #                 CreditsApplication(
+    #                     **creditapplication_data,
+    #                     invoice=instance,
+    #                 )
+    #             )
 
-        CreditsApplication.objects.bulk_update(
-            bulk_updates,
-            [
-                "invoice",
-                "credit_note",
-                "date",
-                "amount_to_credit",
-            ],
-        )
-        # delete
-        CreditsApplication.objects.filter(invoice=instance).exclude(
-            pk__in=[obj.pk for obj in bulk_updates]
-        ).delete()
-        CreditsApplication.objects.bulk_create(bulk_creates)
+    #     CreditsApplication.objects.bulk_update(
+    #         bulk_updates,
+    #         [
+    #             "invoice",
+    #             "credit_note",
+    #             "date",
+    #             "amount_to_credit",
+    #         ],
+    #     )
+    #     # delete
+    #     CreditsApplication.objects.filter(invoice=instance).exclude(
+    #         pk__in=[obj.pk for obj in bulk_updates]
+    #     ).delete()
+    #     CreditsApplication.objects.bulk_create(bulk_creates)
 
     def create(self, validated_data):
+        print("kww")
+        print(validated_data)
         invoiceitems_data = validated_data.pop("invoiceitem_set", [])
         creditsapplications_data = validated_data.pop(
             "creditsapplication_set", []
@@ -580,6 +601,7 @@ class InvoiceSerializer(DocumentSerializer):
         invoice = Invoice.objects.create(**validated_data)
         for invoiceitem_data in invoiceitems_data:
             InvoiceItem.objects.create(**invoiceitem_data, invoice=invoice)
+        # TODO: bulk create?
         for creditsapplication_data in creditsapplications_data:
             CreditsApplication.objects.create(
                 **creditsapplication_data, invoice=invoice
@@ -592,9 +614,13 @@ class InvoiceSerializer(DocumentSerializer):
             "creditsapplication_set", []
         )
         self._update_delete_or_create_items(instance, invoiceitems_data)
-        self._update_delete_or_create_credits_applications(
-            instance, creditsapplications_data
-        )
+        # self._update_delete_or_create_credits_applications(
+        #     instance, creditsapplications_data
+        # )
+        for creditsapplication_data in creditsapplications_data:
+            CreditsApplication.objects.create(
+                **creditsapplication_data, invoice=instance
+            )
         return super().update(instance, validated_data)
 
 
