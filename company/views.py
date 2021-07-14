@@ -2,8 +2,6 @@ from django.contrib.auth import get_user_model
 from django_filters import rest_framework as filters
 
 from rest_framework import viewsets, mixins
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
 
 
 from core.views import BaseAttrViewSet, BaseAssetAttrViewSet
@@ -18,7 +16,7 @@ from core.models import (
     PaymentMethod,
 )
 from company import serializers
-from user.serializers import OwnerProfileSerializer, EmployeeProfileSerializer
+from user.serializers import OwnerProfileSerializer
 
 
 # for debug
@@ -43,19 +41,15 @@ class UserFilter(filters.FilterSet):
 class ListUserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     """Base viewset for listing users"""
 
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
     ordering_fields = "__all__"
     ordering = ["-id"]
     filterset_class = UserFilter
     queryset = get_user_model().objects.all()
 
     def get_serializer_class(self):
-        return (
-            OwnerProfileSerializer
-            if self.request.user.is_staff
-            else EmployeeProfileSerializer
-        )
+
+        # TODO: make a PublicProfileSerializer
+        return OwnerProfileSerializer
 
 
 class ProductCategoryViewSet(BaseAssetAttrViewSet):
@@ -171,6 +165,7 @@ class EmployeeFilter(filters.FilterSet):
     class Meta:
         model = User
         fields = {
+            "name": ["icontains"],
             "designation__department": ["exact"],
             "designation": ["exact"],
             "roles": ["exact"],

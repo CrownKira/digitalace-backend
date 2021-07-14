@@ -36,7 +36,6 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         # explicitly declared on the serializer class, then
         # the extra_kwargs option will be ignored.
         # https://www.django-rest-framework.org/api-guide/serializers/#additional-keyword-arguments
-        extra_kwargs = {"image": {"allow_null": True}}
 
     def get_fields(self):
         fields = super().get_fields()

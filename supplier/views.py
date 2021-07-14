@@ -86,7 +86,7 @@ class ReceiveViewSet(BaseAssetAttrViewSet):
         discount_amount = total_amount * discount_rate / 100
         net = total_amount * (1 - discount_rate / 100)
         gst_amount = net * gst_rate / 100
-        grand_total = net * (1 - gst_rate / 100)
+        grand_total = net * (1 + gst_rate / 100)
 
         return {
             "total_amount": round(total_amount, 2),
@@ -171,7 +171,7 @@ class PurchaseOrderViewSet(BaseAssetAttrViewSet):
         discount_amount = total_amount * discount_rate / 100
         net = total_amount * (1 - discount_rate / 100)
         gst_amount = net * gst_rate / 100
-        grand_total = net * (1 - gst_rate / 100)
+        grand_total = net * (1 + gst_rate / 100)
 
         return {
             "total_amount": round(total_amount, 2),
