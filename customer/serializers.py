@@ -160,9 +160,6 @@ class CreditNoteSerializer(DocumentSerializer):
             "reference",
             "date",
             "description",
-            # "payment_date",
-            # "payment_method",
-            # "payment_note",
             "gst_rate",
             "discount_rate",
             "gst_amount",
@@ -172,7 +169,6 @@ class CreditNoteSerializer(DocumentSerializer):
             "grand_total",
             "customer",
             "salesperson",
-            # "sales_order",
             "status",
             "refund",
             "credits_used",
@@ -384,11 +380,6 @@ class InvoiceSerializer(DocumentSerializer):
     def get_fields(self):
         fields = super().get_fields()
 
-        # if self.context["request"].method in ["GET", "POST"]:
-        #     fields[
-        #         "creditsapplication_set"
-        #     ] = serializers.SerializerMethodField()
-        # else:
         fields["creditsapplication_set"] = CreditsApplicationSerializer(
             many=True,
         )
@@ -399,40 +390,12 @@ class InvoiceSerializer(DocumentSerializer):
 
         return fields
 
-    # def get_creditsapplication_set(self, obj):
-    #     # return obj.company.name if obj.company else ""
-
-    #     credit_notes = CreditNote.objects.filter(
-    #         customer=obj.customer
-    #     ).distinct()
-
-    #     return [
-    #         {
-    #             "credit_note_reference": credit_note.get("reference"),
-    #             "credit_note": credit_note.get("id"),
-    #             "credit_amount": credit_note.get("grand_total"),
-    #             "credits_remaining": credit_note.get("credits_remaining"),
-    #             "amount_to_credit": "0.00",
-    #         }
-    #         for credit_note in CreditNoteSerializer(
-    #             credit_notes, many=True
-    #         ).data
-    #     ]
-
     def get_company_name(self, obj):
         return obj.company.name if obj.company else ""
 
     def validate(self, attrs):
-        ## customer is required?
-        ## split post and patch vs get from validated data?
         customer = attrs.get("customer")
-        creditsapplication_set = attrs.get("creditsapplication_set")
-        # print("kw")
-        # print(creditsapplication_set)
-        # for creditsapplication in creditsapplication_set:
-        #     print(creditsapplication)
-        #     print(creditsapplication.get("id"))
-        #     print(creditsapplication.get("reference"))
+        creditsapplication_set = attrs.get("creditsapplication_set", [])
 
         if any(
             [
@@ -477,19 +440,6 @@ class InvoiceSerializer(DocumentSerializer):
             raise serializers.ValidationError(msg)
 
         return reference
-
-    # def validate_customer(self, customer):
-
-    #     if not all_unique(
-    #         [
-    #             creditsapplication.get("credit_note")
-    #             for creditsapplication in creditsapplication_set
-    #         ]
-    #     ):
-    #         msg = _('The customer for this invoice cannot be changed. This customer\'s credits have been applied to this invoice')
-    #         raise serializers.ValidationError(msg)
-
-    #     return customer
 
     def validate_creditsapplication_set(self, creditsapplication_set):
         def all_unique(x):
@@ -549,51 +499,7 @@ class InvoiceSerializer(DocumentSerializer):
         ).delete()
         InvoiceItem.objects.bulk_create(bulk_creates)
 
-    # def _update_delete_or_create_credits_applications(
-    #     self, instance, creditapplications_data
-    # ):
-    #     creditapplication_instances = instance.creditsapplication_set.all()
-    #     creditsapplication_set_count = creditapplication_instances.count()
-    #     bulk_updates = []
-    #     bulk_creates = []
-
-    #     for i, creditapplication_data in enumerate(creditapplications_data):
-    #         creditapplication_data.pop("id", None)
-    #         creditapplication_data.pop("pk", None)
-    #         if i < creditsapplication_set_count:
-    #             # update
-    #             creditapplication_instance = creditapplication_instances[i]
-    #             for attr, value in creditapplication_data.items():
-    #                 setattr(creditapplication_instance, attr, value)
-    #             bulk_updates.append(creditapplication_instance)
-    #         else:
-    #             # create
-    #             bulk_creates.append(
-    #                 # unpack first to prevent overriding
-    #                 CreditsApplication(
-    #                     **creditapplication_data,
-    #                     invoice=instance,
-    #                 )
-    #             )
-
-    #     CreditsApplication.objects.bulk_update(
-    #         bulk_updates,
-    #         [
-    #             "invoice",
-    #             "credit_note",
-    #             "date",
-    #             "amount_to_credit",
-    #         ],
-    #     )
-    #     # delete
-    #     CreditsApplication.objects.filter(invoice=instance).exclude(
-    #         pk__in=[obj.pk for obj in bulk_updates]
-    #     ).delete()
-    #     CreditsApplication.objects.bulk_create(bulk_creates)
-
     def create(self, validated_data):
-        print("kww")
-        print(validated_data)
         invoiceitems_data = validated_data.pop("invoiceitem_set", [])
         creditsapplications_data = validated_data.pop(
             "creditsapplication_set", []
@@ -603,9 +509,12 @@ class InvoiceSerializer(DocumentSerializer):
             InvoiceItem.objects.create(**invoiceitem_data, invoice=invoice)
         # TODO: bulk create?
         for creditsapplication_data in creditsapplications_data:
-            CreditsApplication.objects.create(
-                **creditsapplication_data, invoice=invoice
-            )
+            if creditsapplication_data.get("amount_to_credit") > 0:
+                # invoice not created yet
+                creditsapplication_data.pop("invoice", None)
+                CreditsApplication.objects.create(
+                    **creditsapplication_data, invoice=invoice
+                )
         return invoice
 
     def update(self, instance, validated_data):
@@ -614,13 +523,13 @@ class InvoiceSerializer(DocumentSerializer):
             "creditsapplication_set", []
         )
         self._update_delete_or_create_items(instance, invoiceitems_data)
-        # self._update_delete_or_create_credits_applications(
-        #     instance, creditsapplications_data
-        # )
+
         for creditsapplication_data in creditsapplications_data:
-            CreditsApplication.objects.create(
-                **creditsapplication_data, invoice=instance
-            )
+            if creditsapplication_data.get("amount_to_credit") > 0:
+                creditsapplication_data.pop("invoice", None)
+                CreditsApplication.objects.create(
+                    **creditsapplication_data, invoice=instance
+                )
         return super().update(instance, validated_data)
 
 
@@ -655,9 +564,6 @@ class SalesOrderSerializer(DocumentSerializer):
             "reference",
             "date",
             "description",
-            # "payment_date",
-            # "payment_method",
-            # "payment_note",
             "gst_rate",
             "discount_rate",
             "gst_amount",
@@ -668,7 +574,6 @@ class SalesOrderSerializer(DocumentSerializer):
             "status",
             "customer",
             "salesperson",
-            "invoice_set",
         )
         read_only_fields = (
             "id",
@@ -691,6 +596,14 @@ class SalesOrderSerializer(DocumentSerializer):
             many=True,
         )
         fields["company_name"] = serializers.SerializerMethodField()
+
+        if self.context["request"].method in ["GET", "PATCH", "PUT"]:
+            fields["invoice_set"] = serializers.PrimaryKeyRelatedField(
+                many=True,
+                queryset=Invoice.objects.filter(
+                    company=self.context["request"].user.company
+                ).distinct(),
+            )
 
         return fields
 
@@ -778,28 +691,6 @@ class SalesOrderSerializer(DocumentSerializer):
 
     def update(self, instance, validated_data):
         salesorderitems_data = validated_data.pop("salesorderitem_set", [])
-
-        # invoice = validated_data.get("invoice")
-        # if invoice:
-        #     try:
-        #         # try to remove reference from previous invoice
-        #         instance_invoice = instance.invoice
-        #         instance_invoice.sales_order = None
-        #         instance_invoice.save()
-        #     except SalesOrder.invoice.RelatedObjectDoesNotExist:
-        #         pass
-
-        #     # assign sales order to new invoice
-        #     invoice.sales_order = instance
-        #     invoice.save()
-
-        # elif "invoice" in validated_data:
-        #     try:
-        #         invoice = Invoice.objects.get(sales_order=instance)
-        #         invoice.sales_order = None
-        #         invoice.save()
-        #     except Invoice.DoesNotExist:
-        #         pass
 
         self._update_delete_or_create(instance, salesorderitems_data)
         return super().update(instance, validated_data)

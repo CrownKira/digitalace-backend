@@ -2,10 +2,10 @@ from decimal import Decimal
 from datetime import datetime
 
 from django.utils import formats
-
+from django.utils.translation import ugettext_lazy as _
 
 from django_filters import rest_framework as filters
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, serializers
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
@@ -17,8 +17,14 @@ from core.models import (
     CreditNote,
     CreditsApplication,
 )
-from customer import serializers
 from core.pagination import StandardResultsSetPagination
+from customer.serializers import (
+    CustomerSerializer,
+    CreditsApplicationSerializer,
+    InvoiceSerializer,
+    SalesOrderSerializer,
+    CreditNoteSerializer,
+)
 
 
 class CustomerFilter(filters.FilterSet):
@@ -36,7 +42,7 @@ class CustomerViewSet(BaseAssetAttrViewSet):
     """Manage customer in the database"""
 
     queryset = Customer.objects.all()
-    serializer_class = serializers.CustomerSerializer
+    serializer_class = CustomerSerializer
     filterset_class = CustomerFilter
     search_fields = [
         "name",
@@ -50,7 +56,11 @@ class CustomerViewSet(BaseAssetAttrViewSet):
 class CreditsApplicationFilter(filters.FilterSet):
     class Meta:
         model = CreditsApplication
-        fields = {"invoice": ["exact"], "credit_note__customer": ["exact"]}
+        fields = {
+            "invoice": ["exact"],
+            "credit_note": ["exact"],
+            "credit_note__customer": ["exact"],
+        }
 
 
 class CreditsApplicationViewSet(
@@ -64,7 +74,8 @@ class CreditsApplicationViewSet(
     ordering_fields = "__all__"
     ordering = ["-id"]
     queryset = CreditsApplication.objects.all()
-    serializer_class = serializers.CreditsApplicationSerializer
+    serializer_class = CreditsApplicationSerializer
+    filterset_class = CreditsApplicationFilter
     search_fields = [
         "id",
         "date",
@@ -100,14 +111,18 @@ class CreditsApplicationViewSet(
 class CreditNoteFilter(filters.FilterSet):
     class Meta:
         model = CreditNote
-        fields = {"reference": ["icontains", "exact"], "customer": ["exact"]}
+        fields = {
+            "reference": ["icontains", "exact"],
+            "customer": ["exact"],
+            "created_from": ["exact"],
+        }
 
 
 class CreditNoteViewSet(BaseAssetAttrViewSet):
     """Manage credit note in the database"""
 
     queryset = CreditNote.objects.all()
-    serializer_class = serializers.CreditNoteSerializer
+    serializer_class = CreditNoteSerializer
     filterset_class = CreditNoteFilter
     search_fields = [
         "reference",
@@ -157,7 +172,7 @@ class CreditNoteViewSet(BaseAssetAttrViewSet):
         discount_amount = total_amount * discount_rate / 100
         net = total_amount * (1 - discount_rate / 100)
         gst_amount = net * gst_rate / 100
-        grand_total = net * (1 - gst_rate / 100)
+        grand_total = net * (1 + gst_rate / 100)
         credits_remaining = grand_total - credits_used
         refund = min(credits_remaining, round(refund, 2))
         credits_remaining -= refund
@@ -198,6 +213,7 @@ class InvoiceFilter(filters.FilterSet):
             # reference__icontains=
             # there is no reference__exact=, just reference= will do
             "reference": ["icontains", "exact"],
+            "sales_order": ["exact"],
         }
 
 
@@ -205,7 +221,7 @@ class InvoiceViewSet(BaseAssetAttrViewSet):
     """Manage invoice in the database"""
 
     queryset = Invoice.objects.all()
-    serializer_class = serializers.InvoiceSerializer
+    serializer_class = InvoiceSerializer
     filterset_class = InvoiceFilter
     search_fields = [
         "reference",
@@ -223,15 +239,17 @@ class InvoiceViewSet(BaseAssetAttrViewSet):
         invoiceitem_set = serializer.validated_data.pop("invoiceitem_set")
         customer = serializer.validated_data.get("customer")
         creditsapplication_set = serializer.validated_data.pop(
-            "creditsapplication_set"
+            "creditsapplication_set", []
         )
         # TODO: fix round down behavior
         # https://stackoverflow.com/questions/20457038/how-to-round-to-2-decimals-with-python
         # round quantity, unit_price, gst_rate and discount rate first
         # then round the rest at the end of calculation
         # TODO: assign invoice later after create or update
-        ## only for creation
-        credits_applied = 0
+
+        credits_applied = Decimal("0.00")
+        if self.request.method in ["PUT", "PATCH"]:
+            credits_applied = serializer.instance.credits_applied
         new_creditsapplication_set = []
         for credits_application in creditsapplication_set:
             # update customer unused credits
@@ -263,29 +281,6 @@ class InvoiceViewSet(BaseAssetAttrViewSet):
                 }
             )
 
-        # creditsapplication_set = [
-        #     {
-        #         **credits_application,
-        #         "date": now,
-        #         "amount_to_credit": round(
-        #             credits_application.get("amount_to_credit"), 2
-        #         ),
-        #     }
-        #     for credits_application in creditsapplication_set
-        # ]
-        # credits_applied = sum(
-        #     [
-        #         max(
-        #             credits_application.get("amount_to_credit"),
-        #             CreditNote.objects.get(
-        #                 reference=credits_application.get(
-        #                     "reference"
-        #                 ).credits_remaining
-        #             ),
-        #         )
-        #         for credits_application in creditsapplication_set
-        #     ]
-        # )
         invoiceitem_set = [
             {
                 **invoiceitem,
@@ -310,8 +305,12 @@ class InvoiceViewSet(BaseAssetAttrViewSet):
         discount_amount = total_amount * discount_rate / 100
         net = total_amount * (1 - discount_rate / 100)
         gst_amount = net * gst_rate / 100
-        grand_total = net * (1 - gst_rate / 100)
+        grand_total = net * (1 + gst_rate / 100)
         balance_due = grand_total - credits_applied
+
+        if balance_due < 0:
+            msg = _("Credits Applied cannot be more than Grand Total")
+            raise serializers.ValidationError(msg)
 
         return {
             "total_amount": round(total_amount, 2),
@@ -352,14 +351,13 @@ class SalesOrderViewSet(BaseAssetAttrViewSet):
     """Manage customer in the database"""
 
     queryset = SalesOrder.objects.all()
-    serializer_class = serializers.SalesOrderSerializer
+    serializer_class = SalesOrderSerializer
     filterset_class = SalesOrderFilter
     search_fields = [
         "reference",
         "date",
         "customer__name",
         "customer__address",
-        # "invoice__reference",
         "status",
         "grand_total",
     ]
@@ -398,7 +396,7 @@ class SalesOrderViewSet(BaseAssetAttrViewSet):
         discount_amount = total_amount * discount_rate / 100
         net = total_amount * (1 - discount_rate / 100)
         gst_amount = net * gst_rate / 100
-        grand_total = net * (1 - gst_rate / 100)
+        grand_total = net * (1 + gst_rate / 100)
 
         return {
             "total_amount": round(total_amount, 2),

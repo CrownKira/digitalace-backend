@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models.deletion import SET_NULL
+from django.db.models.fields.related import ForeignKey
 from django.utils.translation import gettext_lazy as _
 
 
@@ -84,13 +85,13 @@ class Adjustment(models.Model):
     description = models.TextField(blank=True)
     reason = models.TextField(blank=True)
     mode = models.CharField(
-        max_length=3,
+        max_length=4,
         blank=True,
         choices=Mode.choices,
         default=Mode.INCREASE,
     )
     status = models.CharField(
-        max_length=3,
+        max_length=4,
         blank=True,
         choices=Status.choices,
         default=Status.DRAFT,
@@ -121,7 +122,7 @@ class CreditNote(Document):
         "User", on_delete=models.SET_NULL, null=True, blank=True
     )
     status = models.CharField(
-        max_length=3,
+        max_length=4,
         blank=True,
         choices=Status.choices,
         default=Status.DRAFT,
@@ -186,7 +187,7 @@ class Invoice(Document):
         "SalesOrder", on_delete=SET_NULL, null=True, blank=True
     )
     status = models.CharField(
-        max_length=3,
+        max_length=4,
         blank=True,
         choices=Status.choices,
         default=Status.DRAFT,
@@ -212,7 +213,7 @@ class SalesOrder(Document):
     class Status(models.TextChoices):
         DRAFT = "DFT", _("Draft")
         COMPLETED = "CP", _("Completed")
-        PENDING = "PD", _("Pending")
+        PENDING = "PNDG", _("Pending")
         CANCELLED = "CC", _("Cancelled")
 
     customer = models.ForeignKey(
@@ -222,7 +223,7 @@ class SalesOrder(Document):
         "User", on_delete=models.SET_NULL, null=True, blank=True
     )
     status = models.CharField(
-        max_length=3,
+        max_length=4,
         blank=True,
         choices=Status.choices,
         default=Status.DRAFT,
@@ -246,11 +247,12 @@ class Receive(Document):
     supplier = models.ForeignKey(
         "Supplier", on_delete=models.SET_NULL, null=True
     )
+    # TODO: conver to ForeignKey
     purchase_order = models.OneToOneField(
         "PurchaseOrder", on_delete=SET_NULL, null=True, blank=True
     )
     status = models.CharField(
-        max_length=3,
+        max_length=4,
         blank=True,
         choices=Status.choices,
         default=Status.DRAFT,
@@ -274,14 +276,14 @@ class PurchaseOrder(Document):
     class Status(models.TextChoices):
         DRAFT = "DFT", _("Draft")
         COMPLETED = "CP", _("Completed")
-        PENDING = "PD", _("Pending")
+        PENDING = "PNDG", _("Pending")
         CANCELLED = "CC", _("Cancelled")
 
     supplier = models.ForeignKey(
         "Supplier", on_delete=models.SET_NULL, null=True
     )
     status = models.CharField(
-        max_length=3,
+        max_length=4,
         blank=True,
         choices=Status.choices,
         default=Status.DRAFT,
