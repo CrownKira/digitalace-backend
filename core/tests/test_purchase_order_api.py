@@ -53,7 +53,7 @@ class PrivatePurchseOrderApiTest(TestCase):
         )
         PurchaseOrder.objects.create(
             date="2001-01-10",
-            payment_date="2001-01-10",
+            # payment_date="2001-01-10",
             gst_rate="0.07",
             discount_rate="0",
             gst_amount="0",
@@ -67,7 +67,7 @@ class PrivatePurchseOrderApiTest(TestCase):
         )
         PurchaseOrder.objects.create(
             date="2001-01-10",
-            payment_date="2001-01-10",
+            # payment_date="2001-01-10",
             gst_rate="0.07",
             discount_rate="0",
             gst_amount="0",

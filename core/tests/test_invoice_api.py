@@ -56,7 +56,7 @@ class PrivateInvoiceApiTest(TestCase):
             customer=customer,
             company=self.company,
             date="2001-01-10",
-            payment_date="2001-01-10",
+            # payment_date="2001-01-10",
             gst_rate="0.07",
             discount_rate="0",
             gst_amount="0",
@@ -71,7 +71,7 @@ class PrivateInvoiceApiTest(TestCase):
             customer=customer,
             company=self.company,
             date="2001-01-10",
-            payment_date="2001-01-10",
+            # payment_date="2001-01-10",
             gst_rate="0.07",
             discount_rate="0",
             gst_amount="0",
@@ -96,6 +96,8 @@ class PrivateInvoiceApiTest(TestCase):
             salesperson=user,
             status="PD",
             company=self.company,
+            credits_applied="0.00",
+            balance_due="0.00",
         )
         Invoice.objects.create(
             date="2001-01-10",
@@ -112,6 +114,8 @@ class PrivateInvoiceApiTest(TestCase):
             salesperson=user,
             status="PD",
             company=self.company,
+            credits_applied="0.00",
+            balance_due="0.00",
         )
 
         res = self.client.get(INVOICE_URL)

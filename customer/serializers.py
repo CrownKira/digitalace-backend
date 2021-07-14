@@ -599,13 +599,17 @@ class SalesOrderSerializer(DocumentSerializer):
         )
         fields["company_name"] = serializers.SerializerMethodField()
 
-        if self.context["request"].method in ["GET", "PUT", "PATCH"]:
-            fields["invoice_set"] = serializers.PrimaryKeyRelatedField(
-                many=True,
-                queryset=Invoice.objects.filter(
-                    company=self.context["request"].user.company
-                ).distinct(),
-            )
+        try:
+            if self.context["request"].method in ["GET", "PUT", "PATCH"]:
+                fields["invoice_set"] = serializers.PrimaryKeyRelatedField(
+                    many=True,
+                    queryset=Invoice.objects.filter(
+                        company=self.context["request"].user.company
+                    ).distinct(),
+                )
+
+        except KeyError:
+            pass
 
         return fields
 
