@@ -16,6 +16,9 @@ from core.models import (
 )
 
 
+# TODO: refactor
+
+
 class LineItemSerializer(serializers.ModelSerializer):
     class Meta:
         abstract = True
@@ -510,7 +513,6 @@ class InvoiceSerializer(DocumentSerializer):
         # TODO: bulk create?
         for creditsapplication_data in creditsapplications_data:
             if creditsapplication_data.get("amount_to_credit") > 0:
-                # invoice not created yet
                 creditsapplication_data.pop("invoice", None)
                 CreditsApplication.objects.create(
                     **creditsapplication_data, invoice=invoice
@@ -597,7 +599,7 @@ class SalesOrderSerializer(DocumentSerializer):
         )
         fields["company_name"] = serializers.SerializerMethodField()
 
-        if self.context["request"].method in ["GET", "PATCH", "PUT"]:
+        if self.context["request"].method in ["GET", "PUT", "PATCH"]:
             fields["invoice_set"] = serializers.PrimaryKeyRelatedField(
                 many=True,
                 queryset=Invoice.objects.filter(
@@ -673,7 +675,6 @@ class SalesOrderSerializer(DocumentSerializer):
 
     def create(self, validated_data):
         salesorderitems_data = validated_data.pop("salesorderitem_set", [])
-        # invoice = validated_data.get("invoice")
         sales_order = SalesOrder.objects.create(**validated_data)
         for salesorderitem_data in salesorderitems_data:
             SalesOrderItem.objects.create(
