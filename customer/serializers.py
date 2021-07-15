@@ -17,8 +17,6 @@ from core.models import (
 
 
 # TODO: refactor
-
-
 class LineItemSerializer(serializers.ModelSerializer):
     class Meta:
         abstract = True
