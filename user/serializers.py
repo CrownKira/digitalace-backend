@@ -3,6 +3,11 @@ from django.utils.translation import ugettext_lazy as _
 
 
 from rest_framework import serializers
+from rest_framework_bulk import (
+    BulkListSerializer,
+    BulkSerializerMixin,
+)
+
 
 from core.models import UserConfig
 
@@ -12,10 +17,15 @@ from core.models import UserConfig
 
 
 # TODO: refactor user serializer
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     """Abstract serialier for user objects"""
 
     class Meta:
+        # https://stackoverflow.com/questions/60238246/why-abstract-true-dosent-inherit-in-meta-class-of-django-model
+        # Django does make one adjustment to the Meta class of an abstract base class:
+        # before installing the Meta attribute, it sets abstract=False. This means that
+        # children of abstract base classes don’t automatically become abstract classes themselves.
+        list_serializer_class = BulkListSerializer
         abstract = True
 
     def get_fields(self):
@@ -108,7 +118,7 @@ class OwnerProfileSerializer(UserSerializer):
     Serializer for creating, updating and retrieving owner's profile.
     """
 
-    class Meta:
+    class Meta(UserSerializer.Meta):
         model = get_user_model()
         fields = (
             "id",  # show id to facilitate testing
@@ -184,7 +194,7 @@ class EmployeeProfileSerializer(UserSerializer):
     Serializer for updating and retrieving employee's profile.
     """
 
-    class Meta:
+    class Meta(UserSerializer.Meta):
         model = get_user_model()
         fields = (
             "id",

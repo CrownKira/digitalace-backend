@@ -1,6 +1,11 @@
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework_bulk import (
+    BulkListSerializer,
+    BulkSerializerMixin,
+)
+
 
 from core.models import (
     Receive,
@@ -13,7 +18,7 @@ from core.utils import validate_reference_uniqueness
 from customer.serializers import LineItemSerializer, DocumentSerializer
 
 
-class SupplierSerializer(serializers.ModelSerializer):
+class SupplierSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     """Serializer for Supplier objects"""
 
     class Meta:
@@ -36,6 +41,7 @@ class SupplierSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("id",)
         extra_kwargs = {"image": {"allow_null": True}}
+        list_serializer_class = BulkListSerializer
 
     def get_fields(self):
         fields = super().get_fields()
@@ -84,7 +90,7 @@ class ReceiveItemSerializer(LineItemSerializer):
 class ReceiveSerializer(DocumentSerializer):
     """Serializer for Receive objects"""
 
-    class Meta:
+    class Meta(DocumentSerializer.Meta):
         model = Receive
         fields = (
             "id",
@@ -213,7 +219,7 @@ class PurchaseOrderItemSerializer(LineItemSerializer):
 class PurchaseOrderSerializer(DocumentSerializer):
     """Serializer for Receive objects"""
 
-    class Meta:
+    class Meta(DocumentSerializer.Meta):
         model = PurchaseOrder
         fields = (
             "id",

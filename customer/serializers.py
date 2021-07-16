@@ -23,8 +23,9 @@ from core.utils import validate_reference_uniqueness, all_unique
 
 
 # TODO: refactor
-class LineItemSerializer(serializers.ModelSerializer):
+class LineItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
+        list_serializer_class = BulkListSerializer
         abstract = True
 
     def validate_amount(self, amount):
@@ -46,8 +47,9 @@ class LineItemSerializer(serializers.ModelSerializer):
         return unit_price
 
 
-class DocumentSerializer(serializers.ModelSerializer):
+class DocumentSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
+        list_serializer_class = BulkListSerializer
         abstract = True
 
     def validate_gst_rate(self, gst_rate):
@@ -146,7 +148,7 @@ class CreditNoteItemSerializer(LineItemSerializer):
 class CreditNoteSerializer(DocumentSerializer):
     """Serializer for Credit Note objects"""
 
-    class Meta:
+    class Meta(DocumentSerializer.Meta):
         model = CreditNote
         fields = (
             "id",
@@ -321,7 +323,7 @@ class InvoiceItemSerializer(LineItemSerializer):
 class InvoiceSerializer(DocumentSerializer):
     """Serializer for Invoice objects"""
 
-    class Meta:
+    class Meta(DocumentSerializer.Meta):
         model = Invoice
         fields = (
             "id",
@@ -518,7 +520,7 @@ class SalesOrderItemSerializer(LineItemSerializer):
 class SalesOrderSerializer(DocumentSerializer):
     """Serializer for salesorder objects"""
 
-    class Meta:
+    class Meta(DocumentSerializer.Meta):
         model = SalesOrder
         fields = (
             "id",
