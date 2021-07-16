@@ -4,21 +4,22 @@ from rest_framework import serializers
 
 
 def validate_reference_uniqueness(serializer, model, reference, id):
+    # TODO: handle no both pk=id and serializer.instance.id
     company = serializer.context["request"].user.company
 
     if serializer.context["request"].method in ["POST"]:
         if model.objects.filter(company=company, reference=reference).exists():
             msg = _(
-                f"A {model._meta.model_name} with this reference already exists"
+                f"A/an {model._meta.model_name} with this reference already exists"
             )
             raise serializers.ValidationError(msg)
     elif (
-        model.objects.exclude(pk=id)
+        model.objects.exclude(pk=id or serializer.instance.id)
         .filter(company=company, reference=reference)
         .exists()
     ):
         msg = _(
-            f"A {model._meta.model_name} with this reference already exists"
+            f"A/an {model._meta.model_name} with this reference already exists"
         )
         raise serializers.ValidationError(msg)
 
