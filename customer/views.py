@@ -58,7 +58,7 @@ class CustomerViewSet(BaseAssetAttrViewSet):
 
     def perform_create(self, serializer):
         validate_reference_uniqueness_in_data(serializer.validated_data)
-        serializer.save()
+        super().perform_create(serializer)
 
     def perform_update(self, serializer):
         validate_reference_uniqueness_in_data(serializer.validated_data)
@@ -211,11 +211,8 @@ class CreditNoteViewSet(BaseAssetAttrViewSet):
         )
 
     def perform_update(self, serializer):
-        company = self.request.user.company
         validate_reference_uniqueness_in_data(serializer.validated_data)
-        serializer.save(
-            company=company, **self._get_calculated_fields(serializer)
-        )
+        serializer.save(**self._get_calculated_fields(serializer))
 
 
 class InvoiceFilter(filters.FilterSet):
@@ -348,11 +345,8 @@ class InvoiceViewSet(BaseAssetAttrViewSet):
         )
 
     def perform_update(self, serializer):
-        company = self.request.user.company
         validate_reference_uniqueness_in_data(serializer.validated_data)
-        serializer.save(
-            company=company, **self._get_calculated_fields(serializer)
-        )
+        serializer.save(**self._get_calculated_fields(serializer))
 
 
 class SalesOrderFilter(filters.FilterSet):
@@ -433,8 +427,5 @@ class SalesOrderViewSet(BaseAssetAttrViewSet):
         )
 
     def perform_update(self, serializer):
-        company = self.request.user.company
         validate_reference_uniqueness_in_data(serializer.validated_data)
-        serializer.save(
-            company=company, **self._get_calculated_fields(serializer)
-        )
+        serializer.save(**self._get_calculated_fields(serializer))

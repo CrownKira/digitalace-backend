@@ -30,6 +30,14 @@ class SupplierViewSet(BaseAssetAttrViewSet):
         "payables",
     ]
 
+    def perform_create(self, serializer):
+        validate_reference_uniqueness_in_data(serializer.validated_data)
+        super().perform_create(serializer)
+
+    def perform_update(self, serializer):
+        validate_reference_uniqueness_in_data(serializer.validated_data)
+        serializer.save()
+
 
 class ReceiveFilter(filters.FilterSet):
     class Meta:
@@ -108,11 +116,8 @@ class ReceiveViewSet(BaseAssetAttrViewSet):
         )
 
     def perform_update(self, serializer):
-        company = self.request.user.company
         validate_reference_uniqueness_in_data(serializer.validated_data)
-        serializer.save(
-            company=company, **self._get_calculated_fields(serializer)
-        )
+        serializer.save(**self._get_calculated_fields(serializer))
 
 
 class PurchaseOrderFilter(filters.FilterSet):
@@ -195,8 +200,5 @@ class PurchaseOrderViewSet(BaseAssetAttrViewSet):
         )
 
     def perform_update(self, serializer):
-        company = self.request.user.company
         validate_reference_uniqueness_in_data(serializer.validated_data)
-        serializer.save(
-            company=company, **self._get_calculated_fields(serializer)
-        )
+        serializer.save(**self._get_calculated_fields(serializer))
