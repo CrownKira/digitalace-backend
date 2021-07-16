@@ -1,12 +1,16 @@
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_bulk import BulkModelViewSet
 
-# from rest_framework.pagination import PageNumberPagination
+
 from .pagination import StandardResultsSetPagination
 
 
-class BaseAttrViewSet(viewsets.ModelViewSet):
+class BaseAttrViewSet(
+    # ListBulkCreateUpdateDestroyAPIView, viewsets.ModelViewSet
+    BulkModelViewSet
+):
     """Base attr viewset for all viewsets"""
 
     authentication_classes = (TokenAuthentication,)
@@ -14,6 +18,11 @@ class BaseAttrViewSet(viewsets.ModelViewSet):
     pagination_class = StandardResultsSetPagination
     ordering_fields = "__all__"
     ordering = ["-id"]
+
+    def allow_bulk_destroy(self, qs, filtered):
+        """Don't forget to fine-grain this method"""
+        # TODO: write implementation for bulk destroy
+        return False
 
 
 class BaseAssetAttrViewSet(BaseAttrViewSet):

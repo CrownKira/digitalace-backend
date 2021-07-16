@@ -2,6 +2,7 @@ from django_filters import rest_framework as filters
 
 from core.views import BaseAssetAttrViewSet
 from core.models import Receive, Supplier, PurchaseOrder
+from core.utils import validate_reference_uniqueness_in_data
 from supplier import serializers
 
 
@@ -101,12 +102,14 @@ class ReceiveViewSet(BaseAssetAttrViewSet):
 
     def perform_create(self, serializer):
         company = self.request.user.company
+        validate_reference_uniqueness_in_data(serializer.validated_data)
         serializer.save(
             company=company, **self._get_calculated_fields(serializer)
         )
 
     def perform_update(self, serializer):
         company = self.request.user.company
+        validate_reference_uniqueness_in_data(serializer.validated_data)
         serializer.save(
             company=company, **self._get_calculated_fields(serializer)
         )
@@ -186,12 +189,14 @@ class PurchaseOrderViewSet(BaseAssetAttrViewSet):
 
     def perform_create(self, serializer):
         company = self.request.user.company
+        validate_reference_uniqueness_in_data(serializer.validated_data)
         serializer.save(
             company=company, **self._get_calculated_fields(serializer)
         )
 
     def perform_update(self, serializer):
         company = self.request.user.company
+        validate_reference_uniqueness_in_data(serializer.validated_data)
         serializer.save(
             company=company, **self._get_calculated_fields(serializer)
         )

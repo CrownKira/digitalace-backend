@@ -9,6 +9,7 @@ from core.models import (
     ReceiveItem,
     PurchaseOrderItem,
 )
+from core.utils import validate_reference_uniqueness
 from customer.serializers import LineItemSerializer, DocumentSerializer
 
 
@@ -53,24 +54,11 @@ class SupplierSerializer(serializers.ModelSerializer):
             "title": obj.image.name if obj.image else "",
         }
 
-    def validate_reference(self, reference):
-        company = self.context["request"].user.company
-
-        if self.context["request"].method in ["POST"]:
-            if Supplier.objects.filter(
-                company=company, reference=reference
-            ).exists():
-                msg = _("A supplier with this reference already exists")
-                raise serializers.ValidationError(msg)
-        elif (
-            Supplier.objects.exclude(pk=self.instance.pk)
-            .filter(company=company, reference=reference)
-            .exists()
-        ):
-            msg = _("A supplier with this reference already exists")
-            raise serializers.ValidationError(msg)
-
-        return reference
+    def validate(self, attrs):
+        validate_reference_uniqueness(
+            self, Supplier, attrs.get("reference"), attrs.get("id")
+        )
+        return attrs
 
 
 class ReceiveItemSerializer(LineItemSerializer):
@@ -141,26 +129,13 @@ class ReceiveSerializer(DocumentSerializer):
     def get_company_name(self, obj):
         return obj.company.name if obj.company else ""
 
-    def validate_reference(self, reference):
-        company = self.context["request"].user.company
+    def validate(self, attrs):
+        validate_reference_uniqueness(
+            self, Receive, attrs.get("reference"), attrs.get("id")
+        )
+        return attrs
 
-        if self.context["request"].method in ["POST"]:
-            if Receive.objects.filter(
-                company=company, reference=reference
-            ).exists():
-                msg = _("An receive with this reference already exists")
-                raise serializers.ValidationError(msg)
-        elif (
-            Receive.objects.exclude(pk=self.instance.pk)
-            .filter(company=company, reference=reference)
-            .exists()
-        ):
-            msg = _("An receive with this reference already exists")
-            raise serializers.ValidationError(msg)
-
-        return reference
-
-    def _update_delete_or_create(self, instance, receiveitems_data):
+    def _update_destroy_or_create(self, instance, receiveitems_data):
         receiveitem_instances = instance.receiveitem_set.all()
         receiveitem_set_count = receiveitem_instances.count()
         bulk_updates = []
@@ -211,7 +186,7 @@ class ReceiveSerializer(DocumentSerializer):
 
     def update(self, instance, validated_data):
         receiveitems_data = validated_data.pop("receiveitem_set", [])
-        self._update_delete_or_create(instance, receiveitems_data)
+        self._update_destroy_or_create(instance, receiveitems_data)
         return super().update(instance, validated_data)
 
 
@@ -287,26 +262,13 @@ class PurchaseOrderSerializer(DocumentSerializer):
     def get_company_name(self, obj):
         return obj.company.name if obj.company else ""
 
-    def validate_reference(self, reference):
-        company = self.context["request"].user.company
+    def validate(self, attrs):
+        validate_reference_uniqueness(
+            self, PurchaseOrder, attrs.get("reference"), attrs.get("id")
+        )
+        return attrs
 
-        if self.context["request"].method in ["POST"]:
-            if PurchaseOrder.objects.filter(
-                company=company, reference=reference
-            ).exists():
-                msg = _("A purchase order with this reference already exists")
-                raise serializers.ValidationError(msg)
-        elif (
-            PurchaseOrder.objects.exclude(pk=self.instance.pk)
-            .filter(company=company, reference=reference)
-            .exists()
-        ):
-            msg = _("A purchase order with this reference already exists")
-            raise serializers.ValidationError(msg)
-
-        return reference
-
-    def _update_delete_or_create(self, instance, purchaseorderitems_data):
+    def _update_destroy_or_create(self, instance, purchaseorderitems_data):
         purchaseorderitem_instances = instance.purchaseorderitem_set.all()
         purchaseorderitem_set_count = purchaseorderitem_instances.count()
         bulk_updates = []
@@ -390,5 +352,5 @@ class PurchaseOrderSerializer(DocumentSerializer):
             except Receive.DoesNotExist:
                 pass
 
-        self._update_delete_or_create(instance, purchaseorderitems_data)
+        self._update_destroy_or_create(instance, purchaseorderitems_data)
         return super().update(instance, validated_data)
