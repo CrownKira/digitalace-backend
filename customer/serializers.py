@@ -89,7 +89,6 @@ class CustomerSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         )
         read_only_fields = (
             "id",
-            "image",
             "unused_credits",
         )
         extra_kwargs = {"image": {"allow_null": True}}
