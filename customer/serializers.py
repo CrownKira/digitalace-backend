@@ -1,8 +1,13 @@
+from django.db.models.query import QuerySet
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import get_user_model
 
 
 from rest_framework import serializers
+from rest_framework_bulk import (
+    BulkListSerializer,
+    BulkSerializerMixin,
+)
 
 from core.models import (
     Invoice,
@@ -14,13 +19,13 @@ from core.models import (
     CreditNoteItem,
     CreditsApplication,
 )
+from core.utils import validate_reference_uniqueness, all_unique
 
 
 # TODO: refactor
-
-
-class LineItemSerializer(serializers.ModelSerializer):
+class LineItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
+        list_serializer_class = BulkListSerializer
         abstract = True
 
     def validate_amount(self, amount):
@@ -42,8 +47,9 @@ class LineItemSerializer(serializers.ModelSerializer):
         return unit_price
 
 
-class DocumentSerializer(serializers.ModelSerializer):
+class DocumentSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
+        list_serializer_class = BulkListSerializer
         abstract = True
 
     def validate_gst_rate(self, gst_rate):
@@ -59,7 +65,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         return discount_rate
 
 
-class CustomerSerializer(serializers.ModelSerializer):
+class CustomerSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     """Serializer for customer objects"""
 
     class Meta:
@@ -87,6 +93,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             "unused_credits",
         )
         extra_kwargs = {"image": {"allow_null": True}}
+        list_serializer_class = BulkListSerializer
 
     def get_fields(self):
         fields = super().get_fields()
@@ -111,25 +118,11 @@ class CustomerSerializer(serializers.ModelSerializer):
             "title": obj.image.name if obj.image else "",
         }
 
-    # TODO: create a validate_reference global function
-    def validate_reference(self, reference):
-        company = self.context["request"].user.company
-
-        if self.context["request"].method in ["POST"]:
-            if Customer.objects.filter(
-                company=company, reference=reference
-            ).exists():
-                msg = _("A customer with this reference already exists")
-                raise serializers.ValidationError(msg)
-        elif (
-            Customer.objects.exclude(pk=self.instance.pk)
-            .filter(company=company, reference=reference)
-            .exists()
-        ):
-            msg = _("A customer with this reference already exists")
-            raise serializers.ValidationError(msg)
-
-        return reference
+    def validate(self, attrs):
+        validate_reference_uniqueness(
+            self, Customer, attrs.get("reference"), attrs.get("id")
+        )
+        return attrs
 
 
 class CreditNoteItemSerializer(LineItemSerializer):
@@ -155,7 +148,7 @@ class CreditNoteItemSerializer(LineItemSerializer):
 class CreditNoteSerializer(DocumentSerializer):
     """Serializer for Credit Note objects"""
 
-    class Meta:
+    class Meta(DocumentSerializer.Meta):
         model = CreditNote
         fields = (
             "id",
@@ -209,26 +202,13 @@ class CreditNoteSerializer(DocumentSerializer):
             raise serializers.ValidationError(msg)
         return refund
 
-    def validate_reference(self, reference):
-        company = self.context["request"].user.company
+    def validate(self, attrs):
+        validate_reference_uniqueness(
+            self, CreditNote, attrs.get("reference"), attrs.get("id")
+        )
+        return attrs
 
-        if self.context["request"].method in ["POST"]:
-            if CreditNote.objects.filter(
-                company=company, reference=reference
-            ).exists():
-                msg = _("A credit note with this reference already exists")
-                raise serializers.ValidationError(msg)
-        elif (
-            CreditNote.objects.exclude(pk=self.instance.pk)
-            .filter(company=company, reference=reference)
-            .exists()
-        ):
-            msg = _("A credit note with this reference already exists")
-            raise serializers.ValidationError(msg)
-
-        return reference
-
-    def _update_delete_or_create(self, instance, creditnoteitems_data):
+    def _update_destroy_or_create(self, instance, creditnoteitems_data):
         creditnoteitem_instances = instance.creditnoteitem_set.all()
         creditnoteitem_set_count = creditnoteitem_instances.count()
         bulk_updates = []
@@ -289,7 +269,7 @@ class CreditNoteSerializer(DocumentSerializer):
     def update(self, instance, validated_data):
         creditnoteitems_data = validated_data.pop("creditnoteitem_set", [])
         customer = validated_data.get("customer")
-        self._update_delete_or_create(instance, creditnoteitems_data)
+        self._update_destroy_or_create(instance, creditnoteitems_data)
         credit_note = super().update(instance, validated_data)
 
         customer.unused_credits += (
@@ -343,7 +323,7 @@ class InvoiceItemSerializer(LineItemSerializer):
 class InvoiceSerializer(DocumentSerializer):
     """Serializer for Invoice objects"""
 
-    class Meta:
+    class Meta(DocumentSerializer.Meta):
         model = Invoice
         fields = (
             "id",
@@ -423,31 +403,12 @@ class InvoiceSerializer(DocumentSerializer):
                 )
                 raise serializers.ValidationError(msg)
 
+        validate_reference_uniqueness(
+            self, Invoice, attrs.get("reference"), attrs.get("id")
+        )
         return attrs
 
-    def validate_reference(self, reference):
-        company = self.context["request"].user.company
-
-        if self.context["request"].method in ["POST"]:
-            if Invoice.objects.filter(
-                company=company, reference=reference
-            ).exists():
-                msg = _("An invoice with this reference already exists")
-                raise serializers.ValidationError(msg)
-        elif (
-            Invoice.objects.exclude(pk=self.instance.pk)
-            .filter(company=company, reference=reference)
-            .exists()
-        ):
-            msg = _("An invoice with this reference already exists")
-            raise serializers.ValidationError(msg)
-
-        return reference
-
     def validate_creditsapplication_set(self, creditsapplication_set):
-        def all_unique(x):
-            seen = set()
-            return not any(i in seen or seen.add(i) for i in x)
 
         if not all_unique(
             [
@@ -460,7 +421,8 @@ class InvoiceSerializer(DocumentSerializer):
 
         return creditsapplication_set
 
-    def _update_delete_or_create_items(self, instance, invoiceitems_data):
+    # TODO: extract common logic
+    def _update_destroy_or_create_items(self, instance, invoiceitems_data):
         invoiceitem_instances = instance.invoiceitem_set.all()
         invoiceitem_set_count = invoiceitem_instances.count()
         bulk_updates = []
@@ -524,7 +486,7 @@ class InvoiceSerializer(DocumentSerializer):
         creditsapplications_data = validated_data.pop(
             "creditsapplication_set", []
         )
-        self._update_delete_or_create_items(instance, invoiceitems_data)
+        self._update_destroy_or_create_items(instance, invoiceitems_data)
 
         for creditsapplication_data in creditsapplications_data:
             if creditsapplication_data.get("amount_to_credit") > 0:
@@ -558,7 +520,7 @@ class SalesOrderItemSerializer(LineItemSerializer):
 class SalesOrderSerializer(DocumentSerializer):
     """Serializer for salesorder objects"""
 
-    class Meta:
+    class Meta(DocumentSerializer.Meta):
         model = SalesOrder
         fields = (
             "id",
@@ -616,26 +578,13 @@ class SalesOrderSerializer(DocumentSerializer):
     def get_company_name(self, obj):
         return obj.company.name if obj.company else ""
 
-    def validate_reference(self, reference):
-        company = self.context["request"].user.company
+    def validate(self, attrs):
+        validate_reference_uniqueness(
+            self, SalesOrder, attrs.get("reference"), attrs.get("id")
+        )
+        return attrs
 
-        if self.context["request"].method in ["POST"]:
-            if SalesOrder.objects.filter(
-                company=company, reference=reference
-            ).exists():
-                msg = _("A sales order with this reference already exists")
-                raise serializers.ValidationError(msg)
-        elif (
-            SalesOrder.objects.exclude(pk=self.instance.pk)
-            .filter(company=company, reference=reference)
-            .exists()
-        ):
-            msg = _("A sales order with this reference already exists")
-            raise serializers.ValidationError(msg)
-
-        return reference
-
-    def _update_delete_or_create(self, instance, salesorderitems_data):
+    def _update_destroy_or_create(self, instance, salesorderitems_data):
         salesorderitem_instances = instance.salesorderitem_set.all()
         salesorderitem_set_count = salesorderitem_instances.count()
         bulk_updates = []
@@ -697,5 +646,5 @@ class SalesOrderSerializer(DocumentSerializer):
     def update(self, instance, validated_data):
         salesorderitems_data = validated_data.pop("salesorderitem_set", [])
 
-        self._update_delete_or_create(instance, salesorderitems_data)
+        self._update_destroy_or_create(instance, salesorderitems_data)
         return super().update(instance, validated_data)

@@ -4,7 +4,10 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
-
+from rest_framework_bulk import (
+    BulkListSerializer,
+    BulkSerializerMixin,
+)
 
 from core.models import (
     Product,
@@ -16,12 +19,15 @@ from core.models import (
     Customer,
     PaymentMethod,
 )
+from core.utils import validate_reference_uniqueness
 from user.serializers import UserSerializer
 
 
 # TODO: create an abstract class for get_image logic
 # https://stackoverflow.com/questions/33137165/django-rest-framework-abstract-class-serializer
-class ProductCategorySerializer(serializers.ModelSerializer):
+class ProductCategorySerializer(
+    BulkSerializerMixin, serializers.ModelSerializer
+):
     """Serializer for product category objects"""
 
     class Meta:
@@ -36,6 +42,7 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         # explicitly declared on the serializer class, then
         # the extra_kwargs option will be ignored.
         # https://www.django-rest-framework.org/api-guide/serializers/#additional-keyword-arguments
+        list_serializer_class = BulkListSerializer
 
     def get_fields(self):
         fields = super().get_fields()
@@ -55,7 +62,7 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         }
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     """Serializer for product objects"""
 
     class Meta:
@@ -82,6 +89,7 @@ class ProductSerializer(serializers.ModelSerializer):
             },  # TODO: remove allow_null (should only allow "")
             "thumbnail": {"allow_null": True},
         }
+        list_serializer_class = BulkListSerializer
 
     def get_fields(self):
         fields = super().get_fields()
@@ -127,7 +135,9 @@ class ProductSerializer(serializers.ModelSerializer):
         return reference
 
 
-class PaymentMethodSerializer(serializers.ModelSerializer):
+class PaymentMethodSerializer(
+    BulkSerializerMixin, serializers.ModelSerializer
+):
     """Serializer for payment method objects"""
 
     class Meta:
@@ -136,9 +146,10 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
             "id",
             "name",
         )
+        list_serializer_class = BulkListSerializer
 
 
-class PayslipSerializer(serializers.ModelSerializer):
+class PayslipSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     """Serializer for payslip objects"""
 
     class Meta:
@@ -163,12 +174,13 @@ class PayslipSerializer(serializers.ModelSerializer):
             "comment",
         )
         read_only_fields = ("id", "company")
+        list_serializer_class = BulkListSerializer
 
 
 class EmployeeSerializer(UserSerializer):
     """Serializer for employee objects"""
 
-    class Meta:
+    class Meta(UserSerializer.Meta):
         model = get_user_model()
         fields = (
             "id",
@@ -430,7 +442,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
         return attrs
 
     # TODO: make this a global function
-    def _update_delete_or_create(self, instance, designations_data):
+    def _update_destroy_or_create(self, instance, designations_data):
         designation_instances = instance.designation_set.all()
         designation_set_count = designation_instances.count()
         bulk_updates = []
@@ -487,5 +499,5 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         designations_data = validated_data.pop("designation_set", [])
-        self._update_delete_or_create(instance, designations_data)
+        self._update_destroy_or_create(instance, designations_data)
         return super().update(instance, validated_data)

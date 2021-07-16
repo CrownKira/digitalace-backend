@@ -15,6 +15,7 @@ from core.models import (
     User,
     PaymentMethod,
 )
+from core.utils import validate_reference_uniqueness_in_data
 from company import serializers
 from user.serializers import OwnerProfileSerializer
 
@@ -91,7 +92,12 @@ class ProductViewSet(BaseAttrViewSet):
         company = self.request.user.company
         return Product.objects.filter(category__company=company)
 
+    def perform_create(self, serializer):
+        validate_reference_uniqueness_in_data(serializer.validated_data)
+        serializer.save()
+
     def perform_update(self, serializer):
+        validate_reference_uniqueness_in_data(serializer.validated_data)
         serializer.save()
 
 

@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "django_filters",
     "storages",
+    "rest_framework_bulk",
     "core",
     "user",
     "customer",
@@ -136,8 +137,8 @@ REST_FRAMEWORK = {
     "DEFAULT_PARSER_CLASSES": (
         "rest_framework.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
-        # "rest_framework.parsers.MultiPartParser",
         "core.parsers.MultiPartJSONParser",
+        # "rest_framework.parsers.MultiPartParser",
     ),
 }
 

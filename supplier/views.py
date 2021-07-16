@@ -2,6 +2,7 @@ from django_filters import rest_framework as filters
 
 from core.views import BaseAssetAttrViewSet
 from core.models import Receive, Supplier, PurchaseOrder
+from core.utils import validate_reference_uniqueness_in_data
 from supplier import serializers
 
 
@@ -28,6 +29,14 @@ class SupplierViewSet(BaseAssetAttrViewSet):
         "phone_no",
         "payables",
     ]
+
+    def perform_create(self, serializer):
+        validate_reference_uniqueness_in_data(serializer.validated_data)
+        super().perform_create(serializer)
+
+    def perform_update(self, serializer):
+        validate_reference_uniqueness_in_data(serializer.validated_data)
+        serializer.save()
 
 
 class ReceiveFilter(filters.FilterSet):
@@ -101,15 +110,14 @@ class ReceiveViewSet(BaseAssetAttrViewSet):
 
     def perform_create(self, serializer):
         company = self.request.user.company
+        validate_reference_uniqueness_in_data(serializer.validated_data)
         serializer.save(
             company=company, **self._get_calculated_fields(serializer)
         )
 
     def perform_update(self, serializer):
-        company = self.request.user.company
-        serializer.save(
-            company=company, **self._get_calculated_fields(serializer)
-        )
+        validate_reference_uniqueness_in_data(serializer.validated_data)
+        serializer.save(**self._get_calculated_fields(serializer))
 
 
 class PurchaseOrderFilter(filters.FilterSet):
@@ -186,12 +194,11 @@ class PurchaseOrderViewSet(BaseAssetAttrViewSet):
 
     def perform_create(self, serializer):
         company = self.request.user.company
+        validate_reference_uniqueness_in_data(serializer.validated_data)
         serializer.save(
             company=company, **self._get_calculated_fields(serializer)
         )
 
     def perform_update(self, serializer):
-        company = self.request.user.company
-        serializer.save(
-            company=company, **self._get_calculated_fields(serializer)
-        )
+        validate_reference_uniqueness_in_data(serializer.validated_data)
+        serializer.save(**self._get_calculated_fields(serializer))
