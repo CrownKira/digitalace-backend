@@ -1,6 +1,5 @@
 from django.shortcuts import get_object_or_404
 
-
 from rest_framework import (
     generics,
     authentication,
@@ -12,13 +11,13 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
 from rest_framework.response import Response
 
+from core.models import Company, UserConfig
 from user.serializers import (
     OwnerProfileSerializer,
     EmployeeProfileSerializer,
     AuthTokenSerializer,
     UserConfigSerializer,
 )
-from core.models import Company, UserConfig
 
 
 # TODO: refactor owner and employee views and serializer

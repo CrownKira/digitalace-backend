@@ -1,17 +1,12 @@
-from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_bulk import BulkModelViewSet
-
 
 from core.utils import validate_bulk_reference_uniqueness
 from .pagination import StandardResultsSetPagination
 
 
-class BaseAttrViewSet(
-    # ListBulkCreateUpdateDestroyAPIView, viewsets.ModelViewSet
-    BulkModelViewSet
-):
+class BaseAttrViewSet(BulkModelViewSet):
     """Base attr viewset for all viewsets"""
 
     authentication_classes = (TokenAuthentication,)
@@ -51,10 +46,4 @@ class BaseDocumentViewSet(BaseAssetAttrViewSet):
 
     def perform_create(self, serializer):
         company = self.request.user.company
-        serializer.save(
-            company=company,
-            # **self._get_calculated_fields(serializer)
-        )
-
-    # def perform_update(self, serializer):
-    #     serializer.save(**self._get_calculated_fields(serializer))
+        serializer.save(company=company)

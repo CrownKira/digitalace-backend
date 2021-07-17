@@ -3,7 +3,6 @@ from django_filters import rest_framework as filters
 
 from rest_framework import viewsets, mixins
 
-
 from core.views import BaseAttrViewSet, BaseAssetAttrViewSet
 from core.models import (
     Product,
