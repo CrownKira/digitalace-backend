@@ -29,10 +29,9 @@ def all_unique(x):
     return not any(i in seen or seen.add(i) for i in x)
 
 
-def validate_reference_uniqueness_in_data(data):
-    if isinstance(data, list) and not all_unique(
-        [item.get("reference") for item in data]
-    ):
+def validate_bulk_reference_uniqueness(data):
+    bulk = isinstance(data, list)
+    if bulk and not all_unique([item.get("reference") for item in data]):
         msg = _("Duplicate reference not allowed")
         raise serializers.ValidationError(msg)
     return data

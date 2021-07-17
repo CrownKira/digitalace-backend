@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_bulk import BulkModelViewSet
 
 
+from core.utils import validate_bulk_reference_uniqueness
 from .pagination import StandardResultsSetPagination
 
 
@@ -35,3 +36,25 @@ class BaseAssetAttrViewSet(BaseAttrViewSet):
     def perform_create(self, serializer):
         company = self.request.user.company
         serializer.save(company=company)
+
+
+class BaseDocumentViewSet(BaseAssetAttrViewSet):
+    """Base viewset for documents"""
+
+    def perform_bulk_create(self, serializer):
+        validate_bulk_reference_uniqueness(serializer.validated_data)
+        return self.perform_create(serializer)
+
+    def perform_bulk_update(self, serializer):
+        validate_bulk_reference_uniqueness(serializer.validated_data)
+        return self.perform_update(serializer)
+
+    def perform_create(self, serializer):
+        company = self.request.user.company
+        serializer.save(
+            company=company,
+            # **self._get_calculated_fields(serializer)
+        )
+
+    # def perform_update(self, serializer):
+    #     serializer.save(**self._get_calculated_fields(serializer))
