@@ -6,7 +6,6 @@ from rest_framework_bulk import (
     BulkSerializerMixin,
 )
 
-
 from core.models import (
     Receive,
     Supplier,
@@ -183,7 +182,57 @@ class ReceiveSerializer(DocumentSerializer):
         ).delete()
         ReceiveItem.objects.bulk_create(bulk_creates)
 
+    def _get_calculated_fields(self, validated_data):
+        discount_rate = validated_data.pop("discount_rate")
+        gst_rate = validated_data.pop("gst_rate")
+        receiveitem_set = validated_data.pop("receiveitem_set")
+        # TODO: fix round down behavior
+        # https://stackoverflow.com/questions/20457038/how-to-round-to-2-decimals-with-python
+        # round quantity, unit_price, gst_rate and discount rate first
+        # then round the rest at the end of calculation
+        receiveitem_set = [
+            {
+                **receiveitem,
+                "amount": round(
+                    round(receiveitem.get("quantity"))
+                    * round(receiveitem.get("unit_price"), 2),
+                    2,
+                ),
+            }
+            for receiveitem in receiveitem_set
+        ]
+        total_amount = sum(
+            [
+                # recalculate amount here since it has been rounded up
+                round(receiveitem.get("quantity"))
+                * round(receiveitem.get("unit_price"), 2)
+                for receiveitem in receiveitem_set
+            ]
+        )
+        discount_rate = round(discount_rate, 2)
+        gst_rate = round(gst_rate, 2)
+        discount_amount = total_amount * discount_rate / 100
+        net = total_amount * (1 - discount_rate / 100)
+        gst_amount = net * gst_rate / 100
+        grand_total = net * (1 + gst_rate / 100)
+
+        return {
+            "total_amount": round(total_amount, 2),
+            "discount_rate": discount_rate,
+            "gst_rate": gst_rate,
+            "discount_amount": round(discount_amount, 2),
+            "gst_amount": round(gst_amount, 2),
+            "net": round(net, 2),
+            "grand_total": round(grand_total, 2),
+            "receiveitem_set": receiveitem_set,
+        }
+
     def create(self, validated_data):
+        validated_data = {
+            **validated_data,
+            **self._get_calculated_fields(validated_data),
+        }
+
         receiveitems_data = validated_data.pop("receiveitem_set", [])
         receive = Receive.objects.create(**validated_data)
         for receiveitem_data in receiveitems_data:
@@ -191,6 +240,11 @@ class ReceiveSerializer(DocumentSerializer):
         return receive
 
     def update(self, instance, validated_data):
+        validated_data = {
+            **validated_data,
+            **self._get_calculated_fields(validated_data),
+        }
+
         receiveitems_data = validated_data.pop("receiveitem_set", [])
         self._update_destroy_or_create(instance, receiveitems_data)
         return super().update(instance, validated_data)
@@ -316,7 +370,57 @@ class PurchaseOrderSerializer(DocumentSerializer):
         ).delete()
         PurchaseOrderItem.objects.bulk_create(bulk_creates)
 
+    def _get_calculated_fields(self, validated_data):
+        discount_rate = validated_data.pop("discount_rate")
+        gst_rate = validated_data.pop("gst_rate")
+        purchaseorderitem_set = validated_data.pop("purchaseorderitem_set")
+        # TODO: fix round down behavior
+        # https://stackoverflow.com/questions/20457038/how-to-round-to-2-decimals-with-python
+        # round quantity, unit_price, gst_rate and discount rate first
+        # then round the rest at the end of calculation
+        purchaseorderitem_set = [
+            {
+                **purchaseorderitem,
+                "amount": round(
+                    round(purchaseorderitem.get("quantity"))
+                    * round(purchaseorderitem.get("unit_price"), 2),
+                    2,
+                ),
+            }
+            for purchaseorderitem in purchaseorderitem_set
+        ]
+        total_amount = sum(
+            [
+                # recalculate amount here since it has been rounded up
+                round(purchaseorderitem.get("quantity"))
+                * round(purchaseorderitem.get("unit_price"), 2)
+                for purchaseorderitem in purchaseorderitem_set
+            ]
+        )
+        discount_rate = round(discount_rate, 2)
+        gst_rate = round(gst_rate, 2)
+        discount_amount = total_amount * discount_rate / 100
+        net = total_amount * (1 - discount_rate / 100)
+        gst_amount = net * gst_rate / 100
+        grand_total = net * (1 + gst_rate / 100)
+
+        return {
+            "total_amount": round(total_amount, 2),
+            "discount_rate": discount_rate,
+            "gst_rate": gst_rate,
+            "discount_amount": round(discount_amount, 2),
+            "gst_amount": round(gst_amount, 2),
+            "net": round(net, 2),
+            "grand_total": round(grand_total, 2),
+            "purchaseorderitem_set": purchaseorderitem_set,
+        }
+
     def create(self, validated_data):
+        validated_data = {
+            **validated_data,
+            **self._get_calculated_fields(validated_data),
+        }
+
         purchaseorderitems_data = validated_data.pop(
             "purchaseorderitem_set", []
         )
@@ -334,6 +438,11 @@ class PurchaseOrderSerializer(DocumentSerializer):
         return purchase_order
 
     def update(self, instance, validated_data):
+        validated_data = {
+            **validated_data,
+            **self._get_calculated_fields(validated_data),
+        }
+
         purchaseorderitems_data = validated_data.pop(
             "purchaseorderitem_set", []
         )

@@ -1,8 +1,8 @@
 from django_filters import rest_framework as filters
 
-from core.views import BaseAssetAttrViewSet
+from core.views import BaseAssetAttrViewSet, BaseDocumentViewSet
 from core.models import Receive, Supplier, PurchaseOrder
-from core.utils import validate_reference_uniqueness_in_data
+from core.utils import validate_bulk_reference_uniqueness
 from supplier import serializers
 
 
@@ -30,13 +30,13 @@ class SupplierViewSet(BaseAssetAttrViewSet):
         "payables",
     ]
 
-    def perform_create(self, serializer):
-        validate_reference_uniqueness_in_data(serializer.validated_data)
-        super().perform_create(serializer)
+    def perform_bulk_create(self, serializer):
+        validate_bulk_reference_uniqueness(serializer.validated_data)
+        return self.perform_create(serializer)
 
-    def perform_update(self, serializer):
-        validate_reference_uniqueness_in_data(serializer.validated_data)
-        serializer.save()
+    def perform_bulk_update(self, serializer):
+        validate_bulk_reference_uniqueness(serializer.validated_data)
+        return self.perform_update(serializer)
 
 
 class ReceiveFilter(filters.FilterSet):
@@ -47,7 +47,7 @@ class ReceiveFilter(filters.FilterSet):
         }
 
 
-class ReceiveViewSet(BaseAssetAttrViewSet):
+class ReceiveViewSet(BaseDocumentViewSet):
     """Manage Receive in the database"""
 
     queryset = Receive.objects.all()
@@ -63,62 +63,6 @@ class ReceiveViewSet(BaseAssetAttrViewSet):
         "grand_total",
     ]
 
-    def _get_calculated_fields(self, serializer):
-        discount_rate = serializer.validated_data.pop("discount_rate")
-        gst_rate = serializer.validated_data.pop("gst_rate")
-        receiveitem_set = serializer.validated_data.pop("receiveitem_set")
-        # TODO: fix round down behavior
-        # https://stackoverflow.com/questions/20457038/how-to-round-to-2-decimals-with-python
-        # round quantity, unit_price, gst_rate and discount rate first
-        # then round the rest at the end of calculation
-        receiveitem_set = [
-            {
-                **receiveitem,
-                "amount": round(
-                    round(receiveitem.get("quantity"))
-                    * round(receiveitem.get("unit_price"), 2),
-                    2,
-                ),
-            }
-            for receiveitem in receiveitem_set
-        ]
-        total_amount = sum(
-            [
-                # recalculate amount here since it has been rounded up
-                round(receiveitem.get("quantity"))
-                * round(receiveitem.get("unit_price"), 2)
-                for receiveitem in receiveitem_set
-            ]
-        )
-        discount_rate = round(discount_rate, 2)
-        gst_rate = round(gst_rate, 2)
-        discount_amount = total_amount * discount_rate / 100
-        net = total_amount * (1 - discount_rate / 100)
-        gst_amount = net * gst_rate / 100
-        grand_total = net * (1 + gst_rate / 100)
-
-        return {
-            "total_amount": round(total_amount, 2),
-            "discount_rate": discount_rate,
-            "gst_rate": gst_rate,
-            "discount_amount": round(discount_amount, 2),
-            "gst_amount": round(gst_amount, 2),
-            "net": round(net, 2),
-            "grand_total": round(grand_total, 2),
-            "receiveitem_set": receiveitem_set,
-        }
-
-    def perform_create(self, serializer):
-        company = self.request.user.company
-        validate_reference_uniqueness_in_data(serializer.validated_data)
-        serializer.save(
-            company=company, **self._get_calculated_fields(serializer)
-        )
-
-    def perform_update(self, serializer):
-        validate_reference_uniqueness_in_data(serializer.validated_data)
-        serializer.save(**self._get_calculated_fields(serializer))
-
 
 class PurchaseOrderFilter(filters.FilterSet):
     class Meta:
@@ -128,7 +72,7 @@ class PurchaseOrderFilter(filters.FilterSet):
         }
 
 
-class PurchaseOrderViewSet(BaseAssetAttrViewSet):
+class PurchaseOrderViewSet(BaseDocumentViewSet):
     """Manage Supplier in the database"""
 
     queryset = PurchaseOrder.objects.all()
@@ -144,61 +88,3 @@ class PurchaseOrderViewSet(BaseAssetAttrViewSet):
         "status",
         "grand_total",
     ]
-
-    def _get_calculated_fields(self, serializer):
-        discount_rate = serializer.validated_data.pop("discount_rate")
-        gst_rate = serializer.validated_data.pop("gst_rate")
-        purchaseorderitem_set = serializer.validated_data.pop(
-            "purchaseorderitem_set"
-        )
-        # TODO: fix round down behavior
-        # https://stackoverflow.com/questions/20457038/how-to-round-to-2-decimals-with-python
-        # round quantity, unit_price, gst_rate and discount rate first
-        # then round the rest at the end of calculation
-        purchaseorderitem_set = [
-            {
-                **purchaseorderitem,
-                "amount": round(
-                    round(purchaseorderitem.get("quantity"))
-                    * round(purchaseorderitem.get("unit_price"), 2),
-                    2,
-                ),
-            }
-            for purchaseorderitem in purchaseorderitem_set
-        ]
-        total_amount = sum(
-            [
-                # recalculate amount here since it has been rounded up
-                round(purchaseorderitem.get("quantity"))
-                * round(purchaseorderitem.get("unit_price"), 2)
-                for purchaseorderitem in purchaseorderitem_set
-            ]
-        )
-        discount_rate = round(discount_rate, 2)
-        gst_rate = round(gst_rate, 2)
-        discount_amount = total_amount * discount_rate / 100
-        net = total_amount * (1 - discount_rate / 100)
-        gst_amount = net * gst_rate / 100
-        grand_total = net * (1 + gst_rate / 100)
-
-        return {
-            "total_amount": round(total_amount, 2),
-            "discount_rate": discount_rate,
-            "gst_rate": gst_rate,
-            "discount_amount": round(discount_amount, 2),
-            "gst_amount": round(gst_amount, 2),
-            "net": round(net, 2),
-            "grand_total": round(grand_total, 2),
-            "purchaseorderitem_set": purchaseorderitem_set,
-        }
-
-    def perform_create(self, serializer):
-        company = self.request.user.company
-        validate_reference_uniqueness_in_data(serializer.validated_data)
-        serializer.save(
-            company=company, **self._get_calculated_fields(serializer)
-        )
-
-    def perform_update(self, serializer):
-        validate_reference_uniqueness_in_data(serializer.validated_data)
-        serializer.save(**self._get_calculated_fields(serializer))
