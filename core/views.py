@@ -1,6 +1,8 @@
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_bulk import BulkModelViewSet
+from rest_framework import status
+from rest_framework.response import Response
 
 from core.utils import validate_bulk_reference_uniqueness
 from .pagination import StandardResultsSetPagination
@@ -19,6 +21,12 @@ class BaseAttrViewSet(BulkModelViewSet):
         """Don't forget to fine-grain this method"""
         # TODO: write implementation for bulk destroy
         return False
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        self.perform_destroy(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class BaseAssetAttrViewSet(BaseAttrViewSet):
