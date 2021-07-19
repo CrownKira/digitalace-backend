@@ -44,6 +44,7 @@ class ReceiveFilter(filters.FilterSet):
         model = Receive
         fields = {
             "reference": ["icontains", "exact"],
+            "date": ["gte", "lte"],
         }
 
 
@@ -69,6 +70,7 @@ class PurchaseOrderFilter(filters.FilterSet):
         model = PurchaseOrder
         fields = {
             "reference": ["icontains", "exact"],
+            "date": ["gte", "lte"],
         }
 
 

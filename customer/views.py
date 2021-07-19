@@ -122,6 +122,7 @@ class CreditNoteFilter(filters.FilterSet):
             "reference": ["icontains", "exact"],
             "customer": ["exact"],
             "created_from": ["exact"],
+            "date": ["gte", "lte"],
         }
 
 
@@ -152,6 +153,7 @@ class InvoiceFilter(filters.FilterSet):
             # there is no reference__exact=, just reference= will do
             "reference": ["icontains", "exact"],
             "sales_order": ["exact"],
+            "date": ["gte", "lte"],
         }
 
 
@@ -177,6 +179,7 @@ class SalesOrderFilter(filters.FilterSet):
         model = SalesOrder
         fields = {
             "reference": ["icontains", "exact"],
+            "date": ["gte", "lte"],
         }
 
 
