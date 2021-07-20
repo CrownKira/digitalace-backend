@@ -24,12 +24,3 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 AWS_STORAGE_BUCKET_NAME = "digitalace"
 AWS_S3_CUSTOM_DOMAIN = "%s.s3.amazonaws.com" % AWS_STORAGE_BUCKET_NAME
-
-CORS_ALLOWED_ORIGINS = [
-    "http://eizea.com",
-    "http://www.eizea.com",
-    "https://eizea.com",
-    "https://www.eizea.com",
-    "http://digitalace-env.eba-jj7vp4ec.us-east-2.elasticbeanstalk.com",
-    "http://localhost:3000",
-]

@@ -44,9 +44,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -165,3 +165,12 @@ MEDIA_URL = "/api/media/"
 
 STATIC_ROOT = "/vol/web/static"
 MEDIA_ROOT = "/vol/web/media"
+
+CORS_ALLOWED_ORIGINS = [
+    "http://eizea.com",
+    "http://www.eizea.com",
+    "https://eizea.com",
+    "https://www.eizea.com",
+    "http://digitalace-env.eba-jj7vp4ec.us-east-2.elasticbeanstalk.com",
+    "http://localhost:3000",
+]
