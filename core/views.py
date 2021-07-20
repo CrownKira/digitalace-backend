@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from core.utils import validate_bulk_reference_uniqueness
+from core.role_permission import RolePermission
 from .pagination import StandardResultsSetPagination
 
 
@@ -12,7 +13,7 @@ class BaseAttrViewSet(BulkModelViewSet):
     """Base attr viewset for all viewsets"""
 
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, RolePermission)
     pagination_class = StandardResultsSetPagination
     ordering_fields = "__all__"
     ordering = ["-id"]

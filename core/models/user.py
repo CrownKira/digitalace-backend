@@ -194,15 +194,54 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = "email"
 
-    def has_role_perms(self, perm_list):
-        """Check if user has all the permissions in the list"""
-        # TODO: use filter(id__in=[...])?
-        return self.is_staff or all(
-            Permission.objects.filter(
-                role__in=self.roles.all(), pk=perm
-            ).exists()
-            for perm in perm_list
-        )
+    # def has_role_perms(self, perm_list):
+    #     """Check if user has all the permissions in the list"""
+    #     # TODO: use filter(id__in=[...])?
+    #     return self.is_staff or all(
+    #         Permission.objects.filter(
+    #             role__in=self.roles.all(), pk=perm
+    #         ).exists()
+    #         for perm in perm_list
+    #     )
+
+    # def get_role_permissions(self):
+    #     """Retrieve all the role permissions of the user"""
+    #     perm_list = (
+    #         Permission.objects.all()
+    #         if self.is_staff
+    #         else Permission.objects.filter(
+    #             role__in=self.roles.all()
+    #         ).distinct()
+    #     )
+    #     return set(perm.pk for perm in perm_list)
+
+    def _user_has_role_perm(
+        self,
+        perm,
+    ):
+        return perm in self.get_role_permissions()
+
+    def has_role_perm(self, perm, obj=None):
+        """
+        Return True if the user has the specified permission. Query all
+        available auth backends, but return immediately if any backend returns
+        True. Thus, a user who has permission from a single auth backend is
+        assumed to have permission in general. If an object is provided, check
+        permissions for that object.
+        """
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:
+            return True
+
+        # Otherwise we need to check the backends.
+        return self._user_has_role_perm(perm)
+
+    def has_role_perms(self, perm_list, obj=None):
+        """
+        Return True if the user has each of the specified permissions. If
+        object is passed, check if the user has all required perms for it.
+        """
+        return all(self.has_role_perm(perm, obj) for perm in perm_list)
 
     def get_role_permissions(self):
         """Retrieve all the role permissions of the user"""
@@ -213,7 +252,18 @@ class User(AbstractBaseUser, PermissionsMixin):
                 role__in=self.roles.all()
             ).distinct()
         )
-        return set(perm.pk for perm in perm_list)
+        return set("core." + perm.codename for perm in perm_list)
+
+    def get_role_permission_ids(self):
+        """Retrieve all the role permissions of the user"""
+        perm_list = (
+            Permission.objects.all()
+            if self.is_staff
+            else Permission.objects.filter(
+                role__in=self.roles.all()
+            ).distinct()
+        )
+        return set(perm.id for perm in perm_list)
 
     def __str__(self):
         return self.name
