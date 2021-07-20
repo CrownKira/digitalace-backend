@@ -1,3 +1,5 @@
+# from company.serializers import PaymentMethodSerializer
+# from core.models.transaction import PaymentMethod
 from django.contrib.auth import get_user_model, authenticate
 from django.utils.translation import ugettext_lazy as _
 
@@ -253,17 +255,6 @@ class EmployeeProfileSerializer(UserSerializer):
             if obj.designation
             else None
         )
-
-
-class UserConfigSerializer(serializers.ModelSerializer):
-    """
-    Serializer for updating and retrieving user's config.
-    """
-
-    class Meta:
-        model = UserConfig
-        fields = ("gst_rate", "discount_rate", "theme", "language")
-        read_only_fields = ()
 
 
 class AuthTokenSerializer(serializers.Serializer):

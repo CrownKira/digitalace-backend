@@ -18,9 +18,37 @@ from core.models import (
     Designation,
     Customer,
     PaymentMethod,
+    Invoice,
+    UserConfig,
 )
-from core.utils import validate_reference_uniqueness
 from user.serializers import UserSerializer
+
+
+class UserConfigSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating and retrieving user's config.
+    """
+
+    class Meta:
+        model = UserConfig
+        fields = ("gst_rate", "discount_rate", "theme", "language")
+        read_only_fields = ()
+
+    def get_fields(self):
+        fields = super().get_fields()
+
+        fields["payment_methods"] = serializers.SerializerMethodField()
+
+        return fields
+
+    # TODO: handle payment methods CRUD
+    def get_payment_methods(self, obj):
+        payment_methods = PaymentMethod.objects.filter(
+            company=obj.user.company
+        )
+        serializer = PaymentMethodSerializer(payment_methods, many=True)
+
+        return serializer.data
 
 
 # TODO: create an abstract class for get_image logic
@@ -147,6 +175,25 @@ class PaymentMethodSerializer(
             "name",
         )
         list_serializer_class = BulkListSerializer
+
+    def validate_name(self, name):
+        company = self.context["request"].user.company
+
+        if self.context["request"].method in ["POST"]:
+            if PaymentMethod.objects.filter(
+                company=company, name=name
+            ).exists():
+                msg = _("A payment method with this name already exists")
+                raise serializers.ValidationError(msg)
+        elif (
+            PaymentMethod.objects.exclude(pk=self.instance.pk)
+            .filter(company=company, name=name)
+            .exists()
+        ):
+            msg = _("A payment method with this name already exists")
+            raise serializers.ValidationError(msg)
+
+        return name
 
 
 class PayslipSerializer(BulkSerializerMixin, serializers.ModelSerializer):

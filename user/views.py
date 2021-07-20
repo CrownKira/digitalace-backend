@@ -16,8 +16,8 @@ from user.serializers import (
     OwnerProfileSerializer,
     EmployeeProfileSerializer,
     AuthTokenSerializer,
-    UserConfigSerializer,
 )
+from company.serializers import UserConfigSerializer
 
 
 # TODO: refactor owner and employee views and serializer
