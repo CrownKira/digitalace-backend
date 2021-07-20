@@ -15,7 +15,7 @@ ALLOWED_HOSTS = ["api"]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 # TODO: configure HTTPS for Elastic Beanstalk environment
-SECURE_SSL_REDIRECT = True
+# SECURE_SSL_REDIRECT = True
 
 
 # HSTS settings
