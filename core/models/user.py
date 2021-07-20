@@ -241,11 +241,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         Return True if the user has each of the specified permissions. If
         object is passed, check if the user has all required perms for it.
         """
-        print("kw")
-        print(perm_list)
-
-        # if not perm_list:
-        #     return False
 
         return all(self.has_role_perm(perm, obj) for perm in perm_list)
 

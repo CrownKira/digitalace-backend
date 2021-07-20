@@ -1,15 +1,18 @@
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_bulk import BulkModelViewSet
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.response import Response
 
+from rest_framework_bulk import BulkModelViewSet
 from core.utils import validate_bulk_reference_uniqueness
 from core.role_permission import RolePermission
 from .pagination import StandardResultsSetPagination
 
 
-class BaseAttrViewSet(BulkModelViewSet):
+class BaseAttrViewSet(
+    # viewsets.ModelViewSet
+    BulkModelViewSet
+):
     """Base attr viewset for all viewsets"""
 
     authentication_classes = (TokenAuthentication,)
