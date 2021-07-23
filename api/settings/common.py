@@ -22,6 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Application definition
 
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -31,6 +32,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_extensions",
     "corsheaders",
+    # "guardian",
     "rest_framework",
     "rest_framework.authtoken",
     "django_filters",
@@ -143,6 +145,10 @@ REST_FRAMEWORK = {
     ),
 }
 
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+]
+
 
 # S3 BUCKETS
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html
@@ -165,12 +171,3 @@ MEDIA_URL = "/api/media/"
 
 STATIC_ROOT = "/vol/web/static"
 MEDIA_ROOT = "/vol/web/media"
-
-# CORS_ALLOWED_ORIGINS = [
-#     "http://eizea.com",
-#     "http://www.eizea.com",
-#     "https://eizea.com",
-#     "https://www.eizea.com",
-#     "http://digitalace-env.eba-jj7vp4ec.us-east-2.elasticbeanstalk.com",
-#     "http://localhost:3000",
-# ]

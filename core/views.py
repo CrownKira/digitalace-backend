@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from rest_framework_bulk import BulkModelViewSet
 from core.utils import validate_bulk_reference_uniqueness
-from core.role_permission import RolePermission
+from core.permissions import RolePermission
 from .pagination import StandardResultsSetPagination
 
 

@@ -11,6 +11,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
 from rest_framework.response import Response
 
+from core.permissions import RolePermission
 from core.models import Company, UserConfig
 from user.serializers import (
     OwnerProfileSerializer,
@@ -54,7 +55,7 @@ class ManageProfileView(generics.RetrieveUpdateAPIView):
     """View for retrieving and updating user profile"""
 
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, RolePermission)
 
     def get_object(self):
         """Retrieve and return authenticated user"""
@@ -79,7 +80,7 @@ class UserConfigView(generics.RetrieveUpdateAPIView):
     """View for retrieving and updating user config"""
 
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, RolePermission)
     serializer_class = UserConfigSerializer
 
     def get_object(self):

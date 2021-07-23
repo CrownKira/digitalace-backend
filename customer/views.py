@@ -1,5 +1,3 @@
-from core.utils import validate_reference_uniqueness
-
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters import rest_framework as filters
@@ -7,6 +5,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
+from core.permissions import RolePermission
 from core.utils import validate_bulk_reference_uniqueness
 from core.views import BaseAssetAttrViewSet, BaseDocumentViewSet
 from core.models import (
@@ -51,6 +50,12 @@ class CustomerViewSet(BaseAssetAttrViewSet):
         "receivables",
     ]
 
+    def get_queryset(self):
+        user = self.request.user
+        company = user.company
+        customer_qs = self.queryset if user.is_staff else user.customer_set
+        return customer_qs.filter(company=company).distinct()
+
     def perform_bulk_create(self, serializer):
         validate_bulk_reference_uniqueness(serializer.validated_data)
         return self.perform_create(serializer)
@@ -76,7 +81,7 @@ class CreditsApplicationViewSet(
     """Manage designations in the database"""
 
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, RolePermission)
     pagination_class = StandardResultsSetPagination
     ordering_fields = "__all__"
     ordering = ["-id"]

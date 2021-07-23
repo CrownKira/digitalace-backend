@@ -88,8 +88,14 @@ class ProductViewSet(BaseAttrViewSet):
     ]
 
     def get_queryset(self):
-        company = self.request.user.company
-        return Product.objects.filter(category__company=company)
+        user = self.request.user
+        company = user.company
+        product_qs = self.queryset if user.is_staff else user.product_set
+        return product_qs.filter(category__company=company).distinct()
+
+    # def get_queryset(self):
+    #     company = self.request.user.company
+    #     return Product.objects.filter(category__company=company)
 
     def perform_bulk_create(self, serializer):
         validate_bulk_reference_uniqueness(serializer.validated_data)

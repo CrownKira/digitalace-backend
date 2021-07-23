@@ -5,7 +5,8 @@ class RolePermission(DjangoModelPermissions):
     """Role permission"""
 
     perms_map = {
-        "GET": ["%(app_label)s.view_%(model_name)s"],
+        # "GET": ["%(app_label)s.view_%(model_name)s"],
+        "GET": [],
         "OPTIONS": [],
         "HEAD": [],
         "POST": ["%(app_label)s.add_%(model_name)s"],
@@ -27,4 +28,5 @@ class RolePermission(DjangoModelPermissions):
 
         queryset = self._queryset(view)
         perms = self.get_required_permissions(request.method, queryset.model)
+        # TODO: use backend instead?
         return request.user.has_role_perms(perms)
