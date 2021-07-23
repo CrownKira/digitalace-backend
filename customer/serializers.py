@@ -209,7 +209,7 @@ class CreditNoteSerializer(DocumentSerializer):
         )
         return attrs
 
-    def _update_destroy_or_create(self, instance, creditnoteitems_data):
+    def _update_destroy_or_create_items(self, instance, creditnoteitems_data):
         creditnoteitem_instances = instance.creditnoteitem_set.all()
         creditnoteitem_set_count = creditnoteitem_instances.count()
         bulk_updates = []
@@ -335,7 +335,7 @@ class CreditNoteSerializer(DocumentSerializer):
 
         creditnoteitems_data = validated_data.pop("creditnoteitem_set", [])
         customer = validated_data.get("customer")
-        self._update_destroy_or_create(instance, creditnoteitems_data)
+        self._update_destroy_or_create_items(instance, creditnoteitems_data)
         credit_note = super().update(instance, validated_data)
 
         customer.unused_credits += (
@@ -754,7 +754,7 @@ class SalesOrderSerializer(DocumentSerializer):
         )
         return attrs
 
-    def _update_destroy_or_create(self, instance, salesorderitems_data):
+    def _update_destroy_or_create_items(self, instance, salesorderitems_data):
         salesorderitem_instances = instance.salesorderitem_set.all()
         salesorderitem_set_count = salesorderitem_instances.count()
         bulk_updates = []
@@ -871,5 +871,5 @@ class SalesOrderSerializer(DocumentSerializer):
 
         salesorderitems_data = validated_data.pop("salesorderitem_set", [])
 
-        self._update_destroy_or_create(instance, salesorderitems_data)
+        self._update_destroy_or_create_items(instance, salesorderitems_data)
         return super().update(instance, validated_data)

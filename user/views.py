@@ -80,7 +80,7 @@ class UserConfigView(generics.RetrieveUpdateAPIView):
     """View for retrieving and updating user config"""
 
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated, RolePermission)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = UserConfigSerializer
 
     def get_object(self):

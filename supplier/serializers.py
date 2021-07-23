@@ -140,7 +140,7 @@ class ReceiveSerializer(DocumentSerializer):
         )
         return attrs
 
-    def _update_destroy_or_create(self, instance, receiveitems_data):
+    def _update_destroy_or_create_items(self, instance, receiveitems_data):
         receiveitem_instances = instance.receiveitem_set.all()
         receiveitem_set_count = receiveitem_instances.count()
         bulk_updates = []
@@ -246,7 +246,7 @@ class ReceiveSerializer(DocumentSerializer):
         }
 
         receiveitems_data = validated_data.pop("receiveitem_set", [])
-        self._update_destroy_or_create(instance, receiveitems_data)
+        self._update_destroy_or_create_items(instance, receiveitems_data)
         return super().update(instance, validated_data)
 
 
@@ -306,7 +306,7 @@ class PurchaseOrderSerializer(DocumentSerializer):
         )
 
         extra_kwargs = {
-            "receive": {"allow_null": True},
+            "receive": {"allow_null": True, "required": False},
         }
 
     def get_fields(self):
@@ -328,7 +328,9 @@ class PurchaseOrderSerializer(DocumentSerializer):
         )
         return attrs
 
-    def _update_destroy_or_create(self, instance, purchaseorderitems_data):
+    def _update_destroy_or_create_items(
+        self, instance, purchaseorderitems_data
+    ):
         purchaseorderitem_instances = instance.purchaseorderitem_set.all()
         purchaseorderitem_set_count = purchaseorderitem_instances.count()
         bulk_updates = []
@@ -467,5 +469,5 @@ class PurchaseOrderSerializer(DocumentSerializer):
             except Receive.DoesNotExist:
                 pass
 
-        self._update_destroy_or_create(instance, purchaseorderitems_data)
+        self._update_destroy_or_create_items(instance, purchaseorderitems_data)
         return super().update(instance, validated_data)

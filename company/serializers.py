@@ -489,7 +489,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
         return attrs
 
     # TODO: make this a global function
-    def _update_destroy_or_create(self, instance, designations_data):
+    def _update_destroy_or_create_items(self, instance, designations_data):
         designation_instances = instance.designation_set.all()
         designation_set_count = designation_instances.count()
         bulk_updates = []
@@ -546,5 +546,5 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         designations_data = validated_data.pop("designation_set", [])
-        self._update_destroy_or_create(instance, designations_data)
+        self._update_destroy_or_create_items(instance, designations_data)
         return super().update(instance, validated_data)
