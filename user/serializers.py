@@ -110,7 +110,7 @@ class UserSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         }
 
     def get_permissions(self, obj):
-        return obj.get_role_permission(return_ids=True)
+        return obj.get_role_permissions(return_ids=True)
 
 
 # TODO: split create and retrieveupdate
@@ -226,7 +226,11 @@ class EmployeeProfileSerializer(UserSerializer):
             "date_of_commencement",
             "date_of_cessation",
         )
-        extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
+        extra_kwargs = {
+            "password": {"write_only": True, "min_length": 5},
+            "image": {"allow_null": True},
+            "resume": {"allow_null": True},
+        }
 
     def get_fields(self):
         fields = super().get_fields()

@@ -55,7 +55,7 @@ class ManageProfileView(generics.RetrieveUpdateAPIView):
     """View for retrieving and updating user profile"""
 
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated, RolePermission)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get_object(self):
         """Retrieve and return authenticated user"""

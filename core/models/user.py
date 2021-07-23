@@ -230,7 +230,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             ).distinct()
         )
         if return_ids:
-            set(perm.id for perm in perm_list)
+            return set(perm.id for perm in perm_list)
 
         return set("core." + perm.codename for perm in perm_list)
 
