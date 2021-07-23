@@ -110,7 +110,7 @@ class UserSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         }
 
     def get_permissions(self, obj):
-        return obj.get_role_permissions(return_ids=True)
+        return obj.get_role_permissions(return_ids=True) if obj.id else []
 
 
 # TODO: split create and retrieveupdate
