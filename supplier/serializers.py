@@ -14,7 +14,11 @@ from core.models import (
     PurchaseOrderItem,
 )
 from core.utils import validate_reference_uniqueness
-from customer.serializers import LineItemSerializer, DocumentSerializer
+from customer.serializers import (
+    LineItemSerializer,
+    DocumentSerializer,
+    _update_lineitems,
+)
 
 
 class SupplierSerializer(BulkSerializerMixin, serializers.ModelSerializer):
@@ -246,7 +250,22 @@ class ReceiveSerializer(DocumentSerializer):
         }
 
         receiveitems_data = validated_data.pop("receiveitem_set", [])
-        self._update_destroy_or_create_items(instance, receiveitems_data)
+        _update_lineitems(
+            instance,
+            "receive",
+            receiveitems_data,
+            "receiveitem_set",
+            ReceiveItem,
+            fields=[
+                "product",
+                "receive",
+                "unit",
+                "unit_price",
+                "quantity",
+                "amount",
+            ],
+            adjust_up=True,
+        )
         return super().update(instance, validated_data)
 
 
@@ -327,50 +346,6 @@ class PurchaseOrderSerializer(DocumentSerializer):
             self, PurchaseOrder, attrs.get("reference"), attrs.get("id")
         )
         return attrs
-
-    def _update_destroy_or_create_items(
-        self, instance, purchaseorderitems_data
-    ):
-        purchaseorderitem_instances = instance.purchaseorderitem_set.all()
-        purchaseorderitem_set_count = purchaseorderitem_instances.count()
-        bulk_updates = []
-        bulk_creates = []
-
-        for i, purchaseorderitem_data in enumerate(purchaseorderitems_data):
-            purchaseorderitem_data.pop("id", None)
-            purchaseorderitem_data.pop("pk", None)
-            if i < purchaseorderitem_set_count:
-                # update
-                purchaseorderitem_instance = purchaseorderitem_instances[i]
-                for attr, value in purchaseorderitem_data.items():
-                    setattr(purchaseorderitem_instance, attr, value)
-                bulk_updates.append(purchaseorderitem_instance)
-            else:
-                # create
-                bulk_creates.append(
-                    # unpack first to prevent overriding
-                    PurchaseOrderItem(
-                        **purchaseorderitem_data,
-                        purchase_order=instance,
-                    )
-                )
-
-        PurchaseOrderItem.objects.bulk_update(
-            bulk_updates,
-            [
-                "product",
-                "purchase_order",
-                "unit",
-                "unit_price",
-                "quantity",
-                "amount",
-            ],
-        )
-        # delete
-        PurchaseOrderItem.objects.filter(purchase_order=instance).exclude(
-            pk__in=[obj.pk for obj in bulk_updates]
-        ).delete()
-        PurchaseOrderItem.objects.bulk_create(bulk_creates)
 
     def _get_calculated_fields(self, validated_data):
         discount_rate = validated_data.pop("discount_rate")
@@ -469,5 +444,20 @@ class PurchaseOrderSerializer(DocumentSerializer):
             except Receive.DoesNotExist:
                 pass
 
-        self._update_destroy_or_create_items(instance, purchaseorderitems_data)
+        _update_lineitems(
+            instance,
+            "purchase_order",
+            purchaseorderitems_data,
+            "purchaseorderitem_set",
+            PurchaseOrderItem,
+            fields=[
+                "product",
+                "purchase_order",
+                "unit",
+                "unit_price",
+                "quantity",
+                "amount",
+            ],
+            affect_inventory=False,
+        )
         return super().update(instance, validated_data)

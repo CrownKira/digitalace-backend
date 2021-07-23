@@ -209,48 +209,6 @@ class CreditNoteSerializer(DocumentSerializer):
         )
         return attrs
 
-    def _update_destroy_or_create_items(self, instance, creditnoteitems_data):
-        creditnoteitem_instances = instance.creditnoteitem_set.all()
-        creditnoteitem_set_count = creditnoteitem_instances.count()
-        bulk_updates = []
-        bulk_creates = []
-
-        for i, creditnoteitem_data in enumerate(creditnoteitems_data):
-            creditnoteitem_data.pop("id", None)
-            creditnoteitem_data.pop("pk", None)
-            if i < creditnoteitem_set_count:
-                # update
-                creditnoteitem_instance = creditnoteitem_instances[i]
-                for attr, value in creditnoteitem_data.items():
-                    setattr(creditnoteitem_instance, attr, value)
-                bulk_updates.append(creditnoteitem_instance)
-            else:
-                # create
-                bulk_creates.append(
-                    # unpack first to prevent overriding
-                    CreditNoteItem(
-                        **creditnoteitem_data,
-                        credit_note=instance,
-                    )
-                )
-
-        CreditNoteItem.objects.bulk_update(
-            bulk_updates,
-            [
-                "product",
-                "credit_note",
-                "unit",
-                "unit_price",
-                "quantity",
-                "amount",
-            ],
-        )
-        # delete
-        CreditNoteItem.objects.filter(credit_note=instance).exclude(
-            pk__in=[obj.pk for obj in bulk_updates]
-        ).delete()
-        CreditNoteItem.objects.bulk_create(bulk_creates)
-
     def _get_calculated_fields(self, validated_data):
         # assume all positive
         discount_rate = validated_data.pop("discount_rate")
@@ -335,7 +293,23 @@ class CreditNoteSerializer(DocumentSerializer):
 
         creditnoteitems_data = validated_data.pop("creditnoteitem_set", [])
         customer = validated_data.get("customer")
-        self._update_destroy_or_create_items(instance, creditnoteitems_data)
+        _update_lineitems(
+            instance,
+            "credit_note",
+            creditnoteitems_data,
+            "creditnoteitem_set",
+            CreditNoteItem,
+            fields=[
+                "product",
+                "credit_note",
+                "unit",
+                "unit_price",
+                "quantity",
+                "amount",
+            ],
+            adjust_up=True,
+        )
+
         credit_note = super().update(instance, validated_data)
 
         customer.unused_credits += (
@@ -384,6 +358,73 @@ class InvoiceItemSerializer(LineItemSerializer):
             "id",
             "invoice",
         )
+
+
+def _update_inventory(product, quantity, adjust_up=True):
+    # add to stock and remove from sales
+    if adjust_up:
+        product.stock += quantity
+        product.sales -= quantity
+    else:
+        product.stock -= quantity
+        product.sales += quantity
+    product.save()
+
+
+def _update_lineitems(
+    instance,
+    instance_name,
+    lineitems_data,
+    item_set_name,
+    LineItemModel,
+    fields,
+    affect_inventory=True,
+    adjust_up=True,
+):
+    lineitem_instances = getattr(instance, item_set_name).all()
+    lineitem_set_count = lineitem_instances.count()
+    bulk_updates = []
+    bulk_creates = []
+
+    for i, lineitem_data in enumerate(lineitems_data):
+        if affect_inventory:
+            _update_inventory(
+                lineitem_data.get("product"),
+                lineitem_data.get("quantity"),
+                adjust_up=adjust_up,
+            )
+
+        lineitem_data.pop("id", None)
+        lineitem_data.pop("pk", None)
+        if i < lineitem_set_count:
+            # update
+            lineitem_instance = lineitem_instances[i]
+            if affect_inventory:
+                _update_inventory(
+                    lineitem_instance.product,
+                    lineitem_instance.quantity,
+                    adjust_up=not adjust_up,
+                )
+
+            for attr, value in lineitem_data.items():
+                setattr(lineitem_instance, attr, value)
+            bulk_updates.append(lineitem_instance)
+        else:
+            # create
+            bulk_creates.append(
+                # unpack first to prevent overriding
+                LineItemModel(
+                    **lineitem_data,
+                    **{instance_name: instance},
+                )
+            )
+
+    LineItemModel.objects.bulk_update(bulk_updates, fields)
+    # delete
+    LineItemModel.objects.filter(**{instance_name: instance}).exclude(
+        pk__in=[obj.pk for obj in bulk_updates]
+    ).delete()
+    LineItemModel.objects.bulk_create(bulk_creates)
 
 
 class InvoiceSerializer(DocumentSerializer):
@@ -486,49 +527,6 @@ class InvoiceSerializer(DocumentSerializer):
             raise serializers.ValidationError(msg)
 
         return creditsapplication_set
-
-    # TODO: extract common logic
-    def _update_destroy_or_create_items(self, instance, invoiceitems_data):
-        invoiceitem_instances = instance.invoiceitem_set.all()
-        invoiceitem_set_count = invoiceitem_instances.count()
-        bulk_updates = []
-        bulk_creates = []
-
-        for i, invoiceitem_data in enumerate(invoiceitems_data):
-            invoiceitem_data.pop("id", None)
-            invoiceitem_data.pop("pk", None)
-            if i < invoiceitem_set_count:
-                # update
-                invoiceitem_instance = invoiceitem_instances[i]
-                for attr, value in invoiceitem_data.items():
-                    setattr(invoiceitem_instance, attr, value)
-                bulk_updates.append(invoiceitem_instance)
-            else:
-                # create
-                bulk_creates.append(
-                    # unpack first to prevent overriding
-                    InvoiceItem(
-                        **invoiceitem_data,
-                        invoice=instance,
-                    )
-                )
-
-        InvoiceItem.objects.bulk_update(
-            bulk_updates,
-            [
-                "product",
-                "invoice",
-                "unit",
-                "unit_price",
-                "quantity",
-                "amount",
-            ],
-        )
-        # delete
-        InvoiceItem.objects.filter(invoice=instance).exclude(
-            pk__in=[obj.pk for obj in bulk_updates]
-        ).delete()
-        InvoiceItem.objects.bulk_create(bulk_creates)
 
     def _get_calculated_fields(self, validated_data):
 
@@ -656,7 +654,23 @@ class InvoiceSerializer(DocumentSerializer):
         creditsapplications_data = validated_data.pop(
             "creditsapplication_set", []
         )
-        self._update_destroy_or_create_items(instance, invoiceitems_data)
+
+        _update_lineitems(
+            instance,
+            "invoice",
+            invoiceitems_data,
+            "invoiceitem_set",
+            InvoiceItem,
+            fields=[
+                "product",
+                "invoice",
+                "unit",
+                "unit_price",
+                "quantity",
+                "amount",
+            ],
+            adjust_up=False,
+        )
 
         for creditsapplication_data in creditsapplications_data:
             if creditsapplication_data.get("amount_to_credit") > 0:
@@ -754,48 +768,6 @@ class SalesOrderSerializer(DocumentSerializer):
         )
         return attrs
 
-    def _update_destroy_or_create_items(self, instance, salesorderitems_data):
-        salesorderitem_instances = instance.salesorderitem_set.all()
-        salesorderitem_set_count = salesorderitem_instances.count()
-        bulk_updates = []
-        bulk_creates = []
-
-        for i, salesorderitem_data in enumerate(salesorderitems_data):
-            salesorderitem_data.pop("id", None)
-            salesorderitem_data.pop("pk", None)
-            if i < salesorderitem_set_count:
-                # update
-                salesorderitem_instance = salesorderitem_instances[i]
-                for attr, value in salesorderitem_data.items():
-                    setattr(salesorderitem_instance, attr, value)
-                bulk_updates.append(salesorderitem_instance)
-            else:
-                # create
-                bulk_creates.append(
-                    # unpack first to prevent overriding
-                    SalesOrderItem(
-                        **salesorderitem_data,
-                        sales_order=instance,
-                    )
-                )
-
-        SalesOrderItem.objects.bulk_update(
-            bulk_updates,
-            [
-                "product",
-                "sales_order",
-                "unit",
-                "unit_price",
-                "quantity",
-                "amount",
-            ],
-        )
-        # delete
-        SalesOrderItem.objects.filter(sales_order=instance).exclude(
-            pk__in=[obj.pk for obj in bulk_updates]
-        ).delete()
-        SalesOrderItem.objects.bulk_create(bulk_creates)
-
     def _get_calculated_fields(self, validated_data):
         discount_rate = validated_data.pop("discount_rate")
         gst_rate = validated_data.pop("gst_rate")
@@ -871,5 +843,21 @@ class SalesOrderSerializer(DocumentSerializer):
 
         salesorderitems_data = validated_data.pop("salesorderitem_set", [])
 
-        self._update_destroy_or_create_items(instance, salesorderitems_data)
+        _update_lineitems(
+            instance,
+            "sales_order",
+            salesorderitems_data,
+            "salesorderitem_set",
+            SalesOrderItem,
+            fields=[
+                "product",
+                "sales_order",
+                "unit",
+                "unit_price",
+                "quantity",
+                "amount",
+            ],
+            affect_inventory=False,
+        )
+
         return super().update(instance, validated_data)
