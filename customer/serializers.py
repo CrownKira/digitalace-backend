@@ -360,14 +360,16 @@ class InvoiceItemSerializer(LineItemSerializer):
         )
 
 
-def _update_inventory(product, quantity, adjust_up=True):
+def _update_inventory(product, quantity, adjust_up=True, affect_sales=True):
     # add to stock and remove from sales
     if adjust_up:
         product.stock += quantity
-        product.sales -= quantity
+        if affect_sales:
+            product.sales -= quantity
     else:
         product.stock -= quantity
-        product.sales += quantity
+        if affect_sales:
+            product.sales += quantity
     product.save()
 
 
@@ -378,7 +380,8 @@ def _update_lineitems(
     item_set_name,
     LineItemModel,
     fields,
-    affect_inventory=True,
+    affect_stock=True,
+    affect_sales=True,
     adjust_up=True,
 ):
     lineitem_instances = getattr(instance, item_set_name).all()
@@ -387,11 +390,12 @@ def _update_lineitems(
     bulk_creates = []
 
     for i, lineitem_data in enumerate(lineitems_data):
-        if affect_inventory:
+        if affect_stock:
             _update_inventory(
                 lineitem_data.get("product"),
                 lineitem_data.get("quantity"),
                 adjust_up=adjust_up,
+                affect_sales=affect_sales,
             )
 
         lineitem_data.pop("id", None)
@@ -399,11 +403,12 @@ def _update_lineitems(
         if i < lineitem_set_count:
             # update
             lineitem_instance = lineitem_instances[i]
-            if affect_inventory:
+            if affect_stock:
                 _update_inventory(
                     lineitem_instance.product,
                     lineitem_instance.quantity,
                     adjust_up=not adjust_up,
+                    affect_sales=affect_sales,
                 )
 
             for attr, value in lineitem_data.items():
@@ -857,7 +862,7 @@ class SalesOrderSerializer(DocumentSerializer):
                 "quantity",
                 "amount",
             ],
-            affect_inventory=False,
+            affect_stock=False,
         )
 
         return super().update(instance, validated_data)

@@ -80,6 +80,8 @@ class Adjustment(models.Model):
         DRAFT = "DFT", _("Draft")
         ADJUSTED = "ADJ", _("Adjusted")
 
+    company = models.ForeignKey("Company", on_delete=models.CASCADE)
+    reference = models.CharField(max_length=255)
     date = models.DateField()
     description = models.TextField(blank=True)
     reason = models.TextField(blank=True)
@@ -100,6 +102,7 @@ class Adjustment(models.Model):
 class AdjustmentItem(models.Model):
     """Line item in an inventory adjustment"""
 
+    adjustment = models.ForeignKey("Adjustment", on_delete=models.CASCADE)
     product = models.ForeignKey("Product", on_delete=models.CASCADE)
     unit = models.CharField(max_length=255)
     quantity = models.IntegerField()

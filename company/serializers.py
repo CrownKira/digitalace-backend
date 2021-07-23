@@ -20,8 +20,108 @@ from core.models import (
     PaymentMethod,
     Invoice,
     UserConfig,
+    AdjustmentItem,
+    Adjustment,
 )
+from core.utils import validate_reference_uniqueness
 from user.serializers import UserSerializer
+from customer.serializers import (
+    DocumentSerializer,
+    LineItemSerializer,
+    _update_lineitems,
+)
+
+
+class AdjustmentItemSerializer(LineItemSerializer):
+    """Serializer for adjustment item objects"""
+
+    class Meta:
+        model = AdjustmentItem
+        fields = (
+            "id",
+            "product",
+            "adjustment",
+            "unit",
+            "quantity",
+        )
+        read_only_fields = (
+            "id",
+            "adjustment",
+        )
+
+
+class AdjustmentSerializer(DocumentSerializer):
+    """Serializer for adjustment objects"""
+
+    class Meta(DocumentSerializer.Meta):
+        model = Adjustment
+        fields = (
+            "id",
+            "company",
+            "reference",
+            "date",
+            "description",
+            "reason",
+            "status",
+            "mode",
+        )
+        read_only_fields = (
+            "id",
+            "company",
+        )
+
+        extra_kwargs = {}
+
+    def get_fields(self):
+        fields = super().get_fields()
+
+        fields["adjustmentitem_set"] = AdjustmentItemSerializer(
+            many=True,
+        )
+        fields["company_name"] = serializers.SerializerMethodField()
+
+        return fields
+
+    def get_company_name(self, obj):
+        return obj.company.name if obj.company else ""
+
+    def validate(self, attrs):
+        validate_reference_uniqueness(
+            self, Adjustment, attrs.get("reference"), attrs.get("id")
+        )
+        return attrs
+
+    def create(self, validated_data):
+
+        adjustmentitems_data = validated_data.pop("adjustmentitem_set", [])
+        adjustment = Adjustment.objects.create(**validated_data)
+        for adjustmentitem_data in adjustmentitems_data:
+            AdjustmentItem.objects.create(
+                **adjustmentitem_data, adjustment=adjustment
+            )
+
+        return adjustment
+
+    def update(self, instance, validated_data):
+        adjustmentitems_data = validated_data.pop("adjustmentitem_set", [])
+
+        _update_lineitems(
+            instance,
+            "adjustment",
+            adjustmentitems_data,
+            "adjustmentitem_set",
+            AdjustmentItem,
+            fields=[
+                "product",
+                "adjustment",
+                "unit",
+                "quantity",
+            ],
+            adjust_up=instance.mode == "INC",
+            affect_sales=False,
+        )
+
+        return super().update(instance, validated_data)
 
 
 class UserConfigSerializer(serializers.ModelSerializer):

@@ -3,7 +3,11 @@ from django_filters import rest_framework as filters
 
 from rest_framework import viewsets, mixins
 
-from core.views import BaseAttrViewSet, BaseAssetAttrViewSet
+from core.views import (
+    BaseAttrViewSet,
+    BaseAssetAttrViewSet,
+    BaseDocumentViewSet,
+)
 from core.models import (
     Product,
     ProductCategory,
@@ -13,6 +17,7 @@ from core.models import (
     Designation,
     User,
     PaymentMethod,
+    Adjustment,
 )
 from core.utils import validate_bulk_reference_uniqueness
 from company import serializers
@@ -28,6 +33,30 @@ from user.serializers import OwnerProfileSerializer
 #     return Response(
 #         serializer.data, status=status.HTTP_201_CREATED, headers=headers
 #     )
+
+
+class AdjustmentFilter(filters.FilterSet):
+    class Meta:
+        model = Adjustment
+        fields = {
+            "reference": ["icontains", "exact"],
+            "date": ["gte", "lte"],
+        }
+
+
+class AdjustmentViewSet(BaseDocumentViewSet):
+    """Manage customer in the database"""
+
+    queryset = Adjustment.objects.all()
+    serializer_class = serializers.AdjustmentSerializer
+    filterset_class = AdjustmentFilter
+    search_fields = [
+        "reference",
+        "date",
+        "status",
+        "mode",
+        "reason",
+    ]
 
 
 class UserFilter(filters.FilterSet):

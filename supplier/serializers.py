@@ -458,6 +458,6 @@ class PurchaseOrderSerializer(DocumentSerializer):
                 "quantity",
                 "amount",
             ],
-            affect_inventory=False,
+            affect_stock=False,
         )
         return super().update(instance, validated_data)

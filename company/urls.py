@@ -19,6 +19,7 @@ bulk_router.register("roles", views.RoleViewSet)
 bulk_router.register("departments", views.DepartmentViewSet)
 bulk_router.register("designations", views.DesignationViewSet)
 bulk_router.register("employees", views.EmployeeViewSet)
+bulk_router.register("adjustments", views.AdjustmentViewSet)
 
 
 app_name = "company"

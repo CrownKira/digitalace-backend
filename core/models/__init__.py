@@ -14,6 +14,8 @@ from .transaction import (
     CreditNote,
     CreditNoteItem,
     CreditsApplication,
+    Adjustment,
+    AdjustmentItem,
 )
 from .user import (
     Company,
@@ -44,6 +46,8 @@ __all__ = [
     "CreditNote",
     "CreditNoteItem",
     "CreditsApplication",
+    "Adjustment",
+    "AdjustmentItem",
     "Company",
     "Department",
     "Designation",
