@@ -20,6 +20,7 @@ from core.models import (
     Adjustment,
 )
 from core.utils import validate_bulk_reference_uniqueness
+from customer.serializers import _update_inventory
 from company import serializers
 from user.serializers import OwnerProfileSerializer
 
@@ -57,6 +58,17 @@ class AdjustmentViewSet(BaseDocumentViewSet):
         "mode",
         "reason",
     ]
+
+    def perform_destroy(self, instance):
+        for item in instance.creditnoteitem_set:
+            _update_inventory(
+                item.status,
+                item.product,
+                item.quantity,
+                adjust_up=instance.mode == "DEC",
+                affect_sales=False,
+            )
+        instance.delete()
 
 
 class UserFilter(filters.FilterSet):

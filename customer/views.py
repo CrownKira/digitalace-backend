@@ -22,6 +22,7 @@ from customer.serializers import (
     InvoiceSerializer,
     SalesOrderSerializer,
     CreditNoteSerializer,
+    _update_inventory,
 )
 
 
@@ -147,6 +148,17 @@ class CreditNoteViewSet(BaseDocumentViewSet):
         "grand_total",
     ]
 
+    def perform_destroy(self, instance):
+        for item in instance.creditnoteitem_set:
+            _update_inventory(
+                item.status,
+                item.product,
+                item.quantity,
+                adjust_up=False,
+                affect_sales=True,
+            )
+        instance.delete()
+
 
 class InvoiceFilter(filters.FilterSet):
     class Meta:
@@ -177,6 +189,17 @@ class InvoiceViewSet(BaseDocumentViewSet):
         "status",
         "grand_total",
     ]
+
+    def perform_destroy(self, instance):
+        for item in instance.invoiceitem_set:
+            _update_inventory(
+                item.status,
+                item.product,
+                item.quantity,
+                adjust_up=True,
+                affect_sales=True,
+            )
+        instance.delete()
 
 
 class SalesOrderFilter(filters.FilterSet):

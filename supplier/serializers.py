@@ -265,6 +265,7 @@ class ReceiveSerializer(DocumentSerializer):
                 "amount",
             ],
             adjust_up=True,
+            affect_sales=False,
         )
         return super().update(instance, validated_data)
 
@@ -459,5 +460,6 @@ class PurchaseOrderSerializer(DocumentSerializer):
                 "amount",
             ],
             affect_stock=False,
+            affect_sales=False,
         )
         return super().update(instance, validated_data)

@@ -308,6 +308,7 @@ class CreditNoteSerializer(DocumentSerializer):
                 "amount",
             ],
             adjust_up=True,
+            affect_sales=True,
         )
 
         credit_note = super().update(instance, validated_data)
@@ -360,8 +361,13 @@ class InvoiceItemSerializer(LineItemSerializer):
         )
 
 
-def _update_inventory(product, quantity, adjust_up=True, affect_sales=True):
+def _update_inventory(
+    status, product, quantity, adjust_up=True, affect_sales=True
+):
     # add to stock and remove from sales
+    if status in ["DFT", "CC"]:
+        return
+
     if adjust_up:
         product.stock += quantity
         if affect_sales:
@@ -392,6 +398,7 @@ def _update_lineitems(
     for i, lineitem_data in enumerate(lineitems_data):
         if affect_stock:
             _update_inventory(
+                lineitem_data.get("status"),
                 lineitem_data.get("product"),
                 lineitem_data.get("quantity"),
                 adjust_up=adjust_up,
@@ -405,6 +412,7 @@ def _update_lineitems(
             lineitem_instance = lineitem_instances[i]
             if affect_stock:
                 _update_inventory(
+                    lineitem_instance.status,
                     lineitem_instance.product,
                     lineitem_instance.quantity,
                     adjust_up=not adjust_up,
@@ -675,6 +683,7 @@ class InvoiceSerializer(DocumentSerializer):
                 "amount",
             ],
             adjust_up=False,
+            affect_sales=True,
         )
 
         for creditsapplication_data in creditsapplications_data:
@@ -863,6 +872,7 @@ class SalesOrderSerializer(DocumentSerializer):
                 "amount",
             ],
             affect_stock=False,
+            affect_sales=False,
         )
 
         return super().update(instance, validated_data)

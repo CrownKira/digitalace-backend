@@ -3,6 +3,7 @@ from django_filters import rest_framework as filters
 from core.views import BaseAssetAttrViewSet, BaseDocumentViewSet
 from core.models import Receive, Supplier, PurchaseOrder
 from core.utils import validate_bulk_reference_uniqueness
+from customer.serializers import _update_inventory
 from supplier import serializers
 
 
@@ -63,6 +64,17 @@ class ReceiveViewSet(BaseDocumentViewSet):
         "status",
         "grand_total",
     ]
+
+    def perform_destroy(self, instance):
+        for item in instance.creditnoteitem_set:
+            _update_inventory(
+                item.status,
+                item.product,
+                item.quantity,
+                adjust_up=False,
+                affect_sales=False,
+            )
+        instance.delete()
 
 
 class PurchaseOrderFilter(filters.FilterSet):
