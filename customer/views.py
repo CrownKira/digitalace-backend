@@ -144,7 +144,7 @@ class CreditNoteViewSet(BaseDocumentViewSet):
         "date",
         "customer__name",
         "customer__address",
-        "sales_order__reference",
+        "created_from__reference",
         "status",
         "grand_total",
     ]
