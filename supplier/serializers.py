@@ -252,6 +252,7 @@ class ReceiveSerializer(DocumentSerializer):
         receiveitems_data = validated_data.pop("receiveitem_set", [])
         _update_lineitems(
             instance,
+            validated_data,
             "receive",
             receiveitems_data,
             "receiveitem_set",
@@ -447,6 +448,7 @@ class PurchaseOrderSerializer(DocumentSerializer):
 
         _update_lineitems(
             instance,
+            validated_data,
             "purchase_order",
             purchaseorderitems_data,
             "purchaseorderitem_set",

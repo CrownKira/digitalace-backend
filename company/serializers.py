@@ -107,6 +107,7 @@ class AdjustmentSerializer(DocumentSerializer):
 
         _update_lineitems(
             instance,
+            validated_data,
             "adjustment",
             adjustmentitems_data,
             "adjustmentitem_set",

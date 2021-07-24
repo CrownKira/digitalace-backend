@@ -295,6 +295,7 @@ class CreditNoteSerializer(DocumentSerializer):
         customer = validated_data.get("customer")
         _update_lineitems(
             instance,
+            validated_data,
             "credit_note",
             creditnoteitems_data,
             "creditnoteitem_set",
@@ -381,6 +382,7 @@ def _update_inventory(
 
 def _update_lineitems(
     instance,
+    validated_data,
     instance_name,
     lineitems_data,
     item_set_name,
@@ -398,7 +400,7 @@ def _update_lineitems(
     for i, lineitem_data in enumerate(lineitems_data):
         if affect_stock:
             _update_inventory(
-                lineitem_data.get("status"),
+                validated_data.get("status"),
                 lineitem_data.get("product"),
                 lineitem_data.get("quantity"),
                 adjust_up=adjust_up,
@@ -412,7 +414,7 @@ def _update_lineitems(
             lineitem_instance = lineitem_instances[i]
             if affect_stock:
                 _update_inventory(
-                    lineitem_instance.status,
+                    instance.status,
                     lineitem_instance.product,
                     lineitem_instance.quantity,
                     adjust_up=not adjust_up,
@@ -670,6 +672,7 @@ class InvoiceSerializer(DocumentSerializer):
 
         _update_lineitems(
             instance,
+            validated_data,
             "invoice",
             invoiceitems_data,
             "invoiceitem_set",
@@ -859,6 +862,7 @@ class SalesOrderSerializer(DocumentSerializer):
 
         _update_lineitems(
             instance,
+            validated_data,
             "sales_order",
             salesorderitems_data,
             "salesorderitem_set",

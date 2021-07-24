@@ -129,6 +129,7 @@ class CreditNoteFilter(filters.FilterSet):
             "customer": ["exact"],
             "created_from": ["exact"],
             "date": ["gte", "lte"],
+            "status": ["exact"],
         }
 
 
@@ -151,7 +152,7 @@ class CreditNoteViewSet(BaseDocumentViewSet):
     def perform_destroy(self, instance):
         for item in instance.creditnoteitem_set:
             _update_inventory(
-                item.status,
+                instance.status,
                 item.product,
                 item.quantity,
                 adjust_up=False,
@@ -171,6 +172,7 @@ class InvoiceFilter(filters.FilterSet):
             "reference": ["icontains", "exact"],
             "sales_order": ["exact"],
             "date": ["gte", "lte"],
+            "status": ["exact"],
         }
 
 
@@ -193,7 +195,7 @@ class InvoiceViewSet(BaseDocumentViewSet):
     def perform_destroy(self, instance):
         for item in instance.invoiceitem_set:
             _update_inventory(
-                item.status,
+                instance.status,
                 item.product,
                 item.quantity,
                 adjust_up=True,
@@ -208,6 +210,7 @@ class SalesOrderFilter(filters.FilterSet):
         fields = {
             "reference": ["icontains", "exact"],
             "date": ["gte", "lte"],
+            "status": ["exact"],
         }
 
 

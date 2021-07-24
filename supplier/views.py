@@ -46,6 +46,7 @@ class ReceiveFilter(filters.FilterSet):
         fields = {
             "reference": ["icontains", "exact"],
             "date": ["gte", "lte"],
+            "status": ["exact"],
         }
 
 
@@ -68,7 +69,7 @@ class ReceiveViewSet(BaseDocumentViewSet):
     def perform_destroy(self, instance):
         for item in instance.creditnoteitem_set:
             _update_inventory(
-                item.status,
+                instance.status,
                 item.product,
                 item.quantity,
                 adjust_up=False,
@@ -83,6 +84,7 @@ class PurchaseOrderFilter(filters.FilterSet):
         fields = {
             "reference": ["icontains", "exact"],
             "date": ["gte", "lte"],
+            "status": ["exact"],
         }
 
 
