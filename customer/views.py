@@ -101,22 +101,31 @@ class CreditsApplicationViewSet(
         company = self.request.user.company
         return self.queryset.filter(invoice__company=company).distinct()
 
+    def _update_customer_credits(self, customer, amount_to_credit):
+        customer.unused_credits += amount_to_credit
+        customer.save()
+
+    def _update_invoice_credits(self, invoice, amount_to_credit):
+        invoice.credits_applied -= amount_to_credit
+        invoice.balance_due += amount_to_credit
+        invoice.save()
+
+    def _update_credit_note_credits(self, credit_note, amount_to_credit):
+        credit_note.credits_used -= amount_to_credit
+        credit_note.credits_remaining += amount_to_credit
+        credit_note.save()
+
     def perform_destroy(self, instance):
         amount_to_credit = instance.amount_to_credit
         invoice = instance.invoice
         customer = invoice.customer
         credit_note = instance.credit_note
 
-        invoice.credits_applied -= amount_to_credit
-        invoice.balance_due += amount_to_credit
-        invoice.save()
+        self._update_invoice_credits(invoice, amount_to_credit)
 
-        customer.unused_credits += amount_to_credit
-        customer.save()
+        self._update_customer_credits(customer, amount_to_credit)
 
-        credit_note.credits_used -= amount_to_credit
-        credit_note.credits_remaining += amount_to_credit
-        credit_note.save()
+        self._update_credit_note_credits(credit_note, amount_to_credit)
 
         instance.delete()
 

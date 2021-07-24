@@ -284,8 +284,7 @@ class CreditNoteSerializer(DocumentSerializer):
         # calculate unused credits and store in db instead of calculate
         # on every request for customer api since this will slow down api response
         customer = credit_note.customer
-        customer.unused_credits += credit_note.credits_remaining
-        customer.save()
+        _update_customer_credits(customer, credit_note.credits_remaining)
 
         return credit_note
 
@@ -318,10 +317,10 @@ class CreditNoteSerializer(DocumentSerializer):
 
         credit_note = super().update(instance, validated_data)
 
-        customer.unused_credits += (
-            credit_note.credits_remaining - instance.credits_remaining
+        _update_customer_credits(
+            customer,
+            credit_note.credits_remaining - instance.credits_remaining,
         )
-        customer.save()
 
         return credit_note
 
@@ -344,6 +343,11 @@ class CreditsApplicationSerializer(serializers.ModelSerializer):
             "date",
         )
         extra_kwargs = {"amount_to_credit": {"required": False}}
+
+
+def _update_customer_credits(customer, offset):
+    customer.unused_credits += offset
+    customer.save()
 
 
 def _update_customer_history(instance):
@@ -594,8 +598,7 @@ class InvoiceSerializer(DocumentSerializer):
             credit_note.credits_used += new_amount_to_credit
             credit_note.save()
 
-            customer.unused_credits -= new_amount_to_credit
-            customer.save()
+            _update_customer_credits(customer, -new_amount_to_credit)
 
             new_creditsapplication_set.append(
                 {
