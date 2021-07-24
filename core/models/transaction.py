@@ -61,6 +61,8 @@ class PaymentMethod(models.Model):
 class CreditsApplication(models.Model):
     """Credits Applied"""
 
+    # https://stackoverflow.com/questions/50502537/what-does-on-delete-models-protect-and-on-delete-models-cascade-do-on-django-mod
+    # can't delete if it is still referenced by some objects
     invoice = models.ForeignKey("Invoice", on_delete=models.PROTECT, null=True)
     credit_note = models.ForeignKey(
         "CreditNote", on_delete=models.PROTECT, null=True
@@ -198,7 +200,7 @@ class Invoice(Document):
     balance_due = models.DecimalField(max_digits=10, decimal_places=2)
     payment_date = models.DateField(null=True, blank=True)
     payment_method = models.ForeignKey(
-        "PaymentMethod", on_delete=models.SET_NULL, null=True, blank=True
+        "PaymentMethod", on_delete=models.PROTECT, null=True, blank=True
     )
     payment_note = models.TextField(blank=True)
 
