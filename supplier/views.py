@@ -47,6 +47,7 @@ class ReceiveFilter(filters.FilterSet):
             "reference": ["icontains", "exact"],
             "date": ["gte", "lte"],
             "status": ["exact"],
+            "supplier": ["exact"],
         }
 
 
@@ -85,6 +86,7 @@ class PurchaseOrderFilter(filters.FilterSet):
             "reference": ["icontains", "exact"],
             "date": ["gte", "lte"],
             "status": ["exact"],
+            "supplier": ["exact"],
         }
 
 

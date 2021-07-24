@@ -130,6 +130,7 @@ class CreditNoteFilter(filters.FilterSet):
             "created_from": ["exact"],
             "date": ["gte", "lte"],
             "status": ["exact"],
+            "customer": ["exact"],
         }
 
 
@@ -173,6 +174,7 @@ class InvoiceFilter(filters.FilterSet):
             "sales_order": ["exact"],
             "date": ["gte", "lte"],
             "status": ["exact"],
+            "customer": ["exact"],
         }
 
 
@@ -211,6 +213,7 @@ class SalesOrderFilter(filters.FilterSet):
             "reference": ["icontains", "exact"],
             "date": ["gte", "lte"],
             "status": ["exact"],
+            "customer": ["exact"],
         }
 
 

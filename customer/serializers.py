@@ -88,10 +88,14 @@ class CustomerSerializer(BulkSerializerMixin, serializers.ModelSerializer):
             "receivables",
             "image",
             "unused_credits",
+            "first_seen",
+            "last_seen",
         )
         read_only_fields = (
             "id",
             "unused_credits",
+            "first_seen",
+            "last_seen",
         )
         extra_kwargs = {"image": {"allow_null": True}}
         list_serializer_class = BulkListSerializer
@@ -342,24 +346,13 @@ class CreditsApplicationSerializer(serializers.ModelSerializer):
         extra_kwargs = {"amount_to_credit": {"required": False}}
 
 
-class InvoiceItemSerializer(LineItemSerializer):
-    """Serializer for invoice item objects"""
-
-    class Meta:
-        model = InvoiceItem
-        fields = (
-            "id",
-            "product",
-            "invoice",
-            "unit",
-            "unit_price",
-            "quantity",
-            "amount",
-        )
-        read_only_fields = (
-            "id",
-            "invoice",
-        )
+def _update_customer_history(instance):
+    customer = instance.customer
+    date = instance.date
+    if customer.first_seen is None:
+        customer.first_seen = date
+    customer.last_seen = date
+    customer.save()
 
 
 def _update_inventory(
@@ -440,6 +433,26 @@ def _update_lineitems(
         pk__in=[obj.pk for obj in bulk_updates]
     ).delete()
     LineItemModel.objects.bulk_create(bulk_creates)
+
+
+class InvoiceItemSerializer(LineItemSerializer):
+    """Serializer for invoice item objects"""
+
+    class Meta:
+        model = InvoiceItem
+        fields = (
+            "id",
+            "product",
+            "invoice",
+            "unit",
+            "unit_price",
+            "quantity",
+            "amount",
+        )
+        read_only_fields = (
+            "id",
+            "invoice",
+        )
 
 
 class InvoiceSerializer(DocumentSerializer):
@@ -657,6 +670,8 @@ class InvoiceSerializer(DocumentSerializer):
                 CreditsApplication.objects.create(
                     **creditsapplication_data, invoice=invoice
                 )
+
+        _update_customer_history(invoice)
         return invoice
 
     def update(self, instance, validated_data):
@@ -695,7 +710,9 @@ class InvoiceSerializer(DocumentSerializer):
                 CreditsApplication.objects.create(
                     **creditsapplication_data, invoice=instance
                 )
-        return super().update(instance, validated_data)
+        updated_instance = super().update(instance, validated_data)
+        _update_customer_history(updated_instance)
+        return updated_instance
 
 
 class SalesOrderItemSerializer(LineItemSerializer):
@@ -850,6 +867,7 @@ class SalesOrderSerializer(DocumentSerializer):
         #     invoice.sales_order = sales_order
         #     invoice.save()
 
+        _update_customer_history(sales_order)
         return sales_order
 
     def update(self, instance, validated_data):
@@ -879,4 +897,6 @@ class SalesOrderSerializer(DocumentSerializer):
             affect_sales=False,
         )
 
-        return super().update(instance, validated_data)
+        updated_instance = super().update(instance, validated_data)
+        _update_customer_history(updated_instance)
+        return updated_instance

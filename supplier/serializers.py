@@ -21,6 +21,15 @@ from customer.serializers import (
 )
 
 
+def _update_supplier_history(instance):
+    supplier = instance.supplier
+    date = instance.date
+    if supplier.first_seen is None:
+        supplier.first_seen = date
+    supplier.last_seen = date
+    supplier.save()
+
+
 class SupplierSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     """Serializer for Supplier objects"""
 
@@ -41,8 +50,14 @@ class SupplierSerializer(BulkSerializerMixin, serializers.ModelSerializer):
             "email",
             "payables",
             "image",
+            "first_seen",
+            "last_seen",
         )
-        read_only_fields = ("id",)
+        read_only_fields = (
+            "id",
+            "first_seen",
+            "last_seen",
+        )
         extra_kwargs = {"image": {"allow_null": True}}
         list_serializer_class = BulkListSerializer
 
@@ -241,6 +256,7 @@ class ReceiveSerializer(DocumentSerializer):
         receive = Receive.objects.create(**validated_data)
         for receiveitem_data in receiveitems_data:
             ReceiveItem.objects.create(**receiveitem_data, receive=receive)
+        _update_supplier_history(receive)
         return receive
 
     def update(self, instance, validated_data):
@@ -268,7 +284,9 @@ class ReceiveSerializer(DocumentSerializer):
             adjust_up=True,
             affect_sales=False,
         )
-        return super().update(instance, validated_data)
+        updated_instance = super().update(instance, validated_data)
+        _update_supplier_history(updated_instance)
+        return updated_instance
 
 
 class PurchaseOrderItemSerializer(LineItemSerializer):
@@ -414,6 +432,7 @@ class PurchaseOrderSerializer(DocumentSerializer):
             receive.purchase_order = purchase_order
             receive.save()
 
+        _update_supplier_history(purchase_order)
         return purchase_order
 
     def update(self, instance, validated_data):
@@ -464,4 +483,7 @@ class PurchaseOrderSerializer(DocumentSerializer):
             affect_stock=False,
             affect_sales=False,
         )
-        return super().update(instance, validated_data)
+
+        updated_instance = super().update(instance, validated_data)
+        _update_supplier_history(updated_instance)
+        return updated_instance
