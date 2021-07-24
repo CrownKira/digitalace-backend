@@ -18,6 +18,7 @@ from core.models import (
     User,
     PaymentMethod,
     Adjustment,
+    Announcement,
 )
 from core.utils import validate_bulk_reference_uniqueness
 from customer.serializers import _update_inventory
@@ -36,6 +37,20 @@ from user.serializers import OwnerProfileSerializer
 #     )
 
 
+class AnnouncementViewSet(BaseAssetAttrViewSet):
+    """Manage announcement in the database"""
+
+    queryset = Announcement.objects.all()
+    serializer_class = serializers.AnnouncementSerializer
+    # filterset_class = AnnouncementFilter
+    search_fields = [
+        "title",
+        "message",
+        "status",
+        "severity",
+    ]
+
+
 class AdjustmentFilter(filters.FilterSet):
     class Meta:
         model = Adjustment
@@ -48,7 +63,7 @@ class AdjustmentFilter(filters.FilterSet):
 
 
 class AdjustmentViewSet(BaseDocumentViewSet):
-    """Manage customer in the database"""
+    """Manage adjustment in the database"""
 
     queryset = Adjustment.objects.all()
     serializer_class = serializers.AdjustmentSerializer

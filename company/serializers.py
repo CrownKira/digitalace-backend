@@ -18,10 +18,10 @@ from core.models import (
     Designation,
     Customer,
     PaymentMethod,
-    Invoice,
     UserConfig,
     AdjustmentItem,
     Adjustment,
+    Announcement,
 )
 from core.utils import validate_reference_uniqueness
 from user.serializers import UserSerializer
@@ -30,6 +30,25 @@ from customer.serializers import (
     LineItemSerializer,
     _update_lineitems,
 )
+
+
+class AnnouncementSerializer(DocumentSerializer):
+    """Serializer for announcement objects"""
+
+    class Meta(DocumentSerializer.Meta):
+        model = Announcement
+        fields = (
+            "id",
+            "company",
+            "title",
+            "message",
+            "status",
+            "severity",
+        )
+        read_only_fields = (
+            "id",
+            "company",
+        )
 
 
 class AdjustmentItemSerializer(LineItemSerializer):

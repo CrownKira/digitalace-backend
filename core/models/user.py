@@ -100,6 +100,39 @@ class Role(models.Model):
         return self.name
 
 
+class Announcement(models.Model):
+    """Announcement made"""
+
+    class Status(models.TextChoices):
+        DRAFT = "DFT", _("Draft")
+        PAID = "OP", _("Open")
+
+    class Severity(models.TextChoices):
+        SUCCESS = "SUCC", _("Success")
+        INFO = "INFO", _("Info")
+        WARNING = "WARN", _("Warning")
+        ERROR = "ERR", _("Error")
+
+    company = models.ForeignKey("Company", on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    message = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=4,
+        blank=True,
+        choices=Status.choices,
+        default=Status.DRAFT,
+    )
+    severity = models.CharField(
+        max_length=4,
+        blank=True,
+        choices=Severity.choices,
+        default=Severity.INFO,
+    )
+
+    def __str__(self):
+        return self.name
+
+
 class UserManager(BaseUserManager):
     def create_user(
         self,

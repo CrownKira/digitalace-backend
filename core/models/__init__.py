@@ -24,6 +24,7 @@ from .user import (
     Role,
     User,
     UserConfig,
+    Announcement,
 )
 from .user import user_image_file_path, user_resume_file_path
 
@@ -57,4 +58,5 @@ __all__ = [
     "PaymentMethod",
     "user_image_file_path",
     "user_resume_file_path",
+    "Announcement",
 ]
