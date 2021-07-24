@@ -37,12 +37,21 @@ from user.serializers import OwnerProfileSerializer
 #     )
 
 
+class AnnouncementFilter(filters.FilterSet):
+    class Meta:
+        model = Announcement
+        fields = {
+            "status": ["exact"],
+            "severity": ["exact"],
+        }
+
+
 class AnnouncementViewSet(BaseAssetAttrViewSet):
     """Manage announcement in the database"""
 
     queryset = Announcement.objects.all()
     serializer_class = serializers.AnnouncementSerializer
-    # filterset_class = AnnouncementFilter
+    filterset_class = AnnouncementFilter
     search_fields = [
         "title",
         "message",
