@@ -130,7 +130,6 @@ class CreditNoteFilter(filters.FilterSet):
             "created_from": ["exact"],
             "date": ["gte", "lte"],
             "status": ["exact"],
-            "customer": ["exact"],
         }
 
 
