@@ -24,6 +24,100 @@ from core.models import (
 from core.utils import validate_reference_uniqueness, all_unique
 
 
+def _update_customer_credits(customer, offset):
+    customer.unused_credits += offset
+    customer.save()
+
+
+def _update_customer_history(instance):
+    customer = instance.customer
+    date = instance.date
+    if customer.first_seen is None:
+        customer.first_seen = date
+    customer.last_seen = date
+    customer.save()
+
+
+def _update_inventory(
+    status, product, quantity, adjust_up=True, affect_sales=True
+):
+    # add to stock and remove from sales
+    if status in ["DFT", "CC"]:
+        return
+
+    if adjust_up:
+        product.stock += quantity
+        if affect_sales:
+            product.sales -= quantity
+    else:
+        product.stock -= quantity
+        if affect_sales:
+            product.sales += quantity
+    product.save()
+
+
+def _update_lineitems(
+    instance,
+    validated_data,
+    instance_name,
+    lineitems_data,
+    item_set_name,
+    LineItemModel,
+    fields,
+    affect_stock=True,
+    affect_sales=True,
+    adjust_up=True,
+):
+    lineitem_instances = getattr(instance, item_set_name).all()
+    lineitem_set_count = lineitem_instances.count()
+    bulk_updates = []
+    bulk_creates = []
+
+    for i, lineitem_data in enumerate(lineitems_data):
+        if affect_stock:
+            _update_inventory(
+                validated_data.get("status"),
+                lineitem_data.get("product"),
+                lineitem_data.get("quantity"),
+                adjust_up=adjust_up,
+                affect_sales=affect_sales,
+            )
+
+        lineitem_data.pop("id", None)
+        lineitem_data.pop("pk", None)
+        if i < lineitem_set_count:
+            # update
+            lineitem_instance = lineitem_instances[i]
+            if affect_stock:
+                _update_inventory(
+                    instance.status,
+                    lineitem_instance.product,
+                    lineitem_instance.quantity,
+                    adjust_up=not adjust_up,
+                    affect_sales=affect_sales,
+                )
+
+            for attr, value in lineitem_data.items():
+                setattr(lineitem_instance, attr, value)
+            bulk_updates.append(lineitem_instance)
+        else:
+            # create
+            bulk_creates.append(
+                # unpack first to prevent overriding
+                LineItemModel(
+                    **lineitem_data,
+                    **{instance_name: instance},
+                )
+            )
+
+    LineItemModel.objects.bulk_update(bulk_updates, fields)
+    # delete
+    LineItemModel.objects.filter(**{instance_name: instance}).exclude(
+        pk__in=[obj.pk for obj in bulk_updates]
+    ).delete()
+    LineItemModel.objects.bulk_create(bulk_creates)
+
+
 # TODO: refactor
 class LineItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
@@ -343,100 +437,6 @@ class CreditsApplicationSerializer(serializers.ModelSerializer):
             "date",
         )
         extra_kwargs = {"amount_to_credit": {"required": False}}
-
-
-def _update_customer_credits(customer, offset):
-    customer.unused_credits += offset
-    customer.save()
-
-
-def _update_customer_history(instance):
-    customer = instance.customer
-    date = instance.date
-    if customer.first_seen is None:
-        customer.first_seen = date
-    customer.last_seen = date
-    customer.save()
-
-
-def _update_inventory(
-    status, product, quantity, adjust_up=True, affect_sales=True
-):
-    # add to stock and remove from sales
-    if status in ["DFT", "CC"]:
-        return
-
-    if adjust_up:
-        product.stock += quantity
-        if affect_sales:
-            product.sales -= quantity
-    else:
-        product.stock -= quantity
-        if affect_sales:
-            product.sales += quantity
-    product.save()
-
-
-def _update_lineitems(
-    instance,
-    validated_data,
-    instance_name,
-    lineitems_data,
-    item_set_name,
-    LineItemModel,
-    fields,
-    affect_stock=True,
-    affect_sales=True,
-    adjust_up=True,
-):
-    lineitem_instances = getattr(instance, item_set_name).all()
-    lineitem_set_count = lineitem_instances.count()
-    bulk_updates = []
-    bulk_creates = []
-
-    for i, lineitem_data in enumerate(lineitems_data):
-        if affect_stock:
-            _update_inventory(
-                validated_data.get("status"),
-                lineitem_data.get("product"),
-                lineitem_data.get("quantity"),
-                adjust_up=adjust_up,
-                affect_sales=affect_sales,
-            )
-
-        lineitem_data.pop("id", None)
-        lineitem_data.pop("pk", None)
-        if i < lineitem_set_count:
-            # update
-            lineitem_instance = lineitem_instances[i]
-            if affect_stock:
-                _update_inventory(
-                    instance.status,
-                    lineitem_instance.product,
-                    lineitem_instance.quantity,
-                    adjust_up=not adjust_up,
-                    affect_sales=affect_sales,
-                )
-
-            for attr, value in lineitem_data.items():
-                setattr(lineitem_instance, attr, value)
-            bulk_updates.append(lineitem_instance)
-        else:
-            # create
-            bulk_creates.append(
-                # unpack first to prevent overriding
-                LineItemModel(
-                    **lineitem_data,
-                    **{instance_name: instance},
-                )
-            )
-
-    LineItemModel.objects.bulk_update(bulk_updates, fields)
-    # delete
-    LineItemModel.objects.filter(**{instance_name: instance}).exclude(
-        pk__in=[obj.pk for obj in bulk_updates]
-    ).delete()
-    LineItemModel.objects.bulk_create(bulk_creates)
 
 
 class InvoiceItemSerializer(LineItemSerializer):
