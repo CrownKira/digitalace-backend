@@ -29,6 +29,27 @@ def _update_customer_credits(customer, offset):
     customer.save()
 
 
+def _update_customer_receivables(validated_data, instance=None):
+    # TODO: reduce db hit (check for same customer, same balance_due, etc)
+
+    if validated_data is None:
+        return
+
+    customer2 = validated_data.get("customer")
+
+    if instance is not None and instance.status in ["UPD"]:
+        customer1 = instance.customer
+        customer1.receivables -= instance.balance_due
+        customer1.save()
+
+        if customer1.id == customer2.id:
+            customer2.receivables = customer1.receivables
+
+    if validated_data.get("status") in ["UPD"]:
+        customer2.receivables += validated_data.get("balance_due")
+        customer2.save()
+
+
 def _update_customer_history(instance):
     customer = instance.customer
     date = instance.date
@@ -674,6 +695,7 @@ class InvoiceSerializer(DocumentSerializer):
                     **creditsapplication_data, invoice=invoice
                 )
 
+        _update_customer_receivables(validated_data)
         _update_customer_history(invoice)
         return invoice
 
@@ -713,9 +735,11 @@ class InvoiceSerializer(DocumentSerializer):
                 CreditsApplication.objects.create(
                     **creditsapplication_data, invoice=instance
                 )
-        updated_instance = super().update(instance, validated_data)
-        _update_customer_history(updated_instance)
-        return updated_instance
+
+        _update_customer_receivables(validated_data, instance)
+        super().update(instance, validated_data)
+        _update_customer_history(instance)
+        return instance
 
 
 class SalesOrderItemSerializer(LineItemSerializer):
@@ -900,6 +924,6 @@ class SalesOrderSerializer(DocumentSerializer):
             affect_sales=False,
         )
 
-        updated_instance = super().update(instance, validated_data)
-        _update_customer_history(updated_instance)
-        return updated_instance
+        super().update(instance, validated_data)
+        _update_customer_history(instance)
+        return instance

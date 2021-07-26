@@ -21,6 +21,27 @@ from customer.serializers import (
 )
 
 
+def _update_supplier_payables(validated_data, instance=None):
+    # TODO: reduce db hit (check for same supplier, same grand_total, etc)
+
+    if validated_data is None:
+        return
+
+    supplier2 = validated_data.get("supplier")
+
+    if instance is not None and instance.status in ["UPD"]:
+        supplier1 = instance.supplier
+        supplier1.payables -= instance.grand_total
+        supplier1.save()
+
+        if supplier1.id == supplier2.id:
+            supplier2.payables = supplier1.payables
+
+    if validated_data.get("status") in ["UPD"]:
+        supplier2.payables += validated_data.get("grand_total")
+        supplier2.save()
+
+
 def _update_supplier_history(instance):
     supplier = instance.supplier
     date = instance.date
@@ -256,6 +277,7 @@ class ReceiveSerializer(DocumentSerializer):
         receive = Receive.objects.create(**validated_data)
         for receiveitem_data in receiveitems_data:
             ReceiveItem.objects.create(**receiveitem_data, receive=receive)
+        _update_supplier_payables(validated_data)
         _update_supplier_history(receive)
         return receive
 
@@ -284,9 +306,10 @@ class ReceiveSerializer(DocumentSerializer):
             adjust_up=True,
             affect_sales=False,
         )
-        updated_instance = super().update(instance, validated_data)
-        _update_supplier_history(updated_instance)
-        return updated_instance
+        super().update(instance, validated_data)
+        _update_supplier_history(instance)
+        _update_supplier_payables(validated_data, instance)
+        return instance
 
 
 class PurchaseOrderItemSerializer(LineItemSerializer):
@@ -484,6 +507,6 @@ class PurchaseOrderSerializer(DocumentSerializer):
             affect_sales=False,
         )
 
-        updated_instance = super().update(instance, validated_data)
-        _update_supplier_history(updated_instance)
-        return updated_instance
+        super().update(instance, validated_data)
+        _update_supplier_history(instance)
+        return instance
