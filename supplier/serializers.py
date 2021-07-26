@@ -306,9 +306,9 @@ class ReceiveSerializer(DocumentSerializer):
             adjust_up=True,
             affect_sales=False,
         )
+        _update_supplier_payables(validated_data, instance)
         super().update(instance, validated_data)
         _update_supplier_history(instance)
-        _update_supplier_payables(validated_data, instance)
         return instance
 
 
